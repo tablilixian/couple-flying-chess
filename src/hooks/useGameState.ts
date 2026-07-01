@@ -51,40 +51,66 @@ function normalizePlayers(input: unknown, mode: GameMode): Player[] {
   });
 }
 
+function normalizeOneTheme(raw: unknown, mode: GameMode): Theme {
+  const record = isRecord(raw) ? raw : {};
+  const tasksValue = record.tasks;
+  const tasks = Array.isArray(tasksValue)
+    ? tasksValue
+        .map(x => (typeof x === 'string' ? x.trim() : ''))
+        .filter((x): x is string => x.length > 0)
+    : [];
+
+  const audienceValue = record.audience;
+
+  return {
+    id: typeof record.id === 'string' ? record.id : `theme_${Date.now()}`,
+    name: typeof record.name === 'string' ? record.name : '未命名主题',
+    desc: typeof record.desc === 'string' ? record.desc : '',
+    mode: (record.mode === 'couple' || record.mode === 'normal' ? record.mode : mode) as GameMode,
+    audience:
+      audienceValue === 'common' || audienceValue === 'male' || audienceValue === 'female'
+        ? audienceValue
+        : 'common',
+    tasks
+  } satisfies Theme;
+}
+
 function normalizeThemes(input: unknown, mode: GameMode): Theme[] {
   const incoming = Array.isArray(input) ? input : [];
   const defaultThemes = mode === 'couple' ? COUPLE_DEFAULT_THEMES : NORMAL_DEFAULT_THEMES;
-  const source = incoming.length > 0 ? incoming : defaultThemes;
 
-  return source
-    .map(t => {
-      const record = isRecord(t) ? t : {};
-      const tasksValue = record.tasks;
-      const tasks = Array.isArray(tasksValue)
-        ? tasksValue
-            .map(x => (typeof x === 'string' ? x.trim() : ''))
-            .filter((x): x is string => x.length > 0)
-        : [];
+  if (incoming.length === 0) {
+    return defaultThemes;
+  }
 
-      const audienceValue = record.audience;
+  const defaultIds = new Set(defaultThemes.map(t => t.id));
+  const result: Theme[] = [];
+  const seenIds = new Set<string>();
 
-      return {
-        id: typeof record.id === 'string' ? record.id : `theme_${Date.now()}`,
-        name: typeof record.name === 'string' ? record.name : '未命名主题',
-        desc: typeof record.desc === 'string' ? record.desc : '',
-        mode: (record.mode === 'couple' || record.mode === 'normal' ? record.mode : mode) as GameMode,
-        audience:
-          audienceValue === 'common' || audienceValue === 'male' || audienceValue === 'female'
-            ? audienceValue
-            : 'common',
-        tasks
-      } satisfies Theme;
-    })
-    .reduce<Theme[]>((acc, theme) => {
-      if (acc.some(t => t.id === theme.id)) return acc;
-      acc.push(theme);
-      return acc;
-    }, []);
+  for (const t of incoming) {
+    const record = isRecord(t) ? t : {};
+    const id = typeof record.id === 'string' ? record.id : '';
+    if (!id || seenIds.has(id)) continue;
+
+    if (defaultIds.has(id)) {
+      result.push(normalizeOneTheme(
+        defaultThemes.find(dt => dt.id === id)!,
+        mode
+      ));
+    } else {
+      result.push(normalizeOneTheme(t, mode));
+    }
+    seenIds.add(id);
+  }
+
+  for (const dt of defaultThemes) {
+    if (!seenIds.has(dt.id)) {
+      result.push(normalizeOneTheme(dt, mode));
+      seenIds.add(dt.id);
+    }
+  }
+
+  return result;
 }
 
 function normalizeGameState(saved: unknown, mode: GameMode): GameState | null {
