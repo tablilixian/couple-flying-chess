@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Github } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { useGameState } from './hooks/useGameState';
 import { TaskEventData } from './types';
 import { HomeView } from './components/views/HomeView';
@@ -39,6 +40,9 @@ function App() {
   const [isCreateThemeModalOpen, setIsCreateThemeModalOpen] = useState(false);
   const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
   const [aiImportThemeId, setAiImportThemeId] = useState<string | null>(null);
+  const [verified, setVerified] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
 
   const handleSelectTheme = (playerId: number) => {
     setSelectedPlayerId(playerId);
@@ -92,6 +96,17 @@ function App() {
     }
   };
 
+  const handleSavePassword = () => {
+    if (passwordInput.length < 4) return;
+    setStoredPassword(passwordInput);
+    setIsPasswordModalOpen(false);
+    setPasswordInput('');
+  };
+
+  if (!verified) {
+    return <VerificationGate onVerified={() => setVerified(true)} />;
+  }
+
   return (
     <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
       <div className="fixed inset-0 z-0">
@@ -108,21 +123,16 @@ function App() {
             <h1 className="text-3xl font-bold text-white tracking-tight">情侣飞行棋</h1>
           </div>
           <div className="flex flex-col items-end gap-2 mt-1">
-            <a
-              href="https://github.com/woniu9524/couple-flying-chess"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => {
+                setPasswordInput(getStoredPassword());
+                setIsPasswordModalOpen(true);
+              }}
               className="text-gray-400 hover:text-white transition-colors"
-              title="GitHub Repository"
+              title="修改密码"
             >
-              <Github size={24} />
-            </a>
-            <a
-              href="mailto:ikun@gmx.cn"
-              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-            >
-              问题反馈：ikun@gmx.cn
-            </a>
+              <Settings size={20} />
+            </button>
           </div>
         </header>
 
@@ -232,6 +242,40 @@ function App() {
           onTaskTrigger={handleTaskTrigger}
           onBack={handleBackFromGame}
         />
+      )}
+
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-gray-900 rounded-2xl p-6 w-[320px] border border-gray-700 shadow-xl">
+            <h3 className="text-white text-lg font-semibold mb-1">修改密码</h3>
+            <p className="text-gray-400 text-sm mb-4">请输入新的4位数字密码</p>
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              value={passwordInput}
+              onChange={e => setPasswordInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              className="w-full bg-gray-800 text-white text-center text-2xl tracking-[0.5em] py-3 rounded-lg border border-gray-600 focus:border-pink-400 focus:outline-none mb-4"
+              placeholder="●●●●"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setIsPasswordModalOpen(false); setPasswordInput(''); }}
+                className="flex-1 py-2.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleSavePassword}
+                disabled={passwordInput.length < 4}
+                className="flex-1 py-2.5 rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
