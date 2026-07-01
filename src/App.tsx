@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Settings } from 'lucide-react';
+import { GameMode, TaskEventData } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { useGameState } from './hooks/useGameState';
-import { TaskEventData } from './types';
 import { HomeView } from './components/views/HomeView';
 import { GameView } from './components/views/GameView';
 import { ThemesView } from './components/views/ThemesView';
@@ -14,7 +14,50 @@ import { ThemeCreateModal } from './components/modals/ThemeCreateModal';
 import { ThemeEditorModal } from './components/modals/ThemeEditorModal';
 import { AiImportModal } from './components/modals/AiImportModal';
 
+const MODE_CONFIG: Record<GameMode, {
+  title: string;
+  subtitle: string;
+  accentColor: string;
+  accentBg: string;
+  accentText: string;
+  accentBorder: string;
+  startBg: string;
+  navActiveClass: string;
+}> = {
+  couple: {
+    title: '情侣飞行棋',
+    subtitle: "Couple's Game",
+    accentColor: '#FF375F',
+    accentBg: 'bg-pink-500',
+    accentText: 'text-pink-400',
+    accentBorder: 'border-pink-400',
+    startBg: 'bg-pink-500',
+    navActiveClass: 'text-pink-400'
+  },
+  normal: {
+    title: '普通飞行棋',
+    subtitle: 'Party Game',
+    accentColor: '#0A84FF',
+    accentBg: 'bg-blue-500',
+    accentText: 'text-blue-400',
+    accentBorder: 'border-blue-400',
+    startBg: 'bg-blue-500',
+    navActiveClass: 'text-blue-400'
+  }
+};
+
 function App() {
+  const [verified, setVerified] = useState(false);
+  const [mode, setMode] = useState<GameMode>('couple');
+
+  if (!verified) {
+    return <VerificationGate onVerified={(m) => { setMode(m); setVerified(true); }} />;
+  }
+
+  return <AppInner mode={mode} key={mode} />;
+}
+
+function AppInner({ mode }: { mode: GameMode }) {
   const {
     state,
     switchView,
@@ -31,7 +74,7 @@ function App() {
     checkTile,
     resolveTask,
     resetGame
-  } = useGameState();
+  } = useGameState(mode);
 
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number>(0);
@@ -40,9 +83,10 @@ function App() {
   const [isCreateThemeModalOpen, setIsCreateThemeModalOpen] = useState(false);
   const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
   const [aiImportThemeId, setAiImportThemeId] = useState<string | null>(null);
-  const [verified, setVerified] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+
+  const config = MODE_CONFIG[mode];
 
   const handleSelectTheme = (playerId: number) => {
     setSelectedPlayerId(playerId);
@@ -55,7 +99,7 @@ function App() {
 
   const selectedPlayer = state.players.find(p => p.id === selectedPlayerId) || state.players[0];
   const selectableThemes = state.themes.filter(
-    t => t.audience === 'common' || t.audience === selectedPlayer.role
+    t => t.mode === mode && (t.audience === 'common' || t.audience === selectedPlayer.role)
   );
 
   const handleStartGame = () => {
@@ -98,14 +142,14 @@ function App() {
 
   const handleSavePassword = () => {
     if (passwordInput.length < 4) return;
-    setStoredPassword(passwordInput);
+    setStoredPassword(mode, passwordInput);
     setIsPasswordModalOpen(false);
     setPasswordInput('');
   };
 
-  if (!verified) {
-    return <VerificationGate onVerified={() => setVerified(true)} />;
-  }
+  const modeLabel = mode === 'couple'
+    ? { text: '💕 情侣模式', className: 'text-pink-400 border-pink-400/30 bg-pink-500/10' }
+    : { text: '🎲 普通模式', className: 'text-blue-400 border-blue-400/30 bg-blue-500/10' };
 
   return (
     <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
@@ -117,15 +161,15 @@ function App() {
       <div className="relative z-10 w-full max-w-[430px] h-full flex flex-col bg-black/20">
         <header className="pt-12 pb-2 px-6 shrink-0 flex justify-between items-start">
           <div>
-            <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
-              Couple's Game
+            <div className={`text-[11px] font-semibold ${config.accentText} uppercase tracking-widest mb-1`}>
+              {config.subtitle}
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">情侣飞行棋</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">{config.title}</h1>
           </div>
           <div className="flex flex-col items-end gap-2 mt-1">
             <button
               onClick={() => {
-                setPasswordInput(getStoredPassword());
+                setPasswordInput(getStoredPassword(mode));
                 setIsPasswordModalOpen(true);
               }}
               className="text-gray-400 hover:text-white transition-colors"
@@ -138,7 +182,7 @@ function App() {
 
         <main className="flex-1 min-h-0 relative overflow-hidden">
           <div
-            className={`absolute inset-0 flex flex-col px-6 pt-10 pb-10 transition-all duration-500 ease-in-out ${
+            className={`absolute inset-0 flex flex-col px-6 pt-6 pb-10 transition-all duration-500 ease-in-out ${
               state.view === 'home'
                 ? 'translate-x-0 opacity-100'
                 : 'opacity-0 pointer-events-none -translate-x-full'
@@ -147,6 +191,7 @@ function App() {
             <HomeView
               players={state.players}
               themes={state.themes}
+              mode={mode}
               onSelectTheme={handleSelectTheme}
               onStartGame={handleStartGame}
             />
@@ -161,13 +206,14 @@ function App() {
           >
             <ThemesView
               themes={state.themes}
+              mode={mode}
               onCreateTheme={() => setIsCreateThemeModalOpen(true)}
               onEditTheme={themeId => setEditingThemeId(themeId)}
             />
           </div>
         </main>
 
-        <BottomNav activeView={state.view} onNavigate={handleNavigate} />
+        <BottomNav activeView={state.view} onNavigate={handleNavigate} mode={mode} />
       </div>
 
       <ThemeSelectorModal
@@ -176,6 +222,7 @@ function App() {
         selectedThemeId={selectedPlayer?.themeId || null}
         onSelect={handleThemeSelect}
         onClose={() => setIsThemeModalOpen(false)}
+        mode={mode}
       />
 
       <TaskCardModal
@@ -202,6 +249,7 @@ function App() {
           setIsCreateThemeModalOpen(false);
           if (id) setEditingThemeId(id);
         }}
+        mode={mode}
       />
 
       <ThemeEditorModal
@@ -221,9 +269,9 @@ function App() {
         isOpen={!!aiImportThemeId}
         themeName={aiImportThemeId ? state.themes.find(t => t.id === aiImportThemeId)?.name || '' : ''}
         onClose={() => setAiImportThemeId(null)}
-        onImport={(tasks, mode) => {
+        onImport={(tasks, importMode) => {
           if (!aiImportThemeId) return;
-          importThemeTasks(aiImportThemeId, tasks, mode);
+          importThemeTasks(aiImportThemeId, tasks, importMode);
         }}
       />
 
@@ -248,7 +296,9 @@ function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-gray-900 rounded-2xl p-6 w-[320px] border border-gray-700 shadow-xl">
             <h3 className="text-white text-lg font-semibold mb-1">修改密码</h3>
-            <p className="text-gray-400 text-sm mb-4">请输入新的4位数字密码</p>
+            <p className={`text-sm mb-4 ${config.accentText}`}>
+              {mode === 'couple' ? '💕 情侣模式' : '🎲 普通模式'} · 请输入新的4位数字密码
+            </p>
             <input
               type="password"
               inputMode="numeric"
@@ -269,7 +319,7 @@ function App() {
               <button
                 onClick={handleSavePassword}
                 disabled={passwordInput.length < 4}
-                className="flex-1 py-2.5 rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className={`flex-1 py-2.5 rounded-lg text-white hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.accentBg}`}
               >
                 保存
               </button>

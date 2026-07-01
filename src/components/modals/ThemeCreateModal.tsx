@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Theme } from '../../types';
+import { GameMode, Theme } from '../../types';
 
 interface ThemeCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreate: (input: { name: string; desc: string; audience: Theme['audience'] }) => void;
+  mode: GameMode;
 }
 
 const audienceOptions: Array<{ value: Theme['audience']; label: string }> = [
@@ -13,7 +14,17 @@ const audienceOptions: Array<{ value: Theme['audience']; label: string }> = [
   { value: 'female', label: '仅限女方' }
 ];
 
-export function ThemeCreateModal({ isOpen, onClose, onCreate }: ThemeCreateModalProps) {
+const MODE_LABELS: Record<GameMode, string> = {
+  couple: '💕 情侣模式',
+  normal: '🎲 普通模式'
+};
+
+const MODE_BTN_COLORS: Record<GameMode, string> = {
+  couple: 'bg-gradient-to-r from-pink-500 to-rose-500',
+  normal: 'bg-gradient-to-r from-blue-500 to-cyan-500'
+};
+
+export function ThemeCreateModal({ isOpen, onClose, onCreate, mode }: ThemeCreateModalProps) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [audience, setAudience] = useState<Theme['audience']>('common');
@@ -49,6 +60,9 @@ export function ThemeCreateModal({ isOpen, onClose, onCreate }: ThemeCreateModal
         <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-6" />
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-white">新建主题</h3>
+          <div className={`text-xs ${mode === 'couple' ? 'text-pink-400' : 'text-blue-400'}`}>
+            {MODE_LABELS[mode]}
+          </div>
         </div>
 
         <div className="space-y-4 pb-8">
@@ -103,7 +117,7 @@ export function ThemeCreateModal({ isOpen, onClose, onCreate }: ThemeCreateModal
               取消
             </button>
             <button
-              className="flex-1 h-12 rounded-full bg-gradient-to-r from-[#0A84FF] to-[#007AFF] text-white font-bold text-sm ios-btn shadow-lg disabled:opacity-40"
+              className={`flex-1 h-12 rounded-full text-white font-bold text-sm ios-btn shadow-lg disabled:opacity-40 ${MODE_BTN_COLORS[mode]}`}
               disabled={!canSubmit}
               onClick={() => {
                 if (!name.trim()) {
@@ -121,4 +135,3 @@ export function ThemeCreateModal({ isOpen, onClose, onCreate }: ThemeCreateModal
     </div>
   );
 }
-

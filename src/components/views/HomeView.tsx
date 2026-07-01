@@ -1,16 +1,24 @@
-import { Player, Theme } from '../../types';
+import { GameMode, Player, Theme } from '../../types';
 import { ChevronRight, User, UserRound } from 'lucide-react';
 
 interface HomeViewProps {
   players: Player[];
   themes: Theme[];
+  mode: GameMode;
   onSelectTheme: (playerId: number) => void;
   onStartGame: () => void;
 }
 
-export function HomeView({ players, themes, onSelectTheme, onStartGame }: HomeViewProps) {
+const MODE_STYLES: Record<GameMode, { startBg: string; accentText: string }> = {
+  couple: { startBg: 'bg-pink-500', accentText: 'text-pink-400' },
+  normal: { startBg: 'bg-blue-500', accentText: 'text-blue-400' }
+};
+
+export function HomeView({ players, themes, mode, onSelectTheme, onStartGame }: HomeViewProps) {
+  const styles = MODE_STYLES[mode];
+
   return (
-    <div className="flex-1 flex flex-col justify-start space-y-8 mt-10">
+    <div className="flex-1 flex flex-col justify-start space-y-8 mt-6">
       <div className="text-center mb-4">
         <h2 className="text-xl text-gray-300 font-medium">配置游戏角色</h2>
         <p className="text-sm text-gray-500 mt-2">选择双方的任务主题包</p>
@@ -35,7 +43,9 @@ export function HomeView({ players, themes, onSelectTheme, onStartGame }: HomeVi
                     boxShadow: `0 10px 15px -3px ${player.color}30`
                   }}
                 >
-                  {isMale ? (
+                  {isMale && mode === 'couple' ? (
+                    <User className="text-white" size={24} />
+                  ) : mode === 'normal' ? (
                     <User className="text-white" size={24} />
                   ) : (
                     <UserRound className="text-white" size={24} />
@@ -59,7 +69,7 @@ export function HomeView({ players, themes, onSelectTheme, onStartGame }: HomeVi
       <div className="flex-1" />
 
       <button
-        className="w-full h-14 bg-white rounded-full text-black font-semibold text-lg shadow-lg ios-btn flex items-center justify-center gap-2 mb-8"
+        className={`w-full h-14 bg-white rounded-full text-black font-semibold text-lg shadow-lg ios-btn flex items-center justify-center gap-2 mb-8`}
         onClick={onStartGame}
       >
         <span>开始游戏</span>

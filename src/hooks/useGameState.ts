@@ -1,15 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
-import { GameState, Player, TaskEventData, Theme } from '../types';
+import { GameMode, GameState, Player, TaskEventData, Theme } from '../types';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { generateSpiralPath, generateBoardMap, calculateNewPosition } from '../utils/gameLogic';
-import { DEFAULT_THEMES } from '../data/defaultThemes';
+import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/defaultThemes';
 
-const STORAGE_KEY = 'couples-ludo-game-state';
+const STORAGE_KEYS: Record<GameMode, string> = {
+  couple: 'couple-game-state',
+  normal: 'normal-game-state'
+};
 
-const initialPlayers: Player[] = [
-  { id: 0, name: '男方', color: '#0A84FF', role: 'male', step: 0, themeId: null },
-  { id: 1, name: '女方', color: '#FF375F', role: 'female', step: 0, themeId: null }
-];
+const INITIAL_PLAYERS: Record<GameMode, Player[]> = {
+  couple: [
+    { id: 0, name: '男方', color: '#0A84FF', role: 'male', step: 0, themeId: null },
+    { id: 1, name: '女方', color: '#FF375F', role: 'female', step: 0, themeId: null }
+  ],
+  normal: [
+    { id: 0, name: '玩家 A', color: '#0A84FF', role: 'male', step: 0, themeId: null },
+    { id: 1, name: '玩家 B', color: '#30D158', role: 'female', step: 0, themeId: null }
+  ]
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -19,8 +28,9 @@ function isThemeAllowedForRole(theme: Theme, role: Player['role']) {
   return theme.audience === 'common' || theme.audience === role;
 }
 
-function normalizePlayers(input: unknown): Player[] {
+function normalizePlayers(input: unknown, mode: GameMode): Player[] {
   const incoming = Array.isArray(input) ? input : [];
+  const initialPlayers = INITIAL_PLAYERS[mode];
 
   return initialPlayers.map(base => {
     const found = incoming.find(
@@ -41,9 +51,10 @@ function normalizePlayers(input: unknown): Player[] {
   });
 }
 
-function normalizeThemes(input: unknown): Theme[] {
+function normalizeThemes(input: unknown, mode: GameMode): Theme[] {
   const incoming = Array.isArray(input) ? input : [];
-  const source = incoming.length > 0 ? incoming : DEFAULT_THEMES;
+  const defaultThemes = mode === 'couple' ? COUPLE_DEFAULT_THEMES : NORMAL_DEFAULT_THEMES;
+  const source = incoming.length > 0 ? incoming : defaultThemes;
 
   return source
     .map(t => {
@@ -61,6 +72,7 @@ function normalizeThemes(input: unknown): Theme[] {
         id: typeof record.id === 'string' ? record.id : `theme_${Date.now()}`,
         name: typeof record.name === 'string' ? record.name : '未命名主题',
         desc: typeof record.desc === 'string' ? record.desc : '',
+        mode: (record.mode === 'couple' || record.mode === 'normal' ? record.mode : mode) as GameMode,
         audience:
           audienceValue === 'common' || audienceValue === 'male' || audienceValue === 'female'
             ? audienceValue
@@ -75,12 +87,17 @@ function normalizeThemes(input: unknown): Theme[] {
     }, []);
 }
 
-function normalizeGameState(saved: unknown): GameState | null {
+function normalizeGameState(saved: unknown, mode: GameMode): GameState | null {
   if (!isRecord(saved)) return null;
   const s = saved;
 
-  const themes = normalizeThemes(s.themes);
-  const players = normalizePlayers(s.players).map(p => {
+  const savedMode = s.mode;
+  const actualMode = (savedMode === 'couple' || savedMode === 'normal') ? savedMode : mode;
+
+  if (actualMode !== mode) return null;
+
+  const themes = normalizeThemes(s.themes, mode);
+  const players = normalizePlayers(s.players, mode).map(p => {
     if (p.themeId === null) return p;
     const theme = themes.find(t => t.id === p.themeId);
     if (!theme) return { ...p, themeId: null };
@@ -95,7 +112,8 @@ function normalizeGameState(saved: unknown): GameState | null {
     themes,
     boardMap: Array.isArray(s.boardMap) ? s.boardMap : generateBoardMap(),
     pathCoords: Array.isArray(s.pathCoords) ? s.pathCoords : generateSpiralPath(),
-    isRolling: !!s.isRolling
+    isRolling: !!s.isRolling,
+    mode
   };
 }
 
@@ -112,10 +130,13 @@ function createThemeId(existingIds: Set<string>) {
   return id;
 }
 
-export function useGameState() {
+export function useGameState(mode: GameMode) {
+  const storageKey = STORAGE_KEYS[mode];
+  const defaultThemes = mode === 'couple' ? COUPLE_DEFAULT_THEMES : NORMAL_DEFAULT_THEMES;
+
   const [state, setState] = useState<GameState>(() => {
-    const saved = loadFromStorage<GameState | null>(STORAGE_KEY, null);
-    const normalized = normalizeGameState(saved);
+    const saved = loadFromStorage<GameState | null>(storageKey, null);
+    const normalized = normalizeGameState(saved, mode);
 
     if (normalized) {
       return normalized;
@@ -124,17 +145,18 @@ export function useGameState() {
     return {
       view: 'home',
       turn: 0,
-      players: initialPlayers,
-      themes: DEFAULT_THEMES,
+      players: INITIAL_PLAYERS[mode],
+      themes: defaultThemes,
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
-      isRolling: false
+      isRolling: false,
+      mode
     };
   });
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEY, state);
-  }, [state]);
+    saveToStorage(storageKey, state);
+  }, [state, storageKey]);
 
   const switchView = useCallback((view: GameState['view']) => {
     setState(prev => ({ ...prev, view }));
@@ -168,6 +190,7 @@ export function useGameState() {
             id,
             name,
             desc,
+            mode: prev.mode,
             audience: input.audience,
             tasks: []
           }
@@ -381,7 +404,7 @@ export function useGameState() {
       ...prev,
       view: 'home',
       turn: 0,
-      players: initialPlayers.map(p => ({ ...p, themeId: null, step: 0 })),
+      players: INITIAL_PLAYERS[prev.mode].map(p => ({ ...p, themeId: null, step: 0 })),
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
       isRolling: false

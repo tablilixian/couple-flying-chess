@@ -1,11 +1,20 @@
+import { GameMode } from '../types';
 import { GamepadIcon, Layers } from 'lucide-react';
 
 interface BottomNavProps {
   activeView: 'home' | 'game' | 'themes';
   onNavigate: (view: 'home' | 'themes') => void;
+  mode: GameMode;
 }
 
-export function BottomNav({ activeView, onNavigate }: BottomNavProps) {
+const MODE_ACTIVE_CLASS: Record<GameMode, string> = {
+  couple: 'text-pink-400',
+  normal: 'text-blue-400'
+};
+
+export function BottomNav({ activeView, onNavigate, mode }: BottomNavProps) {
+  const activeClass = MODE_ACTIVE_CLASS[mode];
+
   return (
     <nav className="h-[84px] ios-glass border-t border-white/5 flex items-start justify-around pt-3 shrink-0 z-50">
       <button
@@ -17,7 +26,7 @@ export function BottomNav({ activeView, onNavigate }: BottomNavProps) {
         <GamepadIcon
           className={`transition-colors ${
             activeView === 'home' || activeView === 'game'
-              ? 'text-white'
+              ? activeClass
               : 'text-gray-400 group-hover:text-white'
           }`}
           size={26}
@@ -42,7 +51,7 @@ export function BottomNav({ activeView, onNavigate }: BottomNavProps) {
         <Layers
           className={`transition-colors ${
             activeView === 'themes'
-              ? 'text-white'
+              ? activeClass
               : 'text-gray-400 group-hover:text-white'
           }`}
           size={26}

@@ -1,4 +1,4 @@
-import { Theme } from '../../types';
+import { GameMode, Theme } from '../../types';
 import { Check } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -8,14 +8,21 @@ interface ThemeSelectorModalProps {
   selectedThemeId: string | null;
   onSelect: (themeId: string) => void;
   onClose: () => void;
+  mode: GameMode;
 }
+
+const MODE_CHECK_COLORS: Record<GameMode, string> = {
+  couple: 'text-pink-400',
+  normal: 'text-blue-400'
+};
 
 export function ThemeSelectorModal({
   isOpen,
   themes,
   selectedThemeId,
   onSelect,
-  onClose
+  onClose,
+  mode
 }: ThemeSelectorModalProps) {
   useEffect(() => {
     if (isOpen) {
@@ -53,7 +60,7 @@ export function ThemeSelectorModal({
             >
               <span className="text-white font-medium">{theme.name}</span>
               {selectedThemeId === theme.id && (
-                <Check className="text-[#0A84FF]" size={20} />
+                <Check className={MODE_CHECK_COLORS[mode]} size={20} />
               )}
             </div>
           ))}

@@ -1,22 +1,32 @@
 import { useState } from 'react';
+import { GameMode } from '../types';
 
 interface VerificationGateProps {
-  onVerified: () => void;
+  onVerified: (mode: GameMode) => void;
 }
 
-const DEFAULT_PASSWORD = '1314';
-const STORAGE_KEY = 'couple_game_password';
+const PASSWORD_DEFAULTS: Record<GameMode, string> = {
+  couple: '1314',
+  normal: '1234'
+};
 
-function getPassword(): string {
-  return localStorage.getItem(STORAGE_KEY) || DEFAULT_PASSWORD;
+const PASSWORD_STORAGE_KEYS: Record<GameMode, string> = {
+  couple: 'couple-password',
+  normal: 'normal-password'
+};
+
+export function getStoredPassword(mode: GameMode): string {
+  return localStorage.getItem(PASSWORD_STORAGE_KEYS[mode]) || PASSWORD_DEFAULTS[mode];
 }
 
-export function getStoredPassword(): string {
-  return localStorage.getItem(STORAGE_KEY) || DEFAULT_PASSWORD;
+export function setStoredPassword(mode: GameMode, pwd: string) {
+  localStorage.setItem(PASSWORD_STORAGE_KEYS[mode], pwd);
 }
 
-export function setStoredPassword(pwd: string) {
-  localStorage.setItem(STORAGE_KEY, pwd);
+function checkPassword(code: string): GameMode | null {
+  if (code === getStoredPassword('couple')) return 'couple';
+  if (code === getStoredPassword('normal')) return 'normal';
+  return null;
 }
 
 export function VerificationGate({ onVerified }: VerificationGateProps) {
@@ -29,7 +39,17 @@ export function VerificationGate({ onVerified }: VerificationGateProps) {
     setDigits(newDigits);
     setError(false);
     if (newDigits.length === 4) {
-      verify(newDigits.join(''));
+      const code = newDigits.join('');
+      const mode = checkPassword(code);
+      if (mode) {
+        onVerified(mode);
+      } else {
+        setError(true);
+        setTimeout(() => {
+          setDigits([]);
+          setError(false);
+        }, 600);
+      }
     }
   };
 
@@ -43,18 +63,6 @@ export function VerificationGate({ onVerified }: VerificationGateProps) {
     setError(false);
   };
 
-  const verify = (code: string) => {
-    if (code === getPassword()) {
-      onVerified();
-    } else {
-      setError(true);
-      setTimeout(() => {
-        setDigits([]);
-        setError(false);
-      }, 600);
-    }
-  };
-
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-black relative overflow-hidden">
       <div className="absolute inset-0">
@@ -63,12 +71,12 @@ export function VerificationGate({ onVerified }: VerificationGateProps) {
       </div>
 
       <div className="relative z-10 flex flex-col items-center px-6 w-full max-w-[430px]">
-        <div className="text-center mb-12">
+        <div className="text-center mb-6">
           <h1 className="text-2xl font-light text-white tracking-[0.2em] mb-3">飞行棋</h1>
           <p className="text-gray-600 text-sm tracking-wider">请输入密码</p>
         </div>
 
-        <div className="flex gap-3 mb-12">
+        <div className="flex gap-3 mb-6">
           {[0, 1, 2, 3].map(i => (
             <div
               key={i}
@@ -84,7 +92,7 @@ export function VerificationGate({ onVerified }: VerificationGateProps) {
         </div>
 
         {error && (
-          <p className="text-red-500/70 text-xs mb-4 -mt-8">密码错误</p>
+          <p className="text-red-500/70 text-xs mb-4 -mt-3">密码错误</p>
         )}
 
         <div className="grid grid-cols-3 gap-2.5 w-full max-w-[240px]">
@@ -115,6 +123,11 @@ export function VerificationGate({ onVerified }: VerificationGateProps) {
           >
             ⌫
           </button>
+        </div>
+
+        <div className="mt-8 text-center text-xs text-gray-500 leading-relaxed">
+          <p><span className="text-pink-400">💕 1314</span> 情侣飞行棋</p>
+          <p><span className="text-blue-400">🎲 1234</span> 普通飞行棋</p>
         </div>
       </div>
     </div>
