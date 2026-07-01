@@ -1,5 +1,5 @@
 import { TileType, PathCoord, Player } from '../types';
-import { Sparkles, Bomb, Trophy, User, UserRound } from 'lucide-react';
+import { Sparkles, Bomb, Trophy, Infinity, User, UserRound } from 'lucide-react';
 
 interface GameBoardProps {
   boardMap: TileType[];
@@ -30,6 +30,8 @@ export function GameBoard({ boardMap, pathCoords, players, currentTurn }: GameBo
       className += ' bg-[#FF375F]/20';
     } else if (type === 'trap') {
       className += ' bg-[#BF5AF2]/20';
+    } else if (type === 'status') {
+      className += ' bg-[#30D158]/20';
     } else {
       className += ' bg-[#2C2C2E]';
     }
@@ -43,6 +45,9 @@ export function GameBoard({ boardMap, pathCoords, players, currentTurn }: GameBo
         )}
         {!isStart && !isEnd && type === 'trap' && (
           <Bomb className="text-[#BF5AF2]" size={14} />
+        )}
+        {!isStart && !isEnd && type === 'status' && (
+          <Infinity className="text-[#30D158]" size={14} />
         )}
       </div>
     );

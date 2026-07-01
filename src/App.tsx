@@ -73,7 +73,9 @@ function AppInner({ mode }: { mode: GameMode }) {
     setIsRolling,
     checkTile,
     resolveTask,
-    resetGame
+    resetGame,
+    applyStatusTile,
+    performActionStatus
   } = useGameState(mode);
 
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
@@ -289,6 +291,11 @@ function AppInner({ mode }: { mode: GameMode }) {
           onWin={handleWin}
           onTaskTrigger={handleTaskTrigger}
           onBack={handleBackFromGame}
+          onStatusTile={applyStatusTile}
+          maleActionStatus={state.maleStatus.action}
+          maleConditionStatus={state.maleStatus.condition}
+          femaleActionStatus={state.femaleStatus.action}
+          femaleConditionStatus={state.femaleStatus.condition}
         />
       )}
 

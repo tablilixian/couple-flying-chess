@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { GameMode, GameState, Player, TaskEventData, Theme } from '../types';
+import { GameMode, GameState, Player, TaskEventData, Theme, StatusEffect, PlayerStatusSlots } from '../types';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { generateSpiralPath, generateBoardMap, calculateNewPosition } from '../utils/gameLogic';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
+import { buildStatus, buildOpeningStatus, applyStatusToSlots } from '../utils/statusLogic';
 
 const STORAGE_KEYS: Record<GameMode, string> = {
   couple: 'couple-game-state',
@@ -22,6 +23,20 @@ const INITIAL_PLAYERS: Record<GameMode, Player[]> = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function emptyStatusSlots(): PlayerStatusSlots {
+  return { action: null, condition: null };
+}
+
+function normalizeStatusSlots(input: unknown): PlayerStatusSlots {
+  if (!isRecord(input)) return emptyStatusSlots();
+  const action = input.action;
+  const condition = input.condition;
+  return {
+    action: isRecord(action) ? action as unknown as StatusEffect : null,
+    condition: isRecord(condition) ? condition as unknown as StatusEffect : null
+  };
 }
 
 function isThemeAllowedForRole(theme: Theme, role: Player['role']) {
@@ -139,7 +154,9 @@ function normalizeGameState(saved: unknown, mode: GameMode): GameState | null {
     boardMap: Array.isArray(s.boardMap) ? s.boardMap : generateBoardMap(),
     pathCoords: Array.isArray(s.pathCoords) ? s.pathCoords : generateSpiralPath(),
     isRolling: !!s.isRolling,
-    mode
+    mode,
+    maleStatus: normalizeStatusSlots(s.maleStatus),
+    femaleStatus: normalizeStatusSlots(s.femaleStatus)
   };
 }
 
@@ -176,7 +193,9 @@ export function useGameState(mode: GameMode) {
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
       isRolling: false,
-      mode
+      mode,
+      maleStatus: emptyStatusSlots(),
+      femaleStatus: emptyStatusSlots()
     };
   });
 
@@ -305,7 +324,17 @@ export function useGameState(mode: GameMode) {
       if (!isThemeAllowedForRole(theme, player.role)) return false;
       if (theme.tasks.length === 0) return false;
     }
-    setState(prev => ({ ...prev, view: 'game', turn: Math.random() < 0.5 ? 0 : 1 }));
+
+    const maleOpening = buildOpeningStatus('male');
+    const femaleOpening = buildOpeningStatus('female');
+
+    setState(prev => ({
+      ...prev,
+      view: 'game',
+      turn: Math.random() < 0.5 ? 0 : 1,
+      maleStatus: maleOpening ? applyStatusToSlots(prev.maleStatus, maleOpening) : prev.maleStatus,
+      femaleStatus: femaleOpening ? applyStatusToSlots(prev.femaleStatus, femaleOpening) : prev.femaleStatus
+    }));
     return true;
   }, [state.players, state.themes]);
 
@@ -335,7 +364,7 @@ export function useGameState(mode: GameMode) {
     setState(prev => ({ ...prev, isRolling: rolling }));
   }, []);
 
-  const checkTile = useCallback((landingStep: number): TaskEventData | 'win' | null => {
+  const checkTile = useCallback((landingStep: number): TaskEventData | 'win' | 'status' | null => {
     const activePlayer = state.players[state.turn];
     const opponent = state.players[state.turn === 0 ? 1 : 0];
 
@@ -404,6 +433,10 @@ export function useGameState(mode: GameMode) {
       };
     }
 
+    if (tileType === 'status') {
+      return 'status';
+    }
+
     return null;
   }, [state.players, state.turn, state.themes, state.boardMap]);
 
@@ -441,8 +474,39 @@ export function useGameState(mode: GameMode) {
       players: INITIAL_PLAYERS[prev.mode].map(p => ({ ...p, themeId: null, step: 0 })),
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
-      isRolling: false
+      isRolling: false,
+      maleStatus: emptyStatusSlots(),
+      femaleStatus: emptyStatusSlots()
     }));
+  }, []);
+
+  const applyStatusTile = useCallback((targetRole: 'male' | 'female', activeThemeId: string): StatusEffect | null => {
+    const theme = state.themes.find(t => t.id === activeThemeId);
+    const slot: 'action' | 'condition' = Math.random() < 0.5 ? 'action' : 'condition';
+    const newStatus = buildStatus(theme, slot, targetRole);
+    if (!newStatus) return null;
+
+    const statusKey = targetRole === 'male' ? 'maleStatus' : 'femaleStatus';
+
+    setState(prev => {
+      const targetStatus = applyStatusToSlots(prev[statusKey], newStatus);
+
+      if (newStatus.target === 'both') {
+        return {
+          ...prev,
+          maleStatus: applyStatusToSlots(prev.maleStatus, { ...newStatus, id: newStatus.id + '_m' }),
+          femaleStatus: applyStatusToSlots(prev.femaleStatus, { ...newStatus, id: newStatus.id + '_f' })
+        };
+      }
+
+      return { ...prev, [statusKey]: targetStatus };
+    });
+
+    return newStatus;
+  }, [state.themes]);
+
+  const performActionStatus = useCallback(() => {
+    setState(prev => ({ ...prev }));
   }, []);
 
   return {
@@ -460,6 +524,8 @@ export function useGameState(mode: GameMode) {
     setIsRolling,
     checkTile,
     resolveTask,
-    resetGame
+    resetGame,
+    applyStatusTile,
+    performActionStatus
   };
 }

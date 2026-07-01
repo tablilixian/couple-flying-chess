@@ -1,4 +1,23 @@
-export type TileType = 'blank' | 'lucky' | 'trap';
+export type TileType = 'blank' | 'lucky' | 'trap' | 'status';
+
+export type StatusSlot = 'action' | 'condition';
+
+export type StatusTarget = 'male' | 'female' | 'both';
+
+export interface StatusEffect {
+  id: string;
+  slot: StatusSlot;
+  target: StatusTarget;
+  description: string;
+  tag: string;
+  sourceThemeId: string;
+  sourceThemeName: string;
+}
+
+export type PlayerStatusSlots = {
+  action: StatusEffect | null;
+  condition: StatusEffect | null;
+};
 
 export type PlayerRole = 'male' | 'female';
 
@@ -22,6 +41,8 @@ export interface Theme {
   mode: GameMode;
   audience: ThemeAudience;
   tasks: string[];
+  actionStates?: string[];
+  conditionStates?: string[];
 }
 
 export interface PathCoord {
@@ -38,6 +59,8 @@ export interface GameState {
   pathCoords: PathCoord[];
   isRolling: boolean;
   mode: GameMode;
+  maleStatus: PlayerStatusSlots;
+  femaleStatus: PlayerStatusSlots;
 }
 
 export interface TaskEventData {
