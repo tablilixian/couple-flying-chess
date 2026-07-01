@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { GameMode, GameState, Player, TaskEventData, Theme } from '../types';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { generateSpiralPath, generateBoardMap, calculateNewPosition } from '../utils/gameLogic';
-import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/defaultThemes';
+import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
 
 const STORAGE_KEYS: Record<GameMode, string> = {
   couple: 'couple-game-state',
