@@ -35,6 +35,7 @@ export function TaskCardModal({ isOpen, taskData, onAccept, onReject }: TaskCard
   const rejectLabel = taskData.type === 'collision' ? '拒绝（回到起点）' : '拒绝（倒退1~3格）';
   const executorLabel = taskData.executorPlayerId === 0 ? '男方' : '女方';
   const executorClassName = taskData.executorPlayerId === 0 ? 'text-[#0A84FF]' : 'text-[#FF375F]';
+  const displayTask = taskData.task.replace(/^\[[MF]\]/, '');
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center px-6">
@@ -73,7 +74,7 @@ export function TaskCardModal({ isOpen, taskData, onAccept, onReject }: TaskCard
 
               <div className="w-full bg-[#2C2C2E] rounded-xl p-6 min-h-[120px] flex items-center justify-center border border-white/5 mb-6">
                 <p className="text-lg font-medium text-white text-center leading-relaxed">
-                  {taskData.task}
+                  {displayTask}
                 </p>
               </div>
             </div>

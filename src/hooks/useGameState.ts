@@ -313,13 +313,23 @@ export function useGameState(mode: GameMode) {
     const activePlayer = state.players[state.turn];
     const opponent = state.players[state.turn === 0 ? 1 : 0];
 
+    const pickTaskForRole = (theme: Theme | undefined, executorRole: Player['role']): string => {
+      if (!theme || theme.tasks.length === 0) return '';
+      const eligible = theme.tasks.filter(t => {
+        if (t.startsWith('[M]')) return executorRole === 'male';
+        if (t.startsWith('[F]')) return executorRole === 'female';
+        return true;
+      });
+      const pool = eligible.length > 0 ? eligible : theme.tasks;
+      return pool[Math.floor(Math.random() * pool.length)] || '';
+    };
+
     if (landingStep === 48) {
       return 'win';
     }
 
     if (landingStep !== 0 && landingStep === opponent.step) {
       const theme = state.themes.find(t => t.id === activePlayer.themeId);
-      const task = theme?.tasks[Math.floor(Math.random() * theme.tasks.length)] || '';
 
       return {
         type: 'collision',
@@ -329,7 +339,7 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'handshake',
         color: 'text-yellow-400',
-        task,
+        task: pickTaskForRole(theme, opponent.role),
         taskSourceId: activePlayer.themeId || ''
       };
     }
@@ -338,7 +348,6 @@ export function useGameState(mode: GameMode) {
 
     if (tileType === 'lucky') {
       const theme = state.themes.find(t => t.id === activePlayer.themeId);
-      const task = theme?.tasks[Math.floor(Math.random() * theme.tasks.length)] || '';
 
       return {
         type: 'lucky',
@@ -348,14 +357,13 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'favorite',
         color: 'text-[#FF375F]',
-        task,
+        task: pickTaskForRole(theme, opponent.role),
         taskSourceId: activePlayer.themeId || ''
       };
     }
 
     if (tileType === 'trap') {
       const theme = state.themes.find(t => t.id === opponent.themeId);
-      const task = theme?.tasks[Math.floor(Math.random() * theme.tasks.length)] || '';
 
       return {
         type: 'trap',
@@ -365,7 +373,7 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'lock',
         color: 'text-[#BF5AF2]',
-        task,
+        task: pickTaskForRole(theme, activePlayer.role),
         taskSourceId: opponent.themeId || ''
       };
     }
