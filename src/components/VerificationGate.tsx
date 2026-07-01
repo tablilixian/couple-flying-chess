@@ -125,10 +125,6 @@ export function VerificationGate({ onVerified }: VerificationGateProps) {
           </button>
         </div>
 
-        <div className="mt-8 text-center text-xs text-gray-500 leading-relaxed">
-          <p><span className="text-pink-400">💕 1314</span> 情侣飞行棋</p>
-          <p><span className="text-blue-400">🎲 1234</span> 普通飞行棋</p>
-        </div>
       </div>
     </div>
   );
