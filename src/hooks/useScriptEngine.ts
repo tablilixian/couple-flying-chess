@@ -33,6 +33,10 @@ export function useScriptEngine(script: Script | null) {
   const prevCounterValue = useRef(0);
   const timerIconRef = useRef('');
   const counterIconRef = useRef('');
+  const stepIndexRef = useRef(stepIndex);
+  const chapterIndexRef = useRef(chapterIndex);
+  const advanceStepRef = useRef<() => void>(() => {});
+  const playStepRef = useRef<(step: ScriptStep) => void>(() => {});
 
   const ensureAudio = useCallback(() => {
     if (!audioCtxRef.current) {
@@ -103,13 +107,16 @@ export function useScriptEngine(script: Script | null) {
     clearTimers();
     if (!script) return;
 
-    const ch = script.chapters[chapterIndex];
-    if (stepIndex + 1 >= ch.steps.length) {
-      if (chapterIndex + 1 < script.chapters.length) {
+    const ci = chapterIndexRef.current;
+    const si = stepIndexRef.current;
+    const ch = script.chapters[ci];
+
+    if (si + 1 >= ch.steps.length) {
+      if (ci + 1 < script.chapters.length) {
         setIsChapterTransition(true);
         setIsPlaying(false);
         setIsTask(false);
-        setMood(script.chapters[chapterIndex + 1].mood);
+        setMood(script.chapters[ci + 1].mood);
       } else {
         setIsEnding(true);
         setIsPlaying(false);
@@ -118,15 +125,21 @@ export function useScriptEngine(script: Script | null) {
       return;
     }
 
-    setStepIndex(prev => prev + 1);
-  }, [script, chapterIndex, stepIndex, clearTimers]);
+    const nextStep = ch.steps[si + 1];
+    setStepIndex(si + 1);
+    playStepRef.current(nextStep);
+  }, [script, clearTimers]);
 
   const startChapter = useCallback(() => {
     setIsChapterTransition(false);
     setIsPlaying(true);
-    setChapterIndex(prev => prev + 1);
+    const nextChapter = (chapterIndexRef.current ?? 0) + 1;
+    if (!script || !script.chapters[nextChapter]) return;
+    const firstStep = script.chapters[nextChapter].steps[0];
+    setChapterIndex(nextChapter);
     setStepIndex(0);
-  }, []);
+    playStepRef.current(firstStep);
+  }, [script]);
 
   const playStep = useCallback((step: ScriptStep) => {
     setIsPlaying(true);
@@ -140,7 +153,19 @@ export function useScriptEngine(script: Script | null) {
       setTaskTitle('');
       setTaskDesc('');
       ensureAudio();
-      ttsSpeak(step.text || '', () => advanceStep(), () => advanceStep());
+      ttsSpeak(
+        step.text || '',
+        () => advanceStepRef.current(),
+        () => {
+          const capturedStepIndex = stepIndexRef.current;
+          const capturedChapter = chapterIndexRef.current;
+          const ms = step.duration || 5000;
+          autoRef.current = window.setTimeout(() => {
+            if (stepIndexRef.current !== capturedStepIndex || chapterIndexRef.current !== capturedChapter) return;
+            advanceStepRef.current();
+          }, ms);
+        }
+      );
     } else if (step.type === 'timer') {
       setTaskTitle(step.title || '');
       setTaskDesc(step.desc || '');
@@ -184,7 +209,12 @@ export function useScriptEngine(script: Script | null) {
         beep(1200, 0.06, 0.08, 'square');
       }, 2000);
     }
-  }, [advanceStep, beep]);
+  }, [beep]);
+
+  useEffect(() => { stepIndexRef.current = stepIndex; }, [stepIndex]);
+  useEffect(() => { chapterIndexRef.current = chapterIndex; }, [chapterIndex]);
+  useEffect(() => { advanceStepRef.current = advanceStep; }, [advanceStep]);
+  useEffect(() => { playStepRef.current = playStep; }, [playStep]);
 
   const handleCounterTap = useCallback(() => {
     setCounterValue(prev => prev + 1);

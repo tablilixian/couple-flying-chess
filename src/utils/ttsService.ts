@@ -1,32 +1,10 @@
-export interface TTSConfig {
-  voice: string;
-  rate: number;
-  pitch: number;
-}
-
-const DEFAULT_CONFIG: TTSConfig = {
-  voice: 'zh-CN-XiaoxiaoNeural',
-  rate: 0,
-  pitch: 0,
-};
-
-let currentConfig: TTSConfig = { ...DEFAULT_CONFIG };
-
-export function setTTSConfig(config: Partial<TTSConfig>) {
-  currentConfig = { ...currentConfig, ...config };
-}
-
-export function getTTSConfig(): TTSConfig {
-  return { ...currentConfig };
-}
-
 let currentAudio: HTMLAudioElement | null = null;
+let currentAudioId = 0;
 let speakGen = 0;
 
 function stopCurrentAudio(): void {
   if (currentAudio) {
     currentAudio.pause();
-    currentAudio.src = '';
     currentAudio = null;
   }
 }
@@ -68,7 +46,7 @@ function getAudioUrl(filename: string): string {
 export async function speakText(
   text: string,
   onEnd?: () => void,
-  onError?: (err: string) => void
+  onUnavailable?: () => void
 ): Promise<void> {
   const gen = ++speakGen;
 
@@ -83,71 +61,45 @@ export async function speakText(
 
   if (gen !== speakGen) return;
 
-  stopCurrentAudio();
-
   const filename = manifest.get(text);
 
   if (filename) {
     const url = getAudioUrl(filename);
     const audio = new Audio(url);
+    const audioId = ++currentAudioId;
 
     let completed = false;
 
-    const finish = (fallback = false) => {
+    const finish = () => {
       if (completed) return;
       completed = true;
-      stopCurrentAudio();
-      if (fallback) {
-        speakBrowserFallback(text, onEnd, onError);
-      } else {
-        onEnd?.();
-      }
+      if (currentAudioId !== audioId) return;
+      currentAudio = null;
+      onEnd?.();
     };
 
     currentAudio = audio;
 
-    audio.addEventListener('ended', () => finish(false), { once: true });
-    audio.addEventListener('error', () => finish(true), { once: true });
+    audio.addEventListener('ended', () => finish(), { once: true });
+    audio.addEventListener('error', () => {
+      if (currentAudioId !== audioId) return;
+      currentAudio = null;
+      onUnavailable?.();
+    }, { once: true });
 
     try {
       await audio.play();
     } catch {
-      finish(true);
+      if (currentAudioId !== audioId) return;
+      currentAudio = null;
+      onUnavailable?.();
     }
   } else {
-    speakBrowserFallback(text, onEnd, onError);
-  }
-}
-
-function speakBrowserFallback(
-  text: string,
-  onEnd?: () => void,
-  onError?: (err: string) => void
-): void {
-  try {
-    const plain = text.replace(/<br\s*\/?>/gi, '，').replace(/<[^>]*>/g, '');
-    if (!('speechSynthesis' in window)) {
-      onEnd?.();
-      return;
-    }
-    const utterance = new SpeechSynthesisUtterance(plain);
-    utterance.lang = 'zh-CN';
-    utterance.rate = 0.85;
-    utterance.pitch = 1.0;
-    utterance.volume = 0.8;
-    utterance.onend = () => onEnd?.();
-    utterance.onerror = () => {
-      onError?.('浏览器语音合成失败');
-      onEnd?.();
-    };
-    window.speechSynthesis.speak(utterance);
-  } catch {
-    onEnd?.();
+    onUnavailable?.();
   }
 }
 
 export function stopSpeaking(): void {
   speakGen++;
   stopCurrentAudio();
-  try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
 }

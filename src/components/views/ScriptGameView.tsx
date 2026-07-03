@@ -1,6 +1,6 @@
 import { Script, ScriptStep, ScriptMood, StepLogEntry } from '../../types';
 import { useScriptEngine } from '../../hooks/useScriptEngine';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface ScriptGameViewProps {
   script: Script;
@@ -28,6 +28,14 @@ function moodColor(mood: ScriptMood): string {
 
 export function ScriptGameView({ script, onEnd, onBack }: ScriptGameViewProps) {
   const engine = useScriptEngine(script);
+  const skipLockRef = useRef(false);
+
+  const handleNext = () => {
+    if (skipLockRef.current) return;
+    skipLockRef.current = true;
+    engine.advanceStep();
+    setTimeout(() => { skipLockRef.current = false; }, 300);
+  };
 
   // Start playing on mount
   useEffect(() => {
@@ -37,21 +45,16 @@ export function ScriptGameView({ script, onEnd, onBack }: ScriptGameViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // React to step changes
+  // React to step changes (only handle ending / chapter transition)
   useEffect(() => {
     if (engine.isEnding) {
       onEnd(engine.stepLog);
       return;
     }
     if (engine.isChapterTransition) {
-      return; // wait for user to click continue
+      return;
     }
-    const step = engine.getCurrentStep();
-    if (step && engine.isPlaying) {
-      engine.playStep(step);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [engine.chapterIndex, engine.stepIndex, engine.isEnding]);
+  }, [engine.chapterIndex, engine.stepIndex, engine.isEnding, engine.isChapterTransition, engine.stepLog, onEnd]);
 
   const handleContinue = () => {
     engine.startChapter();
@@ -230,6 +233,12 @@ export function ScriptGameView({ script, onEnd, onBack }: ScriptGameViewProps) {
               <div className="text-5xl mb-5 transition-all duration-500">{engine.narrIcon}</div>
               <div className="text-white text-xl font-medium leading-relaxed max-w-[320px]"
                 dangerouslySetInnerHTML={{ __html: engine.narrText }} />
+              <button
+                onClick={handleNext}
+                className="mt-10 px-8 py-2.5 rounded-full bg-white/10 text-white/60 text-sm border border-white/10 active:bg-white/20 transition-all"
+              >
+                下一步 →
+              </button>
             </>
           )}
         </div>
