@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>情侣剧本杀 - 音频沉浸版原型</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0d0d1a;
+    --text: #ffffff;
+    --text2: rgba(255,255,255,0.55);
+    --pink: #FF375F;
+    --blue: #0A84FF;
+    --purple: #BF5AF2;
+    --green: #30D158;
+    --yellow: #FFD60A;
+    --orange: #FF9F0A;
+    --radius: 16px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 2px solid rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 80px rgba(255,55,95,0.06);
+  }
+
+  .notch {
+    width: 160px; height: 34px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    z-index: 100;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 48px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; font-size: 12px; font-weight: 600;
+    position: relative; z-index: 50;
+  }
+
+  /* ===== Ambient Background ===== */
+  .ambient-bg {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0; transition: background 2s ease;
+    overflow: hidden;
+  }
+  .ambient-bg .gradient {
+    position: absolute; top: -50%; left: -50%; right: -50%; bottom: -50%;
+    background: radial-gradient(ellipse at 30% 40%, rgba(255,55,95,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(10,132,255,0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(191,90,242,0.08) 0%, transparent 50%);
+    transition: all 2s ease;
+    animation: ambientShift 12s ease-in-out infinite alternate;
+  }
+  @keyframes ambientShift {
+    0% { transform: scale(1) rotate(0deg); }
+    100% { transform: scale(1.1) rotate(5deg); }
+  }
+
+  /* ===== Screen ===== */
+  .screen {
+    position: absolute; top: 48px; left: 0; right: 0; bottom: 0;
+    z-index: 10;
+    display: flex; flex-direction: column;
+  }
+
+  .screen-content {
+    flex: 1; padding: 20px 24px 100px;
+    display: flex; flex-direction: column;
+    position: relative; z-index: 10;
+    overflow-y: auto;
+  }
+  .screen-content::-webkit-scrollbar { display: none; }
+
+  .hidden { display: none !important; }
+
+  /* ===== Transitions ===== */
+  .fade-in { animation: fadeIn 0.6s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .scale-in { animation: scaleIn 0.5s ease; }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+  /* ===== Hub ===== */
+  .hub-header { text-align: center; padding: 40px 0 20px; position: relative; z-index: 10; }
+  .hub-header .title { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #FF375F, #BF5AF2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hub-header .sub { color: var(--text2); font-size: 14px; margin-top: 6px; }
+
+  .hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; position: relative; z-index: 10; }
+  .hub-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius); padding: 28px 16px 20px;
+    text-align: center; cursor: pointer; transition: all 0.25s;
+    position: relative; overflow: hidden;
+  }
+  .hub-card:active { transform: scale(0.96); background: rgba(255,255,255,0.08); }
+  .hub-card .icon { font-size: 40px; margin-bottom: 8px; }
+  .hub-card .name { font-size: 18px; font-weight: 700; }
+  .hub-card .desc { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .hub-card .badge { position: absolute; top: 10px; right: 10px; background: var(--pink); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .hub-card.locked { opacity: 0.3; }
+  .hub-card.script { border-color: rgba(255,55,95,0.2); }
+
+  /* ===== Script Select ===== */
+  .ss-header { display: flex; align-items: center; gap: 12px; padding: 8px 0 16px; position: relative; z-index: 10; }
+  .ss-header .back {
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: rgba(255,255,255,0.06); cursor: pointer; font-size: 18px;
+    flex-shrink: 0; border: none; color: #fff;
+  }
+  .ss-header h2 { font-size: 20px; font-weight: 700; }
+
+  .script-card {
+    display: flex; gap: 16px; padding: 16px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius); margin-bottom: 12px; cursor: pointer;
+    transition: all 0.2s; position: relative; z-index: 10;
+  }
+  .script-card:active { transform: scale(0.98); background: rgba(255,255,255,0.08); }
+  .script-card .cover { width: 72px; height: 96px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+  .script-card .info { flex: 1; min-width: 0; }
+  .script-card .info h3 { font-size: 16px; font-weight: 700; }
+  .script-card .info .tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .script-card .info .tags span { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.06); }
+  .script-card .info .meta { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--text2); }
+
+  /* ===== Character Intro ===== */
+  .ci-header { display: flex; align-items: center; gap: 12px; padding: 8px 0 16px; position: relative; z-index: 10; }
+  .ci-header .back {
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: rgba(255,255,255,0.06); cursor: pointer; font-size: 18px;
+    flex-shrink: 0; border: none; color: #fff;
+  }
+  .ci-header h2 { font-size: 18px; font-weight: 700; flex: 1; }
+
+  .ci-desc { font-size: 14px; color: var(--text2); line-height: 1.8; margin-bottom: 20px; position: relative; z-index: 10; }
+
+  .ci-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius); padding: 20px; display: flex; gap: 16px;
+    margin-bottom: 14px; position: relative; z-index: 10;
+    transition: all 0.3s;
+  }
+  .ci-card .avatar { width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .ci-card .info { flex: 1; }
+  .ci-card .info .role-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-bottom: 2px; }
+  .ci-card .info h3 { font-size: 20px; font-weight: 700; }
+  .ci-card .info .bio { font-size: 14px; line-height: 1.7; color: var(--text2); margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+
+  .ci-start { margin-top: 16px; position: relative; z-index: 10; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 16px 28px; border-radius: 12px; font-size: 16px; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.2s;
+    color: #fff; text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: var(--pink); }
+  .btn-secondary { background: rgba(255,255,255,0.08); }
+  .btn-block { width: 100%; }
+
+  /* ================================================================== */
+  /*  MAIN GAME SCREEN - AUDIO FIRST, HANDS FREE                       */
+  /* ================================================================== */
+
+  /* Host indicator */
+  .host-indicator {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    align-self: center; margin-bottom: 8px;
+    font-size: 12px; color: var(--text2);
+  }
+  .host-indicator .wave {
+    display: flex; gap: 2px; align-items: center;
+    height: 16px;
+  }
+  .host-indicator .wave span {
+    width: 3px; height: 6px; background: var(--pink);
+    border-radius: 2px;
+    animation: wave 0.8s ease-in-out infinite;
+  }
+  .host-indicator .wave span:nth-child(2) { animation-delay: 0.15s; height: 10px; }
+  .host-indicator .wave span:nth-child(3) { animation-delay: 0.3s; height: 14px; }
+  .host-indicator .wave span:nth-child(4) { animation-delay: 0.45s; height: 10px; }
+  .host-indicator .wave span:nth-child(5) { animation-delay: 0.6s; height: 6px; }
+  @keyframes wave { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(0.4); } }
+
+  /* --- Narration Display --- */
+  .narr-container {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center; padding: 20px 0;
+    position: relative;
+  }
+  .narr-icon-display { font-size: 56px; margin-bottom: 20px; transition: all 0.5s; }
+  .narr-text-display {
+    font-size: 21px; line-height: 1.8; font-weight: 500;
+    max-width: 320px; text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+  }
+  .narr-text-display .highlight { color: var(--pink); }
+  .narr-text-display .highlight-blue { color: var(--blue); }
+
+  /* Mood indicator bar */
+  .mood-bar {
+    position: absolute; bottom: 0; left: 24px; right: 24px;
+    height: 2px; background: rgba(255,255,255,0.06);
+    border-radius: 1px; overflow: hidden;
+  }
+  .mood-bar .fill {
+    height: 100%; border-radius: 1px;
+    transition: width 0.8s ease, background 1s ease;
+  }
+
+  /* --- Chapter transition (full screen overlay) --- */
+  .chapter-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(13,13,26,0.95);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.6s ease;
+  }
+  .chapter-overlay .ch-number {
+    font-size: 13px; font-weight: 600; color: var(--pink);
+    letter-spacing: 4px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .chapter-overlay .ch-title { font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+  .chapter-overlay .ch-sub { font-size: 15px; color: var(--text2); max-width: 280px; line-height: 1.6; }
+  .chapter-overlay .ch-divider { width: 40px; height: 2px; background: var(--pink); margin: 20px auto; border-radius: 1px; }
+  .chapter-overlay .ch-btn { margin-top: 12px; }
+
+  /* --- Task: Timer --- */
+  .task-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 40;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at center, rgba(255,55,95,0.10) 0%, transparent 70%);
+    animation: fadeIn 0.3s ease;
+  }
+  .task-icon-big { font-size: 48px; margin-bottom: 12px; }
+  .task-title-big { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .task-desc-big { font-size: 15px; color: var(--text2); margin-bottom: 24px; max-width: 300px; line-height: 1.6; }
+
+  .timer-ring {
+    width: 180px; height: 180px; border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; margin-bottom: 16px;
+  }
+  .timer-ring svg { position: absolute; transform: rotate(-90deg); }
+  .timer-ring svg circle {
+    fill: none; stroke-width: 4; stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s;
+  }
+  .timer-ring .timer-number {
+    font-size: 52px; font-weight: 800; font-variant-numeric: tabular-nums;
+  }
+  .timer-ring .timer-unit {
+    font-size: 16px; color: var(--text2); margin-top: 24px; position: absolute;
+  }
+
+  .timer-pulse {
+    position: absolute; width: 220px; height: 220px; border-radius: 50%;
+    border: 1px solid rgba(255,55,95,0.15);
+    animation: pulse-ring 2s ease-out infinite;
+  }
+  @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.3); opacity: 0; } }
+
+  /* Timer color states */
+  .timer-normal .timer-number { color: #fff; }
+  .timer-warning .timer-number { color: var(--yellow); }
+  .timer-urgent .timer-number { color: var(--pink); animation: timerPulse 0.4s infinite; }
+  @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* --- Task: Counter --- */
+  .counter-display {
+    font-size: 72px; font-weight: 800; margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .counter-display .counter-current { color: var(--pink); }
+  .counter-display .counter-total { color: var(--text2); font-weight: 400; font-size: 48px; }
+
+  .counter-bar {
+    width: 200px; height: 4px; background: rgba(255,255,255,0.06);
+    border-radius: 2px; overflow: hidden; margin-bottom: 16px;
+  }
+  .counter-bar .fill {
+    height: 100%; background: var(--pink); border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .counter-hit-area {
+    width: 200px; height: 80px; border-radius: 16px;
+    background: rgba(255,55,95,0.08);
+    border: 1px dashed rgba(255,55,95,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text2); cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .counter-hit-area:active {
+    background: rgba(255,55,95,0.2); transform: scale(0.95);
+  }
+  .counter-hit-area .hit-icon { font-size: 24px; margin-right: 8px; }
+
+  /* Counter metronome visual */
+  .counter-metronome {
+    width: 4px; height: 40px; background: var(--pink);
+    border-radius: 2px; margin: 8px auto;
+    transition: transform 0.1s;
+  }
+  .counter-metronome.tick { transform: scaleX(2); }
+
+  /* ===== Ending ===== */
+  .ending-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px 20px; flex: 1;
+  }
+  .ending-screen .big-icon { font-size: 72px; margin-bottom: 12px; }
+  .ending-screen .label { font-size: 12px; font-weight: 600; color: var(--pink); letter-spacing: 3px; }
+  .ending-screen h2 { font-size: 28px; font-weight: 800; margin: 8px 0 16px; }
+  .ending-screen .desc { font-size: 15px; color: var(--text2); line-height: 1.7; max-width: 300px; margin-bottom: 24px; }
+
+  .ending-stats { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .ending-stats .row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: rgba(255,255,255,0.04);
+    border-radius: 10px; font-size: 14px;
+  }
+  .ending-stats .row .label { color: var(--text2); }
+  .ending-stats .row .val { font-weight: 600; }
+
+  .ending-btns { display: flex; gap: 12px; width: 100%; }
+  .ending-btns .btn { flex: 1; }
+
+  /* ===== Progress ===== */
+  .progress-mini {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 6px 0 2px;
+  }
+  .progress-mini .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.1);
+    transition: all 0.3s;
+  }
+  .progress-mini .dot.active { background: var(--pink); transform: scale(1.3); }
+  .progress-mini .dot.done { background: rgba(255,55,95,0.3); }
+
+  /* ===== Ambient Background Moods ===== */
+  .mood-sweet .ambient-bg .gradient {
+    background: radial-gradient(ellipse at 30% 30%, rgba(255,55,95,0.20) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 70%, rgba(255,159,10,0.12) 0%, transparent 50%);
+  }
+  .mood-romantic .ambient-bg .gradient {
+    background: radial-gradient(ellipse at 50% 40%, rgba(255,55,95,0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 30% 70%, rgba(191,90,242,0.12) 0%, transparent 50%);
+  }
+  .mood-intense .ambient-bg .gradient {
+    background: radial-gradient(ellipse at 40% 50%, rgba(255,55,95,0.30) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 30%, rgba(255,159,10,0.15) 0%, transparent 50%);
+  }
+  .mood-calm .ambient-bg .gradient {
+    background: radial-gradient(ellipse at 30% 50%, rgba(10,132,255,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 40%, rgba(48,209,88,0.08) 0%, transparent 50%);
+  }
+
+  /* ===== Audio Visualizer ===== */
+  .audio-viz {
+    display: flex; gap: 3px; align-items: center; justify-content: center;
+    height: 30px; margin-bottom: 8px;
+  }
+  .audio-viz .bar {
+    width: 3px; background: var(--pink); border-radius: 2px;
+    animation: vizAnim 0.6s ease-in-out infinite;
+  }
+  .audio-viz .bar:nth-child(1) { height: 10px; animation-delay: 0s; }
+  .audio-viz .bar:nth-child(2) { height: 18px; animation-delay: 0.1s; }
+  .audio-viz .bar:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+  .audio-viz .bar:nth-child(4) { height: 18px; animation-delay: 0.3s; }
+  .audio-viz .bar:nth-child(5) { height: 10px; animation-delay: 0.4s; }
+  @keyframes vizAnim { 0%,100% { transform: scaleY(0.6); opacity: 0.5; } 50% { transform: scaleY(1); opacity: 1; } }
+
+  /* ===== Scene label ===== */
+  .scene-label {
+    text-align: center; font-size: 11px; color: var(--text2);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+  <div class="notch"></div>
+  <div class="status-bar">
+    <span class="time" id="statusTime">9:41</span>
+    <span class="icons">📶 📶 🔋</span>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  SCREEN: GAME HUB                                            -->
+  <!-- ============================================================ -->
+  <div class="screen" id="screen-hub">
+    <div class="ambient-bg"><div class="gradient"></div></div>
+    <div class="screen-content">
+      <div class="hub-header">
+        <div class="title">💕 情侣游戏中心</div>
+        <div class="sub">选择一种方式，开启今晚的二人时光</div>
+      </div>
+      <div class="hub-grid">
+        <div class="hub-card" style="border-color:rgba(10,132,255,0.2);">
+          <div class="icon">✈️</div>
+          <div class="name">飞行棋</div>
+          <div class="desc">经典棋盘对战</div>
+          <span class="badge" style="background:var(--blue);">HOT</span>
+        </div>
+        <div class="hub-card script" onclick="showScreen('script-select')">
+          <div class="icon">🎧</div>
+          <div class="name">剧本杀</div>
+          <div class="desc">语音主持 · 沉浸体验</div>
+          <span class="badge">NEW</span>
+        </div>
+        <div class="hub-card locked">
+          <div class="icon">🔒</div>
+          <div class="name">敬请期待</div>
+          <div class="desc">更多游戏开发中</div>
+        </div>
+        <div class="hub-card locked">
+          <div class="icon">🔒</div>
+          <div class="name">敬请期待</div>
+          <div class="desc">更多游戏开发中</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  SCREEN: SCRIPT SELECT                                       -->
+  <!-- ============================================================ -->
+  <div class="screen hidden" id="screen-script-select">
+    <div class="ambient-bg"><div class="gradient"></div></div>
+    <div class="screen-content">
+      <div class="ss-header">
+        <button class="back" onclick="showScreen('hub')">‹</button>
+        <h2>🎧 选择剧本</h2>
+      </div>
+
+      <div class="script-card" onclick="selectScript(0)">
+        <div class="cover" style="background:linear-gradient(135deg,#FF375F,#BF5AF2);">☕</div>
+        <div class="info">
+          <h3>咖啡店的邂逅</h3>
+          <div class="tags"><span>💕 甜蜜 · 初阶</span></div>
+          <div class="meta"><span>⏱ 15min</span><span>🎭 2人</span><span>🏆 3结局</span></div>
+        </div>
+      </div>
+      <div class="script-card" onclick="selectScript(1)">
+        <div class="cover" style="background:linear-gradient(135deg,#0A84FF,#30D158);">🌙</div>
+        <div class="info">
+          <h3>雨夜的秘密</h3>
+          <div class="tags"><span>🔍 悬疑 · 进阶</span></div>
+          <div class="meta"><span>⏱ 25min</span><span>🎭 2人</span><span>🏆 2结局</span></div>
+        </div>
+      </div>
+      <div class="script-card" onclick="selectScript(2)">
+        <div class="cover" style="background:linear-gradient(135deg,#FFD60A,#FF375F);">🔥</div>
+        <div class="info">
+          <h3>七日情侣挑战</h3>
+          <div class="tags"><span>🔥 热情 · 中阶</span></div>
+          <div class="meta"><span>⏱ 30min</span><span>🎭 2人</span><span>🏆 3结局</span></div>
+        </div>
+      </div>
+      <div class="script-card" onclick="selectScript(3)">
+        <div class="cover" style="background:linear-gradient(135deg,#BF5AF2,#0A84FF);">📷</div>
+        <div class="info">
+          <h3>老照片里的时光</h3>
+          <div class="tags"><span>🌙 深情 · 高阶</span></div>
+          <div class="meta"><span>⏱ 20min</span><span>🎭 2人</span><span>🏆 2结局</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  SCREEN: CHARACTER INTRO                                     -->
+  <!-- ============================================================ -->
+  <div class="screen hidden mood-sweet" id="screen-char-intro">
+    <div class="ambient-bg"><div class="gradient"></div></div>
+    <div class="screen-content">
+      <div class="ci-header">
+        <button class="back" onclick="showScreen('script-select')">‹</button>
+        <h2>☕ 咖啡店的邂逅</h2>
+      </div>
+
+      <div class="ci-desc">
+        周末的午后，一间街角的咖啡店，两个陌生人的目光在空气中交汇。
+        一段关于邂逅与告白的甜蜜故事，即将开始。
+      </div>
+
+      <div class="ci-card">
+        <div class="avatar" style="background:rgba(10,132,255,0.12);">👨‍💻</div>
+        <div class="info">
+          <div class="role-label" style="color:var(--blue);">🎭 男方 · 陆辰</div>
+          <h3>独立游戏开发者</h3>
+          <div class="bio">26岁，习惯在咖啡店写代码。温和敏感，社交中略显笨拙，却在代码的世界里游刃有余。</div>
+        </div>
+      </div>
+
+      <div class="ci-card">
+        <div class="avatar" style="background:rgba(255,55,95,0.12);">🎨</div>
+        <div class="info">
+          <div class="role-label" style="color:var(--pink);">🎭 女方 · 苏晚</div>
+          <h3>插画师</h3>
+          <div class="bio">24岁，喜欢在咖啡店寻找灵感。开朗活泼，刚刚搬来这座城市，用画笔记录新生活。</div>
+        </div>
+      </div>
+
+      <div class="ci-start">
+        <button class="btn btn-primary btn-block" onclick="startScript()">
+          🎧 戴上耳机，开始沉浸体验
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  SCREEN: GAME (main)                                         -->
+  <!-- ============================================================ -->
+  <div class="screen hidden mood-sweet" id="screen-game">
+    <div class="ambient-bg"><div class="gradient" id="gameGradient"></div></div>
+
+    <div class="screen-content" id="gameContent">
+      <!-- Host indicator -->
+      <div class="host-indicator">
+        <span>🎙️ 主持人</span>
+        <div class="wave"><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <!-- Scene label -->
+      <div class="scene-label" id="sceneLabel">序章</div>
+
+      <!-- Narration area -->
+      <div class="narr-container" id="narrContainer">
+        <div class="audio-viz" id="audioViz">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+        <div class="narr-icon-display" id="narrIcon">☕</div>
+        <div class="narr-text-display" id="narrText">
+          周末午后的阳光透过玻璃窗，<br>在木质地板上洒下斑驳的光影。
+        </div>
+      </div>
+
+      <!-- Progress dots -->
+      <div class="progress-mini" id="progressDots"></div>
+
+      <!-- Mood bar -->
+      <div class="mood-bar">
+        <div class="fill" id="moodFill" style="width:5%;background:var(--pink);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  SCREEN: ENDING                                              -->
+  <!-- ============================================================ -->
+  <div class="screen hidden mood-romantic" id="screen-ending">
+    <div class="ambient-bg"><div class="gradient"></div></div>
+    <div class="screen-content">
+      <div class="ending-screen">
+        <div class="big-icon">💖</div>
+        <div class="label">— 故事终章 —</div>
+        <h2>缘定今生</h2>
+        <div class="desc">
+          你们的故事，从那个午后的咖啡店开始，<br>
+          在这个星光璀璨的夜晚开花结果。<br>
+          有些缘分，从一开始就注定了。
+        </div>
+        <div class="ending-stats">
+          <div class="row"><span class="label">💕 甜蜜时刻</span><span class="val">5 次</span></div>
+          <div class="row"><span class="label">🔥 心动瞬间</span><span class="val">3 次</span></div>
+          <div class="row"><span class="label">⏱ 沉浸时长</span><span class="val">12 分钟</span></div>
+        </div>
+        <div class="ending-btns">
+          <button class="btn btn-secondary" onclick="showScreen('script-select')">📜 换个剧本</button>
+          <button class="btn btn-primary" onclick="showScreen('hub')">🏠 首页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ===== Time =====
+  function updateTime() {
+    const now = new Date();
+    document.getElementById('statusTime').textContent =
+      now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  }
+  updateTime(); setInterval(updateTime, 10000);
+
+  // ===== Audio Engine (Web Audio API) =====
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new AudioCtx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  // Beep: frequency, duration, volume
+  function beep(freq, duration, volume = 0.15, type = 'sine') {
+    ensureAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  // Metronome tick
+  function metronomeTick() {
+    beep(1200, 0.06, 0.1, 'square');
+    // visual flash
+    const el = document.querySelector('.counter-metronome');
+    if (el) { el.classList.add('tick'); setTimeout(() => el.classList.remove('tick'), 100); }
+  }
+
+  // Countdown beep - accelerates as time runs low
+  function countdownBeep(remaining, total) {
+    const ratio = remaining / total;
+    if (ratio < 0.2) {
+      // urgent: fast beeps
+      beep(880, 0.08, 0.2);
+    } else if (ratio < 0.4) {
+      beep(660, 0.1, 0.12);
+    } else {
+      beep(440, 0.15, 0.08);
+    }
+  }
+
+  // ===== Screen Nav =====
+  const allScreens = ['screen-hub','screen-script-select','screen-char-intro','screen-game','screen-ending'];
+
+  function showScreen(id) {
+    allScreens.forEach(s => {
+      document.getElementById(s).classList.toggle('hidden', s !== 'screen-' + id);
+    });
+  }
+
+  // ===== Script Select =====
+  function selectScript(i) {
+    showScreen('char-intro');
+  }
+
+  // ===== Game State =====
+  const game = {
+    chapter: 0,
+    step: 0,
+    totalSteps: 0,
+    stepLog: [],
+    timerId: null,
+    counterVal: 0,
+    mood: 'sweet',
+    audioPlaying: false,
+    autoTimer: null,
+    isTask: false,
+    isEnding: false,
+  };
+
+  // ===== Script Data =====
+  const SCRIPT = {
+    chapters: [
+      {
+        title: '第一章 · 不期而遇',
+        mood: 'sweet',
+        steps: [
+          {
+            type: 'narration',
+            icon: '🏪',
+            text: '周末午后的阳光透过玻璃窗，<br>在木质地板上洒下斑驳的光影。<br>你推开"遇见"咖啡店的木门，<br>一阵咖啡香扑面而来。',
+            duration: 5000,
+          },
+          {
+            type: 'narration',
+            icon: '👀',
+            text: '窗边坐着一个熟悉的身影——<br>上周朋友的聚会上，<br>你们有过一面之缘。<br>她正低头在素描本上画着什么。',
+            duration: 5000,
+          },
+          {
+            type: 'narration',
+            icon: '🖋️',
+            text: '你抬起头，正好对上了他的目光。<br>空气仿佛在这一秒凝固了。<br>你微微一笑，<br>他也轻轻点了点头。',
+            duration: 4000,
+          },
+          {
+            type: 'timer',
+            icon: '👁️',
+            title: '对视',
+            desc: '请看着对方的眼睛，<br>保持安静，用心感受这一刻。',
+            duration: 10,
+            mood: 'romantic',
+          },
+          {
+            type: 'narration',
+            icon: '☕',
+            text: '服务生走过来打破沉默：<br>"两位想喝点什么？"<br>你们相视一笑——<br>故事，就这样开始了。',
+            duration: 4000,
+          },
+          {
+            type: 'counter',
+            icon: '💕',
+            title: '拉近彼此的距离',
+            desc: '每一次触碰，<br>都让两颗心更近一些。<br>轻轻地触碰对方的手。',
+            target: 5,
+            mood: 'romantic',
+          },
+          {
+            type: 'narration',
+            icon: '💫',
+            text: '咖啡的香气在空气中弥漫，<br>你们的对话渐渐从客套变得自然。<br>阳光透过窗户洒在桌上，<br>这个普通的午后，变得不再普通……',
+            duration: 5000,
+            isChapterEnd: true,
+          }
+        ]
+      },
+      {
+        title: '第二章 · 初次约会',
+        mood: 'romantic',
+        steps: [
+          {
+            type: 'narration',
+            icon: '🌙',
+            text: '一周后的傍晚，<br>你们约定在一家天台餐厅见面。<br>城市的灯火在脚下铺开，<br>晚风轻柔地吹过发梢。',
+            duration: 5000,
+          },
+          {
+            type: 'narration',
+            icon: '🍷',
+            text: '暖黄的烛光摇曳，<br>你们的倒影在酒杯中交叠。<br>他看你的眼神里，<br>有一种说不清的温柔。',
+            duration: 4500,
+          },
+          {
+            type: 'counter',
+            icon: '💋',
+            title: '甜蜜五连拍',
+            desc: '每说出一个对方的优点，<br>就在对方脸上亲一下。<br>交替进行，完成 5 次。',
+            target: 5,
+            mood: 'intense',
+          },
+          {
+            type: 'narration',
+            icon: '🌟',
+            text: '夜色渐深，<br>你们并肩看着城市的万家灯火。<br>有些话在心口盘旋，<br>却还没找到说出口的时机……',
+            duration: 4500,
+            isChapterEnd: true,
+          }
+        ]
+      },
+      {
+        title: '第三章 · 告白之夜',
+        mood: 'intense',
+        steps: [
+          {
+            type: 'narration',
+            icon: '🌉',
+            text: '又是一个周末。<br>你们相约在江边散步，<br>江风习习，<br>灯光在水面上碎成万千星光。',
+            duration: 5000,
+          },
+          {
+            type: 'timer',
+            icon: '🤲',
+            title: '牵手漫步',
+            desc: '牵起对方的手，<br>保持这个温度，<br>静静走一段路。',
+            duration: 20,
+            mood: 'romantic',
+          },
+          {
+            type: 'narration',
+            icon: '💗',
+            text: '江边的灯光下，<br>你停下脚步，转过身，<br>认真地看着她的眼睛……<br>"其实，从那天在咖啡店开始，<br>我就……"',
+            duration: 6000,
+          },
+          {
+            type: 'counter',
+            icon: '🤗',
+            title: '拥抱倒计时',
+            desc: '紧紧地拥抱对方，<br>感受彼此的心跳。<br>每一次呼吸，<br>都在说着"我喜欢你"。',
+            target: 10,
+            mood: 'intense',
+          },
+          {
+            type: 'narration',
+            icon: '💖',
+            text: '"我也喜欢你。"<br>她轻声说道，<br>眼中有星光闪烁。<br>你紧紧握住了她的手——<br>这一刻，就是永远。',
+            duration: 6000,
+            isChapterEnd: true,
+          }
+        ]
+      }
+    ],
+    endings: {
+      title: '缘定今生',
+      desc: '你们的故事，从那个午后的咖啡店开始，<br>在这个星光璀璨的夜晚开花结果。<br>有些缘分，从一开始就注定了。',
+      icon: '💖'
+    }
+  };
+
+  // ===== Game Engine =====
+  function startScript() {
+    showScreen('game');
+    game.chapter = 0;
+    game.step = 0;
+    game.stepLog = [];
+    game.isEnding = false;
+    renderStep();
+  }
+
+  function getCurrentStep() {
+    const ch = SCRIPT.chapters[game.chapter];
+    if (!ch || game.step >= ch.steps.length) return null;
+    return ch.steps[game.step];
+  }
+
+  function renderStep() {
+    const step = getCurrentStep();
+    if (!step) {
+      // Try next chapter or end
+      if (game.chapter < SCRIPT.chapters.length - 1) {
+        showChapterTransition();
+      } else {
+        showEnding();
+      }
+      return;
+    }
+
+    game.isTask = (step.type === 'timer' || step.type === 'counter');
+
+    // Update mood
+    if (step.mood) setMood(step.mood);
+
+    // Update scene label
+    document.getElementById('sceneLabel').textContent = SCRIPT.chapters[game.chapter].title;
+
+    // Update progress
+    updateProgress();
+
+    // Clear any running task
+    if (game.timerId) { clearInterval(game.timerId); game.timerId = null; }
+    if (game.autoTimer) { clearTimeout(game.autoTimer); game.autoTimer = null; }
+
+    if (step.type === 'narration') {
+      renderNarration(step);
+    } else if (step.type === 'timer') {
+      renderTimer(step);
+    } else if (step.type === 'counter') {
+      renderCounter(step);
+    }
+  }
+
+  function renderNarration(step) {
+    document.getElementById('narrIcon').textContent = step.icon;
+    document.getElementById('narrText').innerHTML = step.text;
+    document.getElementById('audioViz').style.display = 'flex';
+    document.getElementById('narrContainer').style.justifyContent = 'center';
+
+    // Auto advance
+    game.autoTimer = setTimeout(() => {
+      advanceStep();
+    }, step.duration);
+  }
+
+  function renderTimer(step) {
+    document.getElementById('audioViz').style.display = 'none';
+    document.getElementById('narrContainer').style.justifyContent = 'center';
+
+    let remaining = step.duration;
+
+    // Switch to timer UI
+    document.getElementById('narrIcon').textContent = step.icon;
+    document.getElementById('narrText').innerHTML = `
+      <div style="font-size:18px;font-weight:600;margin-bottom:6px;">${step.title}</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:16px;line-height:1.6;">${step.desc}</div>
+      <div class="timer-ring" id="timerRing">
+        <div class="timer-pulse"></div>
+        <svg width="180" height="180">
+          <circle id="timerCircle" cx="90" cy="90" r="84"
+            stroke="rgba(255,55,95,0.15)"
+            stroke-dasharray="527.8" stroke-dashoffset="0"/>
+        </svg>
+        <span class="timer-number" id="timerNumber">${remaining}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px;">秒</div>
+    `;
+
+    const total = step.duration;
+    const circumference = 2 * Math.PI * 84;
+
+    // Timer tick
+    game.timerId = setInterval(() => {
+      remaining--;
+      if (remaining < 0) {
+        clearInterval(game.timerId);
+        game.timerId = null;
+        // Complete
+        game.stepLog.push({ type: 'timer', completed: true });
+        advanceStep();
+        return;
+      }
+
+      const pct = remaining / total;
+      const offset = circumference * (1 - pct);
+      const circle = document.getElementById('timerCircle');
+      const num = document.getElementById('timerNumber');
+      const ring = document.getElementById('timerRing');
+
+      if (circle) circle.setAttribute('stroke-dashoffset', offset);
+      if (num) {
+        num.textContent = remaining;
+        // color states
+        const ringEl = num.closest('.timer-ring');
+        if (ringEl) {
+          ringEl.classList.toggle('timer-normal', pct > 0.4);
+          ringEl.classList.toggle('timer-warning', pct <= 0.4 && pct > 0.2);
+          ringEl.classList.toggle('timer-urgent', pct <= 0.2);
+        }
+      }
+
+      // Audio beep
+      countdownBeep(remaining, total);
+    }, 1000);
+  }
+
+  function renderCounter(step) {
+    game.counterVal = 0;
+    document.getElementById('audioViz').style.display = 'none';
+    document.getElementById('narrContainer').style.justifyContent = 'center';
+
+    document.getElementById('narrIcon').textContent = step.icon;
+    document.getElementById('narrText').innerHTML = `
+      <div style="font-size:18px;font-weight:600;margin-bottom:6px;">${step.title}</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6;">${step.desc}</div>
+      <div class="counter-display">
+        <span class="counter-current" id="counterCurrent">0</span>
+        <span class="counter-total"> / ${step.target}</span>
+      </div>
+      <div class="counter-bar">
+        <div class="fill" id="counterFill" style="width:0%;"></div>
+      </div>
+      <div class="counter-metronome" id="counterMetro"></div>
+      <div class="counter-hit-area" id="counterHit"
+        ontouchstart="handleCounterTap(${step.target})"
+        onclick="handleCounterTap(${step.target})">
+        <span class="hit-icon">👆</span> 完成一次，就点这里
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:8px;">
+        节拍器会提示节奏 🎵
+      </div>
+    `;
+
+    // Start metronome (1 tick per 2 seconds as example)
+    if (game.timerId) clearInterval(game.timerId);
+    game.timerId = setInterval(() => {
+      metronomeTick();
+    }, 1500);
+  }
+
+  function handleCounterTap(target) {
+    if (game.counterVal >= target) return;
+    game.counterVal++;
+    document.getElementById('counterCurrent').textContent = game.counterVal;
+    document.getElementById('counterFill').style.width = (game.counterVal / target * 100) + '%';
+
+    // Sound feedback
+    beep(800, 0.08, 0.12, 'square');
+
+    // Visual feedback on hit area
+    const hit = document.getElementById('counterHit');
+    if (hit) {
+      hit.style.transform = 'scale(0.93)';
+      hit.style.background = 'rgba(255,55,95,0.2)';
+      setTimeout(() => {
+        hit.style.transform = '';
+        hit.style.background = '';
+      }, 150);
+    }
+
+    if (game.counterVal >= target) {
+      // Complete!
+      if (game.timerId) { clearInterval(game.timerId); game.timerId = null; }
+      document.getElementById('counterCurrent').style.color = '#30D158';
+      beep(1200, 0.3, 0.2, 'sine');
+      setTimeout(() => {
+        game.stepLog.push({ type: 'counter', count: game.counterVal });
+        advanceStep();
+      }, 800);
+    }
+  }
+
+  function advanceStep() {
+    if (game.timerId) { clearInterval(game.timerId); game.timerId = null; }
+    if (game.autoTimer) { clearTimeout(game.autoTimer); game.autoTimer = null; }
+
+    game.step++;
+
+    const ch = SCRIPT.chapters[game.chapter];
+    if (game.step >= ch.steps.length) {
+      if (game.chapter < SCRIPT.chapters.length - 1) {
+        showChapterTransition();
+      } else {
+        showEnding();
+      }
+      return;
+    }
+
+    renderStep();
+  }
+
+  function showChapterTransition() {
+    game.chapter++;
+    game.step = 0;
+    const ch = SCRIPT.chapters[game.chapter];
+
+    document.getElementById('narrIcon').textContent = '📖';
+    document.getElementById('narrText').innerHTML = `
+      <div style="font-size:13px;color:var(--pink);letter-spacing:3px;font-weight:600;margin-bottom:8px;">
+        — 第 ${game.chapter + 1} 章 —
+      </div>
+      <div style="font-size:26px;font-weight:800;margin-bottom:8px;">
+        ${ch.title}
+      </div>
+      <div style="font-size:14px;color:var(--text2);line-height:1.6;">
+        故事在继续，感情在升温……
+      </div>
+    `;
+    document.getElementById('audioViz').style.display = 'none';
+    document.getElementById('sceneLabel').textContent = ch.title;
+    setMood(ch.mood);
+
+    game.autoTimer = setTimeout(() => {
+      renderStep();
+    }, 3500);
+  }
+
+  function showEnding() {
+    if (game.isEnding) return;
+    game.isEnding = true;
+    showScreen('ending');
+
+    if (game.timerId) { clearInterval(game.timerId); game.timerId = null; }
+    if (game.autoTimer) { clearTimeout(game.autoTimer); game.autoTimer = null; }
+  }
+
+  // ===== Mood System =====
+  function setMood(mood) {
+    const screen = document.getElementById('screen-game');
+    screen.classList.remove('mood-sweet', 'mood-romantic', 'mood-intense', 'mood-calm');
+    screen.classList.add('mood-' + (mood || 'sweet'));
+  }
+
+  // ===== Progress =====
+  function updateProgress() {
+    const totalSteps = SCRIPT.chapters.reduce((sum, ch) => sum + ch.steps.length, 0);
+    let doneSteps = 0;
+    for (let i = 0; i < game.chapter; i++) {
+      doneSteps += SCRIPT.chapters[i].steps.length;
+    }
+    doneSteps += game.step;
+
+    const pct = totalSteps > 0 ? (doneSteps / totalSteps) * 100 : 0;
+    const fill = document.getElementById('moodFill');
+    if (fill) fill.style.width = Math.min(pct, 100) + '%';
+  }
+
+  // ===== Filter chips =====
+  document.querySelectorAll('.script-card').forEach(el => {
+    el.addEventListener('click', function() {
+      // already handled by onclick
+    });
+  });
+</script>
+
+</body>
+</html>
