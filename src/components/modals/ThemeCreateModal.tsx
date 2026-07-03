@@ -6,6 +6,7 @@ interface ThemeCreateModalProps {
   onClose: () => void;
   onCreate: (input: { name: string; desc: string; audience: Theme['audience'] }) => void;
   mode: GameMode;
+  existingNames: string[];
 }
 
 const audienceOptions: Array<{ value: Theme['audience']; label: string }> = [
@@ -122,6 +123,10 @@ export function ThemeCreateModal({ isOpen, onClose, onCreate, mode }: ThemeCreat
               onClick={() => {
                 if (!name.trim()) {
                   setError('请输入主题名称');
+                  return;
+                }
+                if (existingNames.includes(name.trim())) {
+                  setError(`主题「${name.trim()}」已存在`);
                   return;
                 }
                 onCreate({ name: name.trim(), desc: desc.trim(), audience });

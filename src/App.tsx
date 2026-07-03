@@ -369,6 +369,7 @@ function AppInner({ mode }: { mode: GameMode }) {
           if (id) setEditingThemeId(id);
         }}
         mode={mode}
+        existingNames={state.themes.map(t => t.name)}
       />
 
       <ThemeEditorModal
@@ -451,6 +452,23 @@ function AppInner({ mode }: { mode: GameMode }) {
               className={`flex-1 py-2.5 rounded-lg text-white hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.accentBg}`}
             >
               保存
+            </button>
+          </div>
+
+          <div className="mt-6 pt-5 border-t border-gray-800">
+            <button
+              onClick={() => {
+                if (window.confirm('确定要清除所有本地数据吗？\n包括所有主题包、任务卡、游戏进度和密码设置。\n\n此操作不可撤销！')) {
+                  localStorage.removeItem('couple-game-state');
+                  localStorage.removeItem('normal-game-state');
+                  localStorage.removeItem('couple-password');
+                  localStorage.removeItem('normal-password');
+                  window.location.reload();
+                }
+              }}
+              className="w-full py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm hover:bg-red-500/20 transition-colors"
+            >
+              清除所有本地数据
             </button>
           </div>
         </div>

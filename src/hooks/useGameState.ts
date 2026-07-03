@@ -76,6 +76,8 @@ function normalizeOneTheme(raw: unknown, mode: GameMode): Theme {
     : [];
 
   const audienceValue = record.audience;
+  const actionStatesValue = record.actionStates;
+  const conditionStatesValue = record.conditionStates;
 
   return {
     id: typeof record.id === 'string' ? record.id : `theme_${Date.now()}`,
@@ -86,7 +88,13 @@ function normalizeOneTheme(raw: unknown, mode: GameMode): Theme {
       audienceValue === 'common' || audienceValue === 'male' || audienceValue === 'female'
         ? audienceValue
         : 'common',
-    tasks
+    tasks,
+    actionStates: Array.isArray(actionStatesValue)
+      ? actionStatesValue.map(x => (typeof x === 'string' ? x.trim() : '')).filter(x => x.length > 0)
+      : undefined,
+    conditionStates: Array.isArray(conditionStatesValue)
+      ? conditionStatesValue.map(x => (typeof x === 'string' ? x.trim() : '')).filter(x => x.length > 0)
+      : undefined
   } satisfies Theme;
 }
 
@@ -223,6 +231,9 @@ export function useGameState(mode: GameMode) {
 
     let createdId: string | null = null;
     setState(prev => {
+      if (prev.themes.some(t => t.name === name)) {
+        return prev;
+      }
       const existingIds = new Set(prev.themes.map(t => t.id));
       const id = createThemeId(existingIds);
       createdId = id;
@@ -252,6 +263,9 @@ export function useGameState(mode: GameMode) {
       themes: prev.themes.map(t => {
         if (t.id !== themeId) return t;
         const nextName = typeof patch.name === 'string' ? patch.name.trim() : t.name;
+        if (nextName && nextName !== t.name && prev.themes.some(other => other.id !== themeId && other.name === nextName)) {
+          return t;
+        }
         const nextDesc = typeof patch.desc === 'string' ? patch.desc.trim() : t.desc;
         const nextAudience = patch.audience || t.audience;
 
