@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Settings } from 'lucide-react';
 import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
+import { clearAudioCache } from './utils/ttsService';
 import { useGameState } from './hooks/useGameState';
 import { HomeView } from './components/views/HomeView';
 import { GameView } from './components/views/GameView';
@@ -457,8 +458,9 @@ function AppInner({ mode }: { mode: GameMode }) {
 
           <div className="mt-6 pt-5 border-t border-gray-800">
             <button
-              onClick={() => {
-                if (window.confirm('确定要清除所有本地数据吗？\n包括所有主题包、任务卡、游戏进度和密码设置。\n\n此操作不可撤销！')) {
+              onClick={async () => {
+                if (window.confirm('确定要清除所有本地数据吗？\n包括所有主题包、任务卡、游戏进度、密码设置和缓存的语音。\n\n此操作不可撤销！')) {
+                  await clearAudioCache();
                   localStorage.removeItem('couple-game-state');
                   localStorage.removeItem('normal-game-state');
                   localStorage.removeItem('couple-password');
