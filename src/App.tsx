@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Settings } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Settings, History } from 'lucide-react';
 import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { clearAudioCache } from './utils/ttsService';
 import { useGameState } from './hooks/useGameState';
+import { startNewSession, addEntryToCurrentSession, finalizeCurrentSession, TaskHistoryEntry } from './utils/gameSession';
 import { HomeView } from './components/views/HomeView';
 import { GameView } from './components/views/GameView';
 import { ThemesView } from './components/views/ThemesView';
@@ -14,6 +15,7 @@ import { BottomNav } from './components/BottomNav';
 import { ThemeCreateModal } from './components/modals/ThemeCreateModal';
 import { ThemeEditorModal } from './components/modals/ThemeEditorModal';
 import { AiImportModal } from './components/modals/AiImportModal';
+import { HistoryModal } from './components/modals/HistoryModal';
 import { GameHubView } from './components/views/GameHubView';
 import { ScriptSelectView } from './components/views/ScriptSelectView';
 import { CharacterIntroView } from './components/views/CharacterIntroView';
@@ -67,6 +69,7 @@ function AppInner({ mode }: { mode: GameMode }) {
   const {
     state,
     switchView,
+    setPlayerName,
     selectTheme,
     createTheme,
     updateThemeMeta,
@@ -90,12 +93,14 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number>(0);
   const [taskData, setTaskData] = useState<TaskEventData | null>(null);
+  const taskStartTimeRef = useRef(0);
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [isCreateThemeModalOpen, setIsCreateThemeModalOpen] = useState(false);
   const [editingThemeId, setEditingThemeId] = useState<string | null>(null);
   const [aiImportThemeId, setAiImportThemeId] = useState<string | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const config = MODE_CONFIG[mode];
 
@@ -122,34 +127,79 @@ function AppInner({ mode }: { mode: GameMode }) {
     const success = startGame();
     if (!success) {
       alert('请先为双方选择任务包');
+      return;
     }
+    const playerInfos = state.players.map(p => {
+      const theme = state.themes.find(t => t.id === p.themeId);
+      return { id: p.id, name: p.name, themeName: theme?.name || '未知' };
+    });
+    startNewSession(mode, playerInfos);
   };
 
   const handleTaskTrigger = (data: TaskEventData) => {
+    taskStartTimeRef.current = Date.now();
     setTaskData(data);
   };
 
   const handleTaskAccept = () => {
     if (!taskData) return;
+    const executor = state.players.find(p => p.id === taskData.executorPlayerId);
+    const round = Math.floor(Math.max(...state.players.map(p => p.step)) / 4) + 1;
+    const entry: TaskHistoryEntry = {
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: taskStartTimeRef.current,
+      resolvedAt: Date.now(),
+      duration: Math.round((Date.now() - taskStartTimeRef.current) / 1000),
+      round,
+      executorName: executor?.name || '未知',
+      task: taskData.task,
+      completed: true,
+      type: taskData.type,
+    };
+    addEntryToCurrentSession(entry);
     setTaskData(null);
     resolveTask(taskData, 'accept');
   };
 
   const handleTaskReject = () => {
     if (!taskData) return;
+    const executor = state.players.find(p => p.id === taskData.executorPlayerId);
+    const round = Math.floor(Math.max(...state.players.map(p => p.step)) / 4) + 1;
+    const entry: TaskHistoryEntry = {
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: taskStartTimeRef.current,
+      resolvedAt: Date.now(),
+      duration: Math.round((Date.now() - taskStartTimeRef.current) / 1000),
+      round,
+      executorName: executor?.name || '未知',
+      task: taskData.task,
+      completed: false,
+      type: taskData.type,
+    };
+    addEntryToCurrentSession(entry);
     setTaskData(null);
     resolveTask(taskData, 'reject');
   };
 
   const handleWin = (id: number) => {
+    finalizeCurrentSession();
     setWinnerId(id);
   };
 
   const handleBackFromGame = () => {
     if (confirm('离开游戏？进度不会保存')) {
+      finalizeCurrentSession();
       resetGame();
       setAppSubview('hub');
     }
+  };
+
+  const handleOpenHistory = () => {
+    setIsHistoryModalOpen(true);
+  };
+
+  const handleCloseHistory = () => {
+    setIsHistoryModalOpen(false);
   };
 
   const handleSavePassword = () => {
@@ -285,6 +335,13 @@ function AppInner({ mode }: { mode: GameMode }) {
               {config.subtitle}
             </div>
             <h1 className="text-3xl font-bold text-white tracking-tight">{config.title}</h1>
+            <button
+              onClick={handleOpenHistory}
+              className="text-gray-400 hover:text-white transition-colors mt-1"
+              title="任务历史"
+            >
+              <History size={20} />
+            </button>
           </div>
           <div className="flex flex-col items-end gap-2 mt-1">
             <button
@@ -313,6 +370,7 @@ function AppInner({ mode }: { mode: GameMode }) {
               themes={state.themes}
               mode={mode}
               onSelectTheme={handleSelectTheme}
+              onSetPlayerName={setPlayerName}
               onStartGame={handleStartFlyingGame}
             />
           </div>
@@ -348,8 +406,14 @@ function AppInner({ mode }: { mode: GameMode }) {
       <TaskCardModal
         isOpen={!!taskData}
         taskData={taskData}
+        players={state.players}
         onAccept={handleTaskAccept}
         onReject={handleTaskReject}
+      />
+
+      <HistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={handleCloseHistory}
       />
 
       <WinModal
@@ -409,8 +473,8 @@ function AppInner({ mode }: { mode: GameMode }) {
           onSetRolling={setIsRolling}
           onWin={handleWin}
           onTaskTrigger={handleTaskTrigger}
-          onBack={handleBackFromGame}
-          onStatusTile={applyStatusTile}
+                  onBack={handleBackFromGame}
+                  onStatusTile={applyStatusTile}
           maleActionStatus={state.maleStatus.action}
           maleConditionStatus={state.maleStatus.condition}
           femaleActionStatus={state.femaleStatus.action}
@@ -465,6 +529,10 @@ function AppInner({ mode }: { mode: GameMode }) {
                   localStorage.removeItem('normal-game-state');
                   localStorage.removeItem('couple-password');
                   localStorage.removeItem('normal-password');
+                  localStorage.removeItem('couple-player-names');
+                  localStorage.removeItem('normal-player-names');
+                  localStorage.removeItem('game-sessions');
+                  localStorage.removeItem('pending-session');
                   window.location.reload();
                 }
               }}

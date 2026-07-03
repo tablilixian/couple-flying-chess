@@ -146,7 +146,7 @@ export function GameView({
                 }`}
               >
                 <User size={14} />
-                <span className="text-xs font-bold">男方</span>
+                <span className="text-xs font-bold">{players[0].name}</span>
               </div>
               <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-2">
                 Turn {turnNumber}
@@ -158,7 +158,7 @@ export function GameView({
                     : 'text-[#FF375F] opacity-60'
                 }`}
               >
-                <span className="text-xs font-bold">女方</span>
+                <span className="text-xs font-bold">{players[1].name}</span>
                 <UserRound size={14} />
               </div>
             </div>
@@ -178,7 +178,7 @@ export function GameView({
         <div className="h-[260px] w-full ios-glass rounded-t-[32px] flex flex-col pt-6 pb-8 px-4 border-t border-white/10 shadow-2xl shrink-0">
           <div className="flex items-start gap-2 mb-3">
             <StatusPanel
-              label="男方"
+              label={players[0].name}
               role="male"
               actionStatus={maleActionStatus}
               conditionStatus={maleConditionStatus}
@@ -195,7 +195,7 @@ export function GameView({
               <div className="text-[10px] text-gray-500">点击骰子</div>
             </div>
             <StatusPanel
-              label="女方"
+              label={players[1].name}
               role="female"
               actionStatus={femaleActionStatus}
               conditionStatus={femaleConditionStatus}
@@ -223,10 +223,10 @@ export function GameView({
               <h3 className="text-lg font-bold text-white mb-1">状态变化</h3>
               <p className="text-xs text-gray-400 mb-4 text-center">
                 {statusNotification.target === 'both'
-                  ? '双方进入新状态'
+                  ? `${players[0].name}和${players[1].name}进入新状态`
                   : statusNotification.target === 'male'
-                    ? '男方进入新状态'
-                    : '女方进入新状态'}
+                    ? `${players[0].name}进入新状态`
+                    : `${players[1].name}进入新状态`}
               </p>
               <div className="bg-[#2C2C2E] rounded-xl px-4 py-3 w-full border border-white/5">
                 <p className="text-sm text-white text-center leading-relaxed">

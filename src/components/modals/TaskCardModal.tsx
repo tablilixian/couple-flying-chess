@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { TaskEventData } from '../../types';
+import { Player, TaskEventData } from '../../types';
 import { Heart, Lock, HandshakeIcon } from 'lucide-react';
+import { renderColoredTaskText } from '../../utils/personalizeTask';
 
 interface TaskCardModalProps {
   isOpen: boolean;
   taskData: TaskEventData | null;
+  players: Player[];
   onAccept: () => void;
   onReject: () => void;
 }
@@ -15,7 +17,7 @@ const iconMap: Record<string, React.ReactNode> = {
   handshake: <HandshakeIcon size={40} />
 };
 
-export function TaskCardModal({ isOpen, taskData, onAccept, onReject }: TaskCardModalProps) {
+export function TaskCardModal({ isOpen, taskData, players, onAccept, onReject }: TaskCardModalProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
@@ -33,9 +35,11 @@ export function TaskCardModal({ isOpen, taskData, onAccept, onReject }: TaskCard
   if (!isOpen || !taskData) return null;
 
   const rejectLabel = taskData.type === 'collision' ? '拒绝（回到起点）' : '拒绝（倒退1~3格）';
-  const executorLabel = taskData.executorPlayerId === 0 ? '男方' : '女方';
+  const executorPlayer = players.find(p => p.id === taskData.executorPlayerId);
+  const executorLabel = executorPlayer?.name || (taskData.executorPlayerId === 0 ? '男方' : '女方');
   const executorClassName = taskData.executorPlayerId === 0 ? 'text-[#0A84FF]' : 'text-[#FF375F]';
-  const displayTask = taskData.task.replace(/^\[[MF]\]/, '');
+  const displayTask = taskData.task.replace(/^\[(?:M|F|both)\]\s*/, '');
+  const coloredTask = renderColoredTaskText(displayTask, players);
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center px-6">
@@ -74,7 +78,7 @@ export function TaskCardModal({ isOpen, taskData, onAccept, onReject }: TaskCard
 
               <div className="w-full bg-[#2C2C2E] rounded-xl p-6 min-h-[120px] flex items-center justify-center border border-white/5 mb-6">
                 <p className="text-lg font-medium text-white text-center leading-relaxed">
-                  {displayTask}
+                  {coloredTask}
                 </p>
               </div>
             </div>

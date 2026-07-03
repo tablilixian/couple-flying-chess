@@ -4,10 +4,16 @@ import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { generateSpiralPath, generateBoardMap, calculateNewPosition } from '../utils/gameLogic';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
 import { buildStatus, buildOpeningStatus, applyStatusToSlots } from '../utils/statusLogic';
+import { personalizeTask } from '../utils/personalizeTask';
 
 const STORAGE_KEYS: Record<GameMode, string> = {
   couple: 'couple-game-state',
   normal: 'normal-game-state'
+};
+
+const PLAYER_NAMES_KEYS: Record<GameMode, string> = {
+  couple: 'couple-player-names',
+  normal: 'normal-player-names'
 };
 
 const INITIAL_PLAYERS: Record<GameMode, Player[]> = {
@@ -187,16 +193,28 @@ export function useGameState(mode: GameMode) {
 
   const [state, setState] = useState<GameState>(() => {
     const saved = loadFromStorage<GameState | null>(storageKey, null);
+    const savedNames = loadFromStorage<string[] | null>(PLAYER_NAMES_KEYS[mode], null);
     const normalized = normalizeGameState(saved, mode);
 
     if (normalized) {
+      if (savedNames) {
+        normalized.players = normalized.players.map((p, i) => ({
+          ...p,
+          name: savedNames[i] || p.name
+        }));
+      }
       return normalized;
     }
+
+    const players = INITIAL_PLAYERS[mode].map((p, i) => ({
+      ...p,
+      name: savedNames?.[i] || p.name
+    }));
 
     return {
       view: 'home',
       turn: 0,
-      players: INITIAL_PLAYERS[mode],
+      players,
       themes: defaultThemes,
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
@@ -213,6 +231,18 @@ export function useGameState(mode: GameMode) {
 
   const switchView = useCallback((view: GameState['view']) => {
     setState(prev => ({ ...prev, view }));
+  }, []);
+
+  const setPlayerName = useCallback((playerId: number, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setState(prev => {
+      const nextPlayers = prev.players.map(p =>
+        p.id === playerId ? { ...p, name: trimmed } : p
+      );
+      saveToStorage(PLAYER_NAMES_KEYS[prev.mode], nextPlayers.map(p => p.name));
+      return { ...prev, players: nextPlayers };
+    });
   }, []);
 
   const selectTheme = useCallback((playerId: number, themeId: string) => {
@@ -408,7 +438,7 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'handshake',
         color: 'text-yellow-400',
-        task: pickTaskForRole(theme, opponent.role),
+        task: personalizeTask(pickTaskForRole(theme, opponent.role), opponent, activePlayer),
         taskSourceId: activePlayer.themeId || ''
       };
     }
@@ -426,7 +456,7 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'favorite',
         color: 'text-[#FF375F]',
-        task: pickTaskForRole(theme, opponent.role),
+        task: personalizeTask(pickTaskForRole(theme, opponent.role), opponent, activePlayer),
         taskSourceId: activePlayer.themeId || ''
       };
     }
@@ -442,7 +472,7 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'lock',
         color: 'text-[#BF5AF2]',
-        task: pickTaskForRole(theme, activePlayer.role),
+        task: personalizeTask(pickTaskForRole(theme, activePlayer.role), activePlayer, opponent),
         taskSourceId: opponent.themeId || ''
       };
     }
@@ -485,7 +515,7 @@ export function useGameState(mode: GameMode) {
       ...prev,
       view: 'home',
       turn: 0,
-      players: INITIAL_PLAYERS[prev.mode].map(p => ({ ...p, themeId: null, step: 0 })),
+      players: prev.players.map(p => ({ ...p, themeId: null, step: 0 })),
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
       isRolling: false,
@@ -526,6 +556,7 @@ export function useGameState(mode: GameMode) {
   return {
     state,
     switchView,
+    setPlayerName,
     selectTheme,
     createTheme,
     updateThemeMeta,
