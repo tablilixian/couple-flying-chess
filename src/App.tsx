@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Settings } from 'lucide-react';
-import { GameMode, TaskEventData } from './types';
+import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { useGameState } from './hooks/useGameState';
 import { HomeView } from './components/views/HomeView';
@@ -13,6 +13,11 @@ import { BottomNav } from './components/BottomNav';
 import { ThemeCreateModal } from './components/modals/ThemeCreateModal';
 import { ThemeEditorModal } from './components/modals/ThemeEditorModal';
 import { AiImportModal } from './components/modals/AiImportModal';
+import { GameHubView } from './components/views/GameHubView';
+import { ScriptSelectView } from './components/views/ScriptSelectView';
+import { CharacterIntroView } from './components/views/CharacterIntroView';
+import { ScriptGameView } from './components/views/ScriptGameView';
+import { EndingView } from './components/views/EndingView';
 
 const MODE_CONFIG: Record<GameMode, {
   title: string;
@@ -78,6 +83,9 @@ function AppInner({ mode }: { mode: GameMode }) {
     performActionStatus
   } = useGameState(mode);
 
+  const [appSubview, setAppSubview] = useState<AppSubview>('hub');
+  const [selectedScript, setSelectedScript] = useState<Script | null>(null);
+  const [scriptStepLog, setScriptStepLog] = useState<StepLogEntry[]>([]);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number>(0);
   const [taskData, setTaskData] = useState<TaskEventData | null>(null);
@@ -90,6 +98,11 @@ function AppInner({ mode }: { mode: GameMode }) {
 
   const config = MODE_CONFIG[mode];
 
+  const handleNavigate = (view: AppSubview) => {
+    setAppSubview(view);
+  };
+
+  // ===== Hub -> Flying Chess =====
   const handleSelectTheme = (playerId: number) => {
     setSelectedPlayerId(playerId);
     setIsThemeModalOpen(true);
@@ -104,7 +117,7 @@ function AppInner({ mode }: { mode: GameMode }) {
     t => t.mode === mode && (t.audience === 'common' || t.audience === selectedPlayer.role)
   );
 
-  const handleStartGame = () => {
+  const handleStartFlyingGame = () => {
     const success = startGame();
     if (!success) {
       alert('请先为双方选择任务包');
@@ -131,14 +144,10 @@ function AppInner({ mode }: { mode: GameMode }) {
     setWinnerId(id);
   };
 
-  const handleNavigate = (view: 'home' | 'themes') => {
-    switchView(view);
-  };
-
   const handleBackFromGame = () => {
     if (confirm('离开游戏？进度不会保存')) {
       resetGame();
-      switchView('home');
+      setAppSubview('hub');
     }
   };
 
@@ -149,10 +158,118 @@ function AppInner({ mode }: { mode: GameMode }) {
     setPasswordInput('');
   };
 
-  const modeLabel = mode === 'couple'
-    ? { text: '💕 情侣模式', className: 'text-pink-400 border-pink-400/30 bg-pink-500/10' }
-    : { text: '🎲 普通模式', className: 'text-blue-400 border-blue-400/30 bg-blue-500/10' };
+  // ===== Hub -> Script Flow =====
+  const handleScriptSelect = (script: Script) => {
+    setSelectedScript(script);
+    setAppSubview('script-intro');
+  };
 
+  const handleScriptStart = () => {
+    setAppSubview('script-game');
+  };
+
+  const handleScriptEnd = (stepLog: StepLogEntry[]) => {
+    setScriptStepLog(stepLog);
+    setAppSubview('script-ending');
+  };
+
+  const handleScriptBackToSelect = () => {
+    setSelectedScript(null);
+    setAppSubview('script-select');
+  };
+
+  const handleScriptBackToHub = () => {
+    setSelectedScript(null);
+    setAppSubview('hub');
+  };
+
+  // ===== Render =====
+  // Hub view
+  if (appSubview === 'hub') {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="fixed inset-0 z-0">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 opacity-60" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        </div>
+        <div className="relative z-10 w-full max-w-[430px] h-full bg-black/20">
+          <GameHubView mode={mode} onNavigate={handleNavigate} />
+        </div>
+        {isPasswordModalOpen && renderPasswordModal()}
+      </div>
+    );
+  }
+
+  // Script Select
+  if (appSubview === 'script-select') {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="fixed inset-0 z-0">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 opacity-60" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        </div>
+        <div className="relative z-10 w-full max-w-[430px] h-full bg-black/20">
+          <ScriptSelectView onSelect={handleScriptSelect} onBack={() => setAppSubview('hub')} />
+        </div>
+      </div>
+    );
+  }
+
+  // Character Intro
+  if (appSubview === 'script-intro' && selectedScript) {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="fixed inset-0 z-0">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 opacity-60" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        </div>
+        <div className="relative z-10 w-full max-w-[430px] h-full bg-black/20">
+          <CharacterIntroView
+            script={selectedScript}
+            onStart={handleScriptStart}
+            onBack={handleScriptBackToSelect}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Script Game
+  if (appSubview === 'script-game' && selectedScript) {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="relative z-10 w-full max-w-[430px] h-full"
+          style={{ background: '#0d0d1a' }}>
+          <ScriptGameView
+            script={selectedScript}
+            onEnd={handleScriptEnd}
+            onBack={() => { setSelectedScript(null); setAppSubview('hub'); }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Script Ending
+  if (appSubview === 'script-ending' && selectedScript) {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="relative z-10 w-full max-w-[430px] h-full"
+          style={{ background: '#0d0d1a' }}>
+          <EndingView
+            script={selectedScript}
+            stepLog={scriptStepLog}
+            onReplay={handleScriptStart}
+            onBackToHub={handleScriptBackToHub}
+            onBackToSelect={handleScriptBackToSelect}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ===== Flying Chess Flow =====
+  // (default: flying-home)
   return (
     <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
       <div className="fixed inset-0 z-0">
@@ -195,7 +312,7 @@ function AppInner({ mode }: { mode: GameMode }) {
               themes={state.themes}
               mode={mode}
               onSelectTheme={handleSelectTheme}
-              onStartGame={handleStartGame}
+              onStartGame={handleStartFlyingGame}
             />
           </div>
 
@@ -215,7 +332,7 @@ function AppInner({ mode }: { mode: GameMode }) {
           </div>
         </main>
 
-        <BottomNav activeView={state.view} onNavigate={handleNavigate} mode={mode} />
+        <BottomNav activeView={state.view} onNavigate={(v) => switchView(v)} mode={mode} />
       </div>
 
       <ThemeSelectorModal
@@ -299,43 +416,47 @@ function AppInner({ mode }: { mode: GameMode }) {
         />
       )}
 
-      {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-gray-900 rounded-2xl p-6 w-[320px] border border-gray-700 shadow-xl">
-            <h3 className="text-white text-lg font-semibold mb-1">修改密码</h3>
-            <p className={`text-sm mb-4 ${config.accentText}`}>
-              {mode === 'couple' ? '💕 情侣模式' : '🎲 普通模式'} · 请输入新的4位数字密码
-            </p>
-            <input
-              type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={4}
-              value={passwordInput}
-              onChange={e => setPasswordInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              className="w-full bg-gray-800 text-white text-center text-2xl tracking-[0.5em] py-3 rounded-lg border border-gray-600 focus:border-pink-400 focus:outline-none mb-4"
-              placeholder="●●●●"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setIsPasswordModalOpen(false); setPasswordInput(''); }}
-                className="flex-1 py-2.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleSavePassword}
-                disabled={passwordInput.length < 4}
-                className={`flex-1 py-2.5 rounded-lg text-white hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.accentBg}`}
-              >
-                保存
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {isPasswordModalOpen && renderPasswordModal()}
     </div>
   );
+
+  function renderPasswordModal() {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="bg-gray-900 rounded-2xl p-6 w-[320px] border border-gray-700 shadow-xl">
+          <h3 className="text-white text-lg font-semibold mb-1">修改密码</h3>
+          <p className={`text-sm mb-4 ${config.accentText}`}>
+            {mode === 'couple' ? '💕 情侣模式' : '🎲 普通模式'} · 请输入新的4位数字密码
+          </p>
+          <input
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={4}
+            value={passwordInput}
+            onChange={e => setPasswordInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="w-full bg-gray-800 text-white text-center text-2xl tracking-[0.5em] py-3 rounded-lg border border-gray-600 focus:border-pink-400 focus:outline-none mb-4"
+            placeholder="●●●●"
+          />
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setIsPasswordModalOpen(false); setPasswordInput(''); }}
+              className="flex-1 py-2.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
+            >
+              取消
+            </button>
+            <button
+              onClick={handleSavePassword}
+              disabled={passwordInput.length < 4}
+              className={`flex-1 py-2.5 rounded-lg text-white hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.accentBg}`}
+            >
+              保存
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default App;
