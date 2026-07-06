@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Player, PathCoord, TileType, TaskEventData, StatusEffect } from '../../types';
 import { GameBoard } from '../GameBoard';
 import { Dice } from '../Dice';
 import { StatusPanel } from '../StatusPanel';
-import { calculateNewPosition, rollDice } from '../../utils/gameLogic';
-import { User, UserRound, ArrowLeft, Infinity } from 'lucide-react';
+import { rollDice, getTrajectory } from '../../utils/gameLogic';
+import { User, UserRound, ArrowLeft, Infinity, Play, Square } from 'lucide-react';
 
 interface GameViewProps {
   players: Player[];
@@ -17,6 +17,7 @@ interface GameViewProps {
   onEndTurn: () => void;
   onSetRolling: (rolling: boolean) => void;
   onWin: (winnerId: number) => void;
+  winnerId: number | null;
   onTaskTrigger: (data: TaskEventData) => void;
   onBack: () => void;
   onStatusTile: (targetRole: 'male' | 'female') => StatusEffect | null;
@@ -24,6 +25,9 @@ interface GameViewProps {
   maleConditionStatus: StatusEffect | null;
   femaleActionStatus: StatusEffect | null;
   femaleConditionStatus: StatusEffect | null;
+  autoMode: boolean;
+  onToggleAuto: () => void;
+  taskActive: boolean;
 }
 
 export function GameView({
@@ -43,7 +47,11 @@ export function GameView({
   maleActionStatus,
   maleConditionStatus,
   femaleActionStatus,
-  femaleConditionStatus
+  femaleConditionStatus,
+  autoMode,
+  onToggleAuto,
+  winnerId,
+  taskActive
 }: GameViewProps) {
   const [diceResult, setDiceResult] = useState<number | null>(null);
   const [isMoving, setIsMoving] = useState(false);
@@ -67,17 +75,20 @@ export function GameView({
 
   const handleRollComplete = useCallback(() => {
     if (diceResult) {
-      const landingStep = calculateNewPosition(players[currentTurn].step, diceResult);
+      const trajectory = getTrajectory(players[currentTurn].step, diceResult);
+      const landingStep = trajectory[trajectory.length - 1];
       setIsMoving(true);
 
       const moveDelayMs = 220;
-      let movedSteps = 0;
+      let stepIndex = 0;
 
       const stepOnce = () => {
-        onMove(1);
-        movedSteps += 1;
+        const prevPos = stepIndex === 0 ? players[currentTurn].step : trajectory[stepIndex - 1];
+        const delta = trajectory[stepIndex] - prevPos;
+        onMove(delta);
+        stepIndex += 1;
 
-        if (movedSteps < diceResult) {
+        if (stepIndex < trajectory.length) {
           setTimeout(stepOnce, moveDelayMs);
           return;
         }
@@ -118,6 +129,28 @@ export function GameView({
     }
   }, [diceResult, players, currentTurn, onMove, onCheckTile, onWin, onTaskTrigger, onEndTurn, onStatusTile]);
 
+  const autoRollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (autoRollTimerRef.current) {
+      clearTimeout(autoRollTimerRef.current);
+      autoRollTimerRef.current = null;
+    }
+
+    if (autoMode && winnerId === null && !taskActive && !isRolling && !isMoving && diceResult === null) {
+      const delay = 400 + Math.random() * 600;
+      autoRollTimerRef.current = setTimeout(() => {
+        handleRoll();
+      }, delay);
+    }
+
+    return () => {
+      if (autoRollTimerRef.current) {
+        clearTimeout(autoRollTimerRef.current);
+      }
+    };
+  }, [autoMode, isRolling, isMoving, diceResult, handleRoll, winnerId, taskActive]);
+
   const activePlayer = players[currentTurn];
   const turnNumber = Math.floor(Math.max(...players.map(p => p.step)) / 4) + 1;
 
@@ -129,12 +162,23 @@ export function GameView({
       </div>
 
       <div className="relative z-10 flex flex-col h-full max-w-[430px] mx-auto w-full">
-        <header className="pt-12 pb-2 px-4 flex items-center gap-4 shrink-0">
+        <header className="pt-12 pb-2 px-4 flex items-center gap-2 shrink-0">
           <button
             onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ios-btn border border-white/5"
+            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ios-btn border border-white/5 shrink-0"
           >
             <ArrowLeft className="text-white" size={20} />
+          </button>
+          <button
+            onClick={onToggleAuto}
+            className={`w-10 h-10 rounded-full flex items-center justify-center ios-btn border shrink-0 transition-colors ${
+              autoMode
+                ? 'bg-[#30D158] border-[#30D158]/50 text-white'
+                : 'bg-white/10 border-white/5 text-white/60'
+            }`}
+            title={autoMode ? '关闭自动模式' : '开启自动模式'}
+          >
+            {autoMode ? <Square size={16} /> : <Play size={16} />}
           </button>
           <div className="flex-1 flex justify-center">
             <div className="p-1.5 bg-[#1C1C1E] rounded-full flex items-center gap-2 border border-white/10">

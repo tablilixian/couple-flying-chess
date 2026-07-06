@@ -68,6 +68,25 @@ export function calculateNewPosition(current: number, steps: number): number {
   return target;
 }
 
+export function getTrajectory(start: number, steps: number): number[] {
+  const positions: number[] = [];
+  let pos = start;
+  let remaining = steps;
+  let direction = 1;
+
+  while (remaining > 0) {
+    const nextPos = pos + direction;
+    if (nextPos > 48) {
+      direction = -1;
+    }
+    pos = pos + direction;
+    positions.push(pos);
+    remaining--;
+  }
+
+  return positions;
+}
+
 export function rollDice(): number {
   return Math.floor(Math.random() * 6) + 1;
 }

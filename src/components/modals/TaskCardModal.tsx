@@ -9,6 +9,7 @@ interface TaskCardModalProps {
   players: Player[];
   onAccept: () => void;
   onReject: () => void;
+  autoMode?: boolean;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -17,7 +18,7 @@ const iconMap: Record<string, React.ReactNode> = {
   handshake: <HandshakeIcon size={40} />
 };
 
-export function TaskCardModal({ isOpen, taskData, players, onAccept, onReject }: TaskCardModalProps) {
+export function TaskCardModal({ isOpen, taskData, players, onAccept, onReject, autoMode }: TaskCardModalProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
@@ -31,6 +32,23 @@ export function TaskCardModal({ isOpen, taskData, players, onAccept, onReject }:
       document.body.style.overflow = '';
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!autoMode || !isOpen || !taskData) return;
+
+    const flipTimer = setTimeout(() => {
+      setIsFlipped(true);
+    }, 800);
+
+    const acceptTimer = setTimeout(() => {
+      onAccept();
+    }, 800 + 3000);
+
+    return () => {
+      clearTimeout(flipTimer);
+      clearTimeout(acceptTimer);
+    };
+  }, [autoMode, isOpen, taskData, onAccept]);
 
   if (!isOpen || !taskData) return null;
 

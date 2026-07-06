@@ -101,6 +101,7 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [autoMode, setAutoMode] = useState(false);
 
   const config = MODE_CONFIG[mode];
 
@@ -200,6 +201,10 @@ function AppInner({ mode }: { mode: GameMode }) {
 
   const handleCloseHistory = () => {
     setIsHistoryModalOpen(false);
+  };
+
+  const handleToggleAuto = () => {
+    setAutoMode(v => !v);
   };
 
   const handleSavePassword = () => {
@@ -409,6 +414,7 @@ function AppInner({ mode }: { mode: GameMode }) {
         players={state.players}
         onAccept={handleTaskAccept}
         onReject={handleTaskReject}
+        autoMode={autoMode}
       />
 
       <HistoryModal
@@ -473,12 +479,16 @@ function AppInner({ mode }: { mode: GameMode }) {
           onSetRolling={setIsRolling}
           onWin={handleWin}
           onTaskTrigger={handleTaskTrigger}
-                  onBack={handleBackFromGame}
-                  onStatusTile={applyStatusTile}
+          onBack={handleBackFromGame}
+          onStatusTile={applyStatusTile}
           maleActionStatus={state.maleStatus.action}
           maleConditionStatus={state.maleStatus.condition}
           femaleActionStatus={state.femaleStatus.action}
           femaleConditionStatus={state.femaleStatus.condition}
+          autoMode={autoMode}
+          onToggleAuto={handleToggleAuto}
+          winnerId={winnerId}
+          taskActive={taskData !== null}
         />
       )}
 
