@@ -79,7 +79,27 @@ export interface TaskEventData {
 
 export type StepType = 'narration' | 'timer' | 'counter';
 export type ScriptMood = 'sweet' | 'romantic' | 'intense' | 'calm';
-export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending';
+export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending' | 'truth-dare-home' | 'truth-dare-game';
+
+export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
+
+export interface TDQuestion {
+  type: 'truth' | 'dare';
+  difficulty: TDDifficulty;
+  text: string;
+}
+
+export interface TDPenalty {
+  difficulty: TDDifficulty;
+  text: string;
+}
+
+export interface TDPlayer {
+  name: string;
+  truthCount: number;
+  dareCount: number;
+  penaltyCount: number;
+}
 
 export interface ScriptCharacter {
   role: 'male' | 'female';

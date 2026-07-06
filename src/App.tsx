@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Settings, History } from 'lucide-react';
-import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry } from './types';
+import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { clearAudioCache } from './utils/ttsService';
 import { useGameState } from './hooks/useGameState';
@@ -21,6 +21,8 @@ import { ScriptSelectView } from './components/views/ScriptSelectView';
 import { CharacterIntroView } from './components/views/CharacterIntroView';
 import { ScriptGameView } from './components/views/ScriptGameView';
 import { EndingView } from './components/views/EndingView';
+import { TruthDareHomeView } from './components/views/TruthDareHomeView';
+import { TruthDareGameView } from './components/views/TruthDareGameView';
 
 const MODE_CONFIG: Record<GameMode, {
   title: string;
@@ -102,6 +104,8 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [passwordInput, setPasswordInput] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [autoMode, setAutoMode] = useState(false);
+  const [tdNames, setTdNames] = useState<[string, string]>(['', '']);
+  const [tdDifficulty, setTdDifficulty] = useState<TDDifficulty>('soft');
 
   const config = MODE_CONFIG[mode];
 
@@ -239,6 +243,17 @@ function AppInner({ mode }: { mode: GameMode }) {
     setAppSubview('hub');
   };
 
+  // ===== Truth or Dare =====
+  const handleTruthDareStart = (names: [string, string], difficulty: TDDifficulty) => {
+    setTdNames(names);
+    setTdDifficulty(difficulty);
+    setAppSubview('truth-dare-game');
+  };
+
+  const handleTruthDareBack = () => {
+    setAppSubview('hub');
+  };
+
   // ===== Render =====
   // Hub view
   if (appSubview === 'hub') {
@@ -321,6 +336,26 @@ function AppInner({ mode }: { mode: GameMode }) {
           />
         </div>
       </div>
+    );
+  }
+
+  // ===== Truth or Dare =====
+  if (appSubview === 'truth-dare-home') {
+    return (
+      <TruthDareHomeView
+        onStart={handleTruthDareStart}
+        onBack={handleTruthDareBack}
+      />
+    );
+  }
+
+  if (appSubview === 'truth-dare-game') {
+    return (
+      <TruthDareGameView
+        names={tdNames}
+        difficulty={tdDifficulty}
+        onBack={handleTruthDareBack}
+      />
     );
   }
 
