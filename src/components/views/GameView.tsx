@@ -137,7 +137,7 @@ export function GameView({
       autoRollTimerRef.current = null;
     }
 
-    if (autoMode && winnerId === null && !taskActive && !isRolling && !isMoving && diceResult === null) {
+    if (autoMode && winnerId === null && !taskActive && statusNotification === null && !isRolling && !isMoving && diceResult === null) {
       const delay = 400 + Math.random() * 600;
       autoRollTimerRef.current = setTimeout(() => {
         handleRoll();
@@ -149,7 +149,7 @@ export function GameView({
         clearTimeout(autoRollTimerRef.current);
       }
     };
-  }, [autoMode, isRolling, isMoving, diceResult, handleRoll, winnerId, taskActive]);
+  }, [autoMode, isRolling, isMoving, diceResult, handleRoll, winnerId, taskActive, statusNotification]);
 
   const activePlayer = players[currentTurn];
   const turnNumber = Math.floor(Math.max(...players.map(p => p.step)) / 4) + 1;
