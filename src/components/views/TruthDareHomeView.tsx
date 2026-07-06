@@ -1,27 +1,40 @@
 import { useState } from 'react';
-import { TDDifficulty } from '../../types';
-import { DIFFICULTIES, TRUTH_QUESTIONS, DARE_QUESTIONS, PENALTIES } from '../../data/truthDare';
+import { TDDifficulty, TDTheme, TD_THEMES } from '../../types';
+import { DIFFICULTIES, ALL_QUESTIONS, PENALTIES } from '../../data/truthDare';
 import { ArrowLeft } from 'lucide-react';
 
 interface TruthDareHomeViewProps {
   defaultNames: [string, string];
-  onStart: (names: [string, string], difficulty: TDDifficulty) => void;
+  onStart: (names: [string, string], difficulty: TDDifficulty, themes: TDTheme[]) => void;
   onBack: () => void;
 }
+
+const ALL_THEME_KEYS = TD_THEMES.map(t => t.key);
 
 export function TruthDareHomeView({ defaultNames, onStart, onBack }: TruthDareHomeViewProps) {
   const [names, setNames] = useState<[string, string]>(defaultNames);
   const [difficulty, setDifficulty] = useState<TDDifficulty>('soft');
+  const [selectedThemes, setSelectedThemes] = useState<TDTheme[]>(ALL_THEME_KEYS);
 
   const playerLabels: [string, string] = ['他', '她'];
   const playerIcons: [string, string] = ['♂', '♀'];
   const playerColors: [string, string] = ['#0A84FF', '#FF375F'];
 
-  const canStart = names[0].trim().length > 0 && names[1].trim().length > 0;
+  const canStart = names[0].trim().length > 0 && names[1].trim().length > 0 && selectedThemes.length > 0;
 
-  const truthCount = TRUTH_QUESTIONS.filter(q => q.difficulty === difficulty).length;
-  const dareCount = DARE_QUESTIONS.filter(q => q.difficulty === difficulty).length;
-  const penaltyCount = PENALTIES.filter(p => p.difficulty === difficulty).length;
+  const toggleTheme = (theme: TDTheme) => {
+    setSelectedThemes(prev =>
+      prev.includes(theme) ? prev.filter(t => t !== theme) : [...prev, theme]
+    );
+  };
+
+  const totalTruth = ALL_QUESTIONS.filter(q =>
+    q.type === 'truth' && q.difficulty === difficulty && selectedThemes.includes(q.theme)
+  ).length;
+  const totalDare = ALL_QUESTIONS.filter(q =>
+    q.type === 'dare' && q.difficulty === difficulty && selectedThemes.includes(q.theme)
+  ).length;
+  const totalPenalty = PENALTIES.filter(p => p.difficulty === difficulty).length;
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -41,7 +54,7 @@ export function TruthDareHomeView({ defaultNames, onStart, onBack }: TruthDareHo
           <div className="text-white text-lg font-bold">真心话大冒险</div>
         </header>
 
-        <div className="flex-1 px-6 flex flex-col justify-center gap-6">
+        <div className="flex-1 px-6 flex flex-col justify-center gap-5 overflow-y-auto py-4">
           {/* Player name inputs */}
           <div className="flex gap-4">
             {([0, 1] as const).map(i => (
@@ -92,26 +105,61 @@ export function TruthDareHomeView({ defaultNames, onStart, onBack }: TruthDareHo
             </div>
           </div>
 
+          {/* Theme selector */}
+          <div>
+            <div className="text-gray-400 text-xs mb-3 text-center font-medium tracking-wider">
+              选择主题  <span className="text-gray-600">（已选 {selectedThemes.length} 个）</span>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {TD_THEMES.map(t => {
+                const isSelected = selectedThemes.includes(t.key);
+                const questionCount = ALL_QUESTIONS.filter(q =>
+                  q.difficulty === difficulty && q.theme === t.key
+                ).length;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => toggleTheme(t.key)}
+                    className="px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 ios-btn"
+                    style={{
+                      backgroundColor: isSelected ? `${t.color}22` : 'rgba(255,255,255,0.04)',
+                      borderColor: isSelected ? t.color : 'rgba(255,255,255,0.08)',
+                      color: isSelected ? t.color : '#6B7280',
+                      borderWidth: 1,
+                      borderStyle: 'solid',
+                      opacity: questionCount === 0 ? 0.3 : 1,
+                    }}
+                  >
+                    {t.label}
+                    {questionCount > 0 && (
+                      <span className="ml-1 opacity-60">({questionCount})</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Stats preview */}
           <div className="text-center">
             <div className="inline-flex items-center gap-4 bg-white/5 rounded-full px-4 py-2 border border-white/5">
               <span className="text-gray-400 text-xs">
-                💬 真心话 <span className="text-white">{truthCount}</span>
+                💬 真心话 <span className="text-white">{totalTruth}</span>
               </span>
               <span className="text-gray-500">·</span>
               <span className="text-gray-400 text-xs">
-                🎪 大冒险 <span className="text-white">{dareCount}</span>
+                🎪 大冒险 <span className="text-white">{totalDare}</span>
               </span>
               <span className="text-gray-500">·</span>
               <span className="text-gray-400 text-xs">
-                ⚠️ 惩罚 <span className="text-white">{penaltyCount}</span>
+                ⚠️ 惩罚 <span className="text-white">{totalPenalty}</span>
               </span>
             </div>
           </div>
 
           {/* Start button */}
           <button
-            onClick={() => onStart(names, difficulty)}
+            onClick={() => onStart(names, difficulty, selectedThemes)}
             disabled={!canStart}
             className="w-full py-4 rounded-2xl text-white font-bold text-lg ios-btn transition-all duration-200"
             style={{

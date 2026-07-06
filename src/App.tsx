@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Settings, History } from 'lucide-react';
-import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty } from './types';
+import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty, TDTheme } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { clearAudioCache } from './utils/ttsService';
 import { useGameState } from './hooks/useGameState';
@@ -106,6 +106,7 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [autoMode, setAutoMode] = useState(false);
   const [tdNames, setTdNames] = useState<[string, string]>(['', '']);
   const [tdDifficulty, setTdDifficulty] = useState<TDDifficulty>('soft');
+  const [tdThemes, setTdThemes] = useState<TDTheme[]>([]);
 
   const config = MODE_CONFIG[mode];
 
@@ -244,9 +245,10 @@ function AppInner({ mode }: { mode: GameMode }) {
   };
 
   // ===== Truth or Dare =====
-  const handleTruthDareStart = (names: [string, string], difficulty: TDDifficulty) => {
+  const handleTruthDareStart = (names: [string, string], difficulty: TDDifficulty, themes: TDTheme[]) => {
     setTdNames(names);
     setTdDifficulty(difficulty);
+    setTdThemes(themes);
     setAppSubview('truth-dare-game');
   };
 
@@ -355,6 +357,7 @@ function AppInner({ mode }: { mode: GameMode }) {
       <TruthDareGameView
         names={tdNames}
         difficulty={tdDifficulty}
+        themes={tdThemes}
         onBack={handleTruthDareBack}
       />
     );

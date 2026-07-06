@@ -83,9 +83,15 @@ export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select'
 
 export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
 
+export type TDTheme = 'sweet' | 'spicy' | 'confession' | 'roleplay' | 'kinky' | 'bdsm' | 'taboo';
+
+export type TDTarget = 'male' | 'female' | 'both';
+
 export interface TDQuestion {
   type: 'truth' | 'dare';
   difficulty: TDDifficulty;
+  theme: TDTheme;
+  target: TDTarget;
   text: string;
 }
 
@@ -100,6 +106,16 @@ export interface TDPlayer {
   dareCount: number;
   penaltyCount: number;
 }
+
+export const TD_THEMES: { key: TDTheme; label: string; desc: string; color: string }[] = [
+  { key: 'sweet', label: '甜蜜', desc: '温馨浪漫，适合热身', color: '#FF9F0A' },
+  { key: 'spicy', label: '火辣', desc: '暧昧升温，脸红心跳', color: '#FF375F' },
+  { key: 'confession', label: '坦白局', desc: '深层对话，灵魂拷问', color: '#BF5AF2' },
+  { key: 'roleplay', label: '角色扮演', desc: '代入角色，玩出新花样', color: '#5E5CE6' },
+  { key: 'kinky', label: '调教', desc: '主导与顺从，探索边界', color: '#FF6482' },
+  { key: 'bdsm', label: '束缚', desc: '禁忌游戏，深度体验', color: '#FF453A' },
+  { key: 'taboo', label: '禁忌', desc: '大胆突破，解锁幻想', color: '#8E8E93' },
+];
 
 export interface ScriptCharacter {
   role: 'male' | 'female';

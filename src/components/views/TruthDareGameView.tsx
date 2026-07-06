@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { TDDifficulty, TDQuestion, TDPenalty, TDPlayer } from '../../types';
+import { TDDifficulty, TDTheme, TDQuestion, TDPenalty, TDPlayer, TD_THEMES } from '../../types';
 import { pickQuestion, pickPenalty, DIFFICULTIES } from '../../data/truthDare';
 import { ArrowLeft, Heart, Sparkles, AlertTriangle, RotateCcw } from 'lucide-react';
 
 interface TruthDareGameViewProps {
   names: [string, string];
   difficulty: TDDifficulty;
+  themes: TDTheme[];
   onBack: () => void;
 }
 
@@ -14,7 +15,7 @@ type Phase = 'choice' | 'display' | 'penalty' | 'transition';
 const PLAYER_COLORS: [string, string] = ['#0A84FF', '#FF375F'];
 const PLAYER_ICONS: [string, string] = ['♂', '♀'];
 
-export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameViewProps) {
+export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDareGameViewProps) {
   const [currentPlayer, setCurrentPlayer] = useState(0);
   const [round, setRound] = useState(1);
   const [phase, setPhase] = useState<Phase>('choice');
@@ -47,8 +48,10 @@ export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameVi
     }, 1500);
   }, [currentPlayer, round, names]);
 
+  const playerRoles: ['male', 'female'] = ['male', 'female'];
+
   const handleChoice = useCallback((type: 'truth' | 'dare') => {
-    const question = pickQuestion(type, difficulty);
+    const question = pickQuestion(type, difficulty, themes, currentPlayer, playerRoles);
     if (!question) return;
     setCurrentQuestion(question);
     setPhase('display');
@@ -60,7 +63,7 @@ export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameVi
       next[currentPlayer] = { ...next[currentPlayer], [statsKey]: next[currentPlayer][statsKey] + 1 };
       return next;
     });
-  }, [difficulty, currentPlayer]);
+  }, [difficulty, themes, currentPlayer, playerRoles]);
 
   const handleComplete = useCallback(() => {
     switchToNextPlayer();
@@ -136,9 +139,20 @@ export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameVi
             </div>
             <div className="flip-card-back bg-[#1C1C1E] border border-white/10 p-6 shadow-2xl flex flex-col">
               <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="w-fit mb-4 px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{ backgroundColor: `${diffConfig.color}22`, color: diffConfig.color }}>
-                  {diffConfig.label}
+                <div className="flex items-center gap-2 mb-4">
+                  {(() => {
+                    const themeCfg = TD_THEMES.find(t => t.key === currentQuestion.theme);
+                    return (
+                      <div className="px-3 py-1 rounded-full text-xs font-semibold"
+                        style={{ backgroundColor: `${themeCfg?.color || '#666'}22`, color: themeCfg?.color || '#666' }}>
+                        {themeCfg?.label || currentQuestion.theme}
+                      </div>
+                    );
+                  })()}
+                  <div className="px-3 py-1 rounded-full text-xs font-semibold"
+                    style={{ backgroundColor: `${diffConfig.color}22`, color: diffConfig.color }}>
+                    {diffConfig.label}
+                  </div>
                 </div>
                 <div className="text-white text-lg font-medium text-center leading-relaxed px-2">
                   {currentQuestion.text}
