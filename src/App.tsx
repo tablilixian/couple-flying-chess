@@ -343,6 +343,7 @@ function AppInner({ mode }: { mode: GameMode }) {
   if (appSubview === 'truth-dare-home') {
     return (
       <TruthDareHomeView
+        defaultNames={[state.players[0].name, state.players[1].name]}
         onStart={handleTruthDareStart}
         onBack={handleTruthDareBack}
       />

@@ -119,9 +119,9 @@ export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameVi
     return (
       <div className="fixed inset-0 z-50 bg-black flex items-center justify-center px-6">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-sm h-[420px] perspective-1000">
           <div className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}>
-            <div className="flip-card-front bg-[#1C1C1E] border border-white/10 p-6 flex flex-col items-center justify-center shadow-2xl min-h-[380px]">
+            <div className="flip-card-front bg-[#1C1C1E] border border-white/10 p-6 flex flex-col items-center justify-center shadow-2xl">
               <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 animate-pulse">
                 {isTruth
                   ? <Heart className="text-[#FF375F]" size={36} />
@@ -134,17 +134,17 @@ export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameVi
                 {isTruth ? '说出你的答案' : '接受挑战吧'}
               </p>
             </div>
-            <div className="flip-card-back bg-[#1C1C1E] border border-white/10 p-6 shadow-2xl min-h-[380px] flex flex-col">
+            <div className="flip-card-back bg-[#1C1C1E] border border-white/10 p-6 shadow-2xl flex flex-col">
               <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="w-fit mb-4 px-3 py-1 rounded-full text-xs font-semibold"
                   style={{ backgroundColor: `${diffConfig.color}22`, color: diffConfig.color }}>
                   {diffConfig.label}
                 </div>
-                <div className="text-white text-lg font-medium text-center leading-relaxed mb-6 px-2">
+                <div className="text-white text-lg font-medium text-center leading-relaxed px-2">
                   {currentQuestion.text}
                 </div>
               </div>
-              <div className="flex gap-3 mt-auto">
+              <div className="flex gap-3 mt-auto shrink-0">
                 <button
                   onClick={handlePenalty}
                   className="flex-1 h-12 rounded-full bg-[#3A3A3C] text-[#FF453A] font-bold text-sm ios-btn border border-transparent hover:border-[#FF453A]/30 transition-colors"
@@ -169,9 +169,9 @@ export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameVi
     return (
       <div className="fixed inset-0 z-50 bg-black flex items-center justify-center px-6">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-sm h-[420px] perspective-1000">
           <div className={`flip-card-inner ${isPenaltyFlipped ? 'flipped' : ''}`}>
-            <div className="flip-card-front bg-[#1C1C1E] border border-white/10 p-6 flex flex-col items-center justify-center shadow-2xl min-h-[380px]">
+            <div className="flip-card-front bg-[#1C1C1E] border border-white/10 p-6 flex flex-col items-center justify-center shadow-2xl">
               <div className="w-20 h-20 rounded-full bg-[#FF453A]/10 flex items-center justify-center mb-6 animate-pulse">
                 <AlertTriangle className="text-[#FF453A]" size={36} />
               </div>
@@ -180,19 +180,19 @@ export function TruthDareGameView({ names, difficulty, onBack }: TruthDareGameVi
                 {names[currentPlayer]}，准备好接受惩罚
               </p>
             </div>
-            <div className="flip-card-back bg-[#1C1C1E] border border-white/10 p-6 shadow-2xl min-h-[380px] flex flex-col">
+            <div className="flip-card-back bg-[#1C1C1E] border border-white/10 p-6 shadow-2xl flex flex-col">
               <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="w-fit mb-4 px-3 py-1 rounded-full text-xs font-semibold"
                   style={{ backgroundColor: '#FF453A22', color: '#FF453A' }}>
                   惩罚 · {diffConfig.label}
                 </div>
-                <div className="text-white text-lg font-medium text-center leading-relaxed mb-6 px-2">
+                <div className="text-white text-lg font-medium text-center leading-relaxed px-2">
                   {currentPenalty.text}
                 </div>
               </div>
               <button
                 onClick={handlePenaltyComplete}
-                className="w-full h-12 rounded-full bg-[#FF453A] text-white font-bold text-sm ios-btn shadow-lg transition-colors"
+                className="w-full h-12 rounded-full bg-[#FF453A] text-white font-bold text-sm ios-btn shadow-lg transition-colors shrink-0"
               >
                 接受惩罚
               </button>

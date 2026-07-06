@@ -4,12 +4,13 @@ import { DIFFICULTIES, TRUTH_QUESTIONS, DARE_QUESTIONS, PENALTIES } from '../../
 import { ArrowLeft } from 'lucide-react';
 
 interface TruthDareHomeViewProps {
+  defaultNames: [string, string];
   onStart: (names: [string, string], difficulty: TDDifficulty) => void;
   onBack: () => void;
 }
 
-export function TruthDareHomeView({ onStart, onBack }: TruthDareHomeViewProps) {
-  const [names, setNames] = useState<[string, string]>(['', '']);
+export function TruthDareHomeView({ defaultNames, onStart, onBack }: TruthDareHomeViewProps) {
+  const [names, setNames] = useState<[string, string]>(defaultNames);
   const [difficulty, setDifficulty] = useState<TDDifficulty>('soft');
 
   const playerLabels: [string, string] = ['他', '她'];
