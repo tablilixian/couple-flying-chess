@@ -4,14 +4,14 @@ import { speakText as ttsSpeak, stopSpeaking } from '../utils/ttsService';
 
 function getAudioCtx(): AudioContext {
   const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-  const ctx = new Ctx();
-  return ctx;
+  return new Ctx();
 }
 
 export function useScriptEngine(script: Script | null) {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isTask, setIsTask] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [isChapterTransition, setIsChapterTransition] = useState(false);
@@ -37,6 +37,8 @@ export function useScriptEngine(script: Script | null) {
   const chapterIndexRef = useRef(chapterIndex);
   const advanceStepRef = useRef<() => void>(() => {});
   const playStepRef = useRef<(step: ScriptStep) => void>(() => {});
+  const timerRemainingRef = useRef(0);
+  const timerTotalRef = useRef(0);
 
   const ensureAudio = useCallback(() => {
     if (!audioCtxRef.current) {
@@ -69,18 +71,48 @@ export function useScriptEngine(script: Script | null) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    if (autoRef.current !== null) {
-      clearTimeout(autoRef.current);
-      autoRef.current = null;
-    }
+    clearTimeout(autoRef.current);
+    autoRef.current = null;
     stopSpeaking();
   }, []);
+
+  const startTimerInterval = useCallback((total: number) => {
+    clearInterval(timerRef.current!);
+    timerRef.current = window.setInterval(() => {
+      setTimerRemaining(prev => {
+        const next = prev - 1;
+        timerRemainingRef.current = next;
+        if (next <= 0) {
+          clearInterval(timerRef.current!);
+          timerRef.current = null;
+          return 0;
+        }
+        const ratio = next / total;
+        if (ratio < 0.2) {
+          beep(880, 0.08, 0.2);
+        } else if (ratio < 0.4) {
+          beep(660, 0.1, 0.12);
+        } else {
+          beep(440, 0.15, 0.08);
+        }
+        return next;
+      });
+    }, 1000);
+  }, [beep]);
+
+  const startMetronome = useCallback(() => {
+    clearInterval(timerRef.current!);
+    timerRef.current = window.setInterval(() => {
+      beep(1200, 0.06, 0.08, 'square');
+    }, 2000);
+  }, [beep]);
 
   const reset = useCallback(() => {
     clearTimers();
     setChapterIndex(0);
     setStepIndex(0);
     setIsPlaying(false);
+    setIsPaused(false);
     setIsTask(false);
     setIsEnding(false);
     setIsChapterTransition(false);
@@ -113,10 +145,20 @@ export function useScriptEngine(script: Script | null) {
 
     if (si + 1 >= ch.steps.length) {
       if (ci + 1 < script.chapters.length) {
-        setIsChapterTransition(true);
-        setIsPlaying(false);
-        setIsTask(false);
-        setMood(script.chapters[ci + 1].mood);
+        const isLastChapter = ci + 2 >= script.chapters.length;
+        if (isLastChapter) {
+          const nextChapter = script.chapters[ci + 1];
+          setMood(nextChapter.mood);
+          setChapterIndex(ci + 1);
+          setStepIndex(0);
+          const firstStep = nextChapter.steps[0];
+          playStepRef.current(firstStep);
+        } else {
+          setIsChapterTransition(true);
+          setIsPlaying(false);
+          setIsTask(false);
+          setMood(script.chapters[ci + 1].mood);
+        }
       } else {
         setIsEnding(true);
         setIsPlaying(false);
@@ -133,7 +175,7 @@ export function useScriptEngine(script: Script | null) {
   const startChapter = useCallback(() => {
     setIsChapterTransition(false);
     setIsPlaying(true);
-    const nextChapter = (chapterIndexRef.current ?? 0) + 1;
+    const nextChapter = chapterIndexRef.current + 1;
     if (!script || !script.chapters[nextChapter]) return;
     const firstStep = script.chapters[nextChapter].steps[0];
     setChapterIndex(nextChapter);
@@ -143,6 +185,7 @@ export function useScriptEngine(script: Script | null) {
 
   const playStep = useCallback((step: ScriptStep) => {
     setIsPlaying(true);
+    setIsPaused(false);
     setIsTask(step.type === 'timer' || step.type === 'counter');
     if (step.mood) setMood(step.mood);
 
@@ -171,30 +214,14 @@ export function useScriptEngine(script: Script | null) {
       setTaskDesc(step.desc || '');
       setNarrText('');
       const total = step.duration || 10;
+      timerTotalRef.current = total;
+      timerRemainingRef.current = total;
       setTimerRemaining(total);
       setTimerTotal(total);
 
       timerIconRef.current = step.icon;
       prevTimerRemaining.current = total;
-      timerRef.current = window.setInterval(() => {
-        setTimerRemaining(prev => {
-          const next = prev - 1;
-          if (next <= 0) {
-            if (timerRef.current !== null) clearInterval(timerRef.current);
-            timerRef.current = null;
-            return 0;
-          }
-          const ratio = next / total;
-          if (ratio < 0.2) {
-            beep(880, 0.08, 0.2);
-          } else if (ratio < 0.4) {
-            beep(660, 0.1, 0.12);
-          } else {
-            beep(440, 0.15, 0.08);
-          }
-          return next;
-        });
-      }, 1000);
+      startTimerInterval(total);
     } else if (step.type === 'counter') {
       setTaskTitle(step.title || '');
       setTaskDesc(step.desc || '');
@@ -204,12 +231,41 @@ export function useScriptEngine(script: Script | null) {
       counterIconRef.current = step.icon;
       prevCounterValue.current = 0;
 
-      if (timerRef.current !== null) clearInterval(timerRef.current);
-      timerRef.current = window.setInterval(() => {
-        beep(1200, 0.06, 0.08, 'square');
-      }, 2000);
+      startMetronome();
     }
-  }, [beep]);
+  }, [beep, startTimerInterval, startMetronome]);
+
+  const pause = useCallback(() => {
+    if (isPaused || isChapterTransition || isEnding || !isPlaying) return;
+    timerRemainingRef.current = timerRemaining;
+    clearTimers();
+    setIsPaused(true);
+    setIsPlaying(false);
+  }, [isPaused, isChapterTransition, isEnding, isPlaying, timerRemaining, clearTimers]);
+
+  const resume = useCallback(() => {
+    if (!isPaused || !script) return;
+    setIsPaused(false);
+    setIsPlaying(true);
+
+    const step = getCurrentStep();
+    if (!step) return;
+
+    if (step.type === 'timer') {
+      const remaining = timerRemainingRef.current;
+      const total = timerTotalRef.current;
+      if (remaining > 0) {
+        setTimerRemaining(remaining);
+        startTimerInterval(total);
+      } else {
+        advanceStepRef.current();
+      }
+    } else if (step.type === 'counter') {
+      startMetronome();
+    } else if (step.type === 'narration') {
+      playStepRef.current(step);
+    }
+  }, [isPaused, script, getCurrentStep, startTimerInterval, startMetronome]);
 
   useEffect(() => { stepIndexRef.current = stepIndex; }, [stepIndex]);
   useEffect(() => { chapterIndexRef.current = chapterIndex; }, [chapterIndex]);
@@ -232,24 +288,25 @@ export function useScriptEngine(script: Script | null) {
       setStepLog(l => [...l, { type: 'timer', icon: timerIconRef.current, completed: true }]);
       window.setTimeout(() => advanceStep(), 600);
     }
-  }, [timerRemaining, timerTotal, isPlaying, advanceStep, getCurrentStep, isEnding, isChapterTransition]);
+  }, [timerRemaining, timerTotal, isPlaying, advanceStep, isEnding, isChapterTransition]);
 
   useEffect(() => {
     const prev = prevCounterValue.current;
     prevCounterValue.current = counterValue;
     if (prev < counterTarget && counterValue >= counterTarget && counterTarget > 0 && isPlaying && !isEnding && !isChapterTransition) {
-      if (timerRef.current !== null) clearInterval(timerRef.current);
+      clearInterval(timerRef.current!);
       timerRef.current = null;
       beep(1200, 0.3, 0.2);
       setStepLog(l => [...l, { type: 'counter', icon: counterIconRef.current, count: counterValue }]);
       window.setTimeout(() => advanceStep(), 600);
     }
-  }, [counterValue, counterTarget, isPlaying, advanceStep, beep, getCurrentStep, isEnding, isChapterTransition]);
+  }, [counterValue, counterTarget, isPlaying, advanceStep, beep, isEnding, isChapterTransition]);
 
   return {
     chapterIndex,
     stepIndex,
     isPlaying,
+    isPaused,
     isTask,
     isEnding,
     isChapterTransition,
@@ -267,6 +324,8 @@ export function useScriptEngine(script: Script | null) {
     advanceStep,
     startChapter,
     handleCounterTap,
+    pause,
+    resume,
     reset,
     getCurrentStep,
   };

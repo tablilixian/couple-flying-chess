@@ -2,6 +2,7 @@ import { Script } from '../../types';
 
 export const coffeeShop: Script = {
   id: 'coffee-shop',
+  mode: 'couple',
   title: '咖啡店的邂逅',
   emoji: '☕',
   desc: '周末午后，街角的咖啡店，两个陌生人的目光在空气中交汇。一段关于邂逅与告白的甜蜜故事，从一杯咖啡开始。',

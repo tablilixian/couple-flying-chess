@@ -1,10 +1,16 @@
 import { Script } from '../../types';
 import { coffeeShop } from './coffeeShop';
 import { spaMassage } from './spaMassage';
+import { morningGap } from './morningGap';
+import { summerMorning } from './summerMorning';
+import { atticMystery } from './atticMystery';
 
 export const BUILTIN_SCRIPTS: Script[] = [
   coffeeShop,
   spaMassage,
+  morningGap,
+  summerMorning,
+  atticMystery,
 ];
 
 export function getScriptById(id: string): Script | undefined {

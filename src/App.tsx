@@ -260,7 +260,7 @@ function AppInner({ mode }: { mode: GameMode }) {
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         </div>
         <div className="relative z-10 w-full max-w-[430px] h-full bg-black/20">
-          <ScriptSelectView onSelect={handleScriptSelect} onBack={() => setAppSubview('hub')} />
+          <ScriptSelectView mode={mode} onSelect={handleScriptSelect} onBack={() => setAppSubview('hub')} />
         </div>
       </div>
     );

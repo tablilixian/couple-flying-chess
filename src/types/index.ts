@@ -110,6 +110,7 @@ export interface ScriptChapter {
 
 export interface Script {
   id: string;
+  mode: 'couple' | 'normal';
   title: string;
   emoji: string;
   desc: string;

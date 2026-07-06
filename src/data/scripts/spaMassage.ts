@@ -2,6 +2,7 @@ import { Script } from '../../types';
 
 export const spaMassage: Script = {
   id: 'spa-massage',
+  mode: 'couple',
   title: 'SPA按摩室的秘密',
   emoji: '💆',
   desc: '一位专业男按摩师今天迎来了最后一位女顾客。从肩颈放松开始，一步一步探索身体的每一个角落。当按摩变成一场欲望的交锋，谁能在这场游戏中全身而退？',

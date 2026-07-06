@@ -1,17 +1,24 @@
-import { Script } from '../../types';
+import { GameMode, Script } from '../../types';
 import { BUILTIN_SCRIPTS } from '../../data/scripts';
 
 interface ScriptSelectViewProps {
+  mode: GameMode;
   onSelect: (script: Script) => void;
   onBack: () => void;
 }
 
 const COVER_GRADIENTS: Record<string, string> = {
   'coffee-shop': 'linear-gradient(135deg, #FF375F, #BF5AF2)',
+  'attic-mystery': 'linear-gradient(135deg, #0A84FF, #30D158)',
 };
 
-export function ScriptSelectView({ onSelect, onBack }: ScriptSelectViewProps) {
-  const scripts = BUILTIN_SCRIPTS;
+const MODE_LABEL: Record<string, string> = {
+  couple: '💕 情侣剧场',
+  normal: '👨‍👩‍👧‍👦 亲子剧场',
+};
+
+export function ScriptSelectView({ mode, onSelect, onBack }: ScriptSelectViewProps) {
+  const scripts = BUILTIN_SCRIPTS.filter(s => s.mode === mode);
 
   return (
     <div className="h-full flex flex-col">
@@ -33,7 +40,10 @@ export function ScriptSelectView({ onSelect, onBack }: ScriptSelectViewProps) {
         >
           ‹
         </button>
-        <h2 className="text-white text-xl font-bold">🎧 选择剧本</h2>
+        <div>
+          <h2 className="text-white text-xl font-bold">🎧 选择剧本</h2>
+          <div className="text-xs text-gray-500 mt-0.5">{MODE_LABEL[mode]}</div>
+        </div>
       </div>
 
       {/* List */}
