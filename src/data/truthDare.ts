@@ -1,4 +1,4 @@
-import { TDQuestion, TDPenalty, TDDifficulty, TDTheme, TDTarget } from '../types';
+import { TDQuestion, TDPenalty, TDDifficulty, TDTheme, TDTarget, GameMode } from '../types';
 
 // ========================================================================
 //  1. SWEET — 甜蜜 (温馨浪漫 · 增进了解 · 适合热身)
@@ -771,10 +771,150 @@ const TABOO_DARES: TDQuestion[] = [
 ];
 
 // ========================================================================
-//  PENALTIES — 惩罚 (按难度分级)
+//  COUPLE / NORMAL 物理分离的题库
+//  - 14 个原始数组(SWEET/SPICY/.../TABOO)保持不变 = 情侣题库的全部数据
+//  - 普通题库用「显式白名单」从 14 个原始数组中按 text 命中挑选
+//  - 关键安全保证: 没有"按 mode 字段自动过滤"的逻辑,
+//                  normal 题库只可能是白名单里出现过的 text
+//                  改 normal 题目只需在 NORMAL_QUESTION_TEXTS 里增删 text
 // ========================================================================
 
-export const PENALTIES: TDPenalty[] = [
+// 情侣题库 = 全部 14 个原始数组
+export const COUPLE_QUESTIONS: TDQuestion[] = [
+  ...SWEET_TRUTHS, ...SWEET_DARES,
+  ...SPICY_TRUTHS, ...SPICY_DARES,
+  ...CONFESSION_TRUTHS, ...CONFESSION_DARES,
+  ...ROLEPLAY_TRUTHS, ...ROLEPLAY_DARES,
+  ...KINKY_TRUTHS, ...KINKY_DARES,
+  ...BDSM_TRUTHS, ...BDSM_DARES,
+  ...TABOO_TRUTHS, ...TABOO_DARES,
+];
+
+// 普通题库白名单(text 集合)
+// 编辑此集合即可调整普通模式的题库,与情侣题库完全独立
+// 选题原则: 派对向、搞笑向、朋友之间也能玩; 排除含性/越界/亲密肢体接触的题
+const NORMAL_QUESTION_TEXTS: Set<string> = new Set([
+  // ── sweet/soft 全部(48 题,恋爱情感向,无性无越界)──
+  '你第一次对我心动是什么时候？',
+  '和我在一起最开心的一件事是什么？',
+  '你最喜欢我身上的哪个特质？',
+  '第一次约会前你紧张吗？',
+  '你最喜欢我们一起去的哪个地方？',
+  '你觉得我什么时候最可爱？',
+  '你第一次牵我的手是什么感觉？',
+  '如果用一个词形容我，你会用什么？',
+  '你觉得我们之间最有默契的一件事是什么？',
+  '你更想要早安吻还是晚安吻？',
+  '你收藏过我们之间的哪张照片？',
+  '你觉得我是更感性还是更理性的人？',
+  '你觉得她穿什么颜色最好看？',
+  '你觉得他做什么表情最可爱？',
+  '我们之间你最不想失去的是什么？',
+  '你理想中的周末约会是什么样？',
+  '你最喜欢我穿哪件衣服？为什么？',
+  '你觉得我最迷人的小习惯是什么？',
+  '你回忆一下，我们之间最安静但是最幸福的一个瞬间',
+  '她哭的时候你第一反应是什么？',
+  '他累的时候你一般怎么做？',
+  '你有没有偷偷学过我喜欢的某样东西？',
+  '你觉得我们什么时候最般配？',
+  '如果有一个按钮可以重置我们的关系，你会按吗？',
+  '你觉得我们的爱能打败什么困难？',
+  '你最喜欢我们之间哪一个小秘密？',
+  '你觉得和我在一起后你最大的变化是什么？',
+  '你什么时候最想紧紧抱住我？',
+  '她什么时候看起来最美？素颜还是化妆？',
+  '他穿什么衣服你觉得最帅？',
+  '你偷偷给我起过什么昵称？',
+  '你更想要浪漫的约会还是日常的陪伴？',
+  // ── sweet/soft dares(搞笑、互动,无身体接触)──
+  '给对方一个真诚的拥抱，持续10秒',
+  '闭上眼睛，让对方在你手心画一个图案，猜是什么',
+  '用三句话夸对方，不能重复',
+  '模仿一个可爱的小动物的叫声',
+  '做10个深蹲，一边做一边说对方最棒',
+  '给对方的备注改成你最想叫的昵称',
+  '和对方自拍一张搞怪合照',
+  '重现你们第一次见面时的自我介绍',
+  '用方言说一句我爱你',
+  '用手机录一段10秒的语音描述对方今天的样子',
+  '和对方对视20秒，不许笑',
+  '给你最好的朋友发一条消息夸你的另一半',
+  '把手机壁纸换成对方的照片用一天',
+  '和对方一起计划一次未来的旅行，具体到每个细节',
+  '一起哼一首你们共同喜欢的歌',
+  '和对方一起做一个未来的约定',
+  '说三个对方让你心动的瞬间',
+  '给对方唱一首情歌，不管跑不跑调',
+]);
+
+// 普通题库 = 从情侣题库中按白名单 text 命中挑选
+//   注意: 这是普通题库的唯一来源,与情侣题库不再共享自动过滤逻辑
+export const NORMAL_QUESTIONS: TDQuestion[] = COUPLE_QUESTIONS.filter(q =>
+  NORMAL_QUESTION_TEXTS.has(q.text)
+);
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function pickQuestion(
+  type: 'truth' | 'dare',
+  difficulty: TDDifficulty,
+  themes: TDTheme[],
+  currentPlayer: 0 | 1,
+  playerRoles: ['male' | 'female', 'male' | 'female'],
+  mode: GameMode = 'couple',
+): TDQuestion | null {
+  // 关键: 直接根据 mode 选池,不再做模式过滤
+  const sourcePool = mode === 'couple' ? COUPLE_QUESTIONS : NORMAL_QUESTIONS;
+
+  const playerTarget = playerRoles[currentPlayer];
+  const pool = sourcePool.filter(q =>
+    q.type === type &&
+    q.difficulty === difficulty &&
+    themes.includes(q.theme) &&
+    (q.target === 'both' || q.target === playerTarget)
+  );
+
+  // fallback: 若按 gender 匹配不到,放宽到 both
+  const fallback = pool.length === 0
+    ? sourcePool.filter(q =>
+        q.type === type && q.difficulty === difficulty && themes.includes(q.theme)
+      )
+    : [];
+
+  const finalPool = pool.length > 0 ? pool : fallback;
+  if (finalPool.length === 0) return null;
+  return pickRandom(finalPool);
+}
+
+// ========================================================================
+//  PENALTIES — 惩罚 (完全分离的 couple/normal 池)
+// ========================================================================
+
+// 普通惩罚白名单(搞笑/体能向,朋友之间也能玩)
+// 注意: 此集合的每个 text 都必须存在于下方 RAW_PENALTIES
+const NORMAL_PENALTY_TEXTS: Set<string> = new Set([
+  // soft
+  '做10个深蹲', '学猫叫三声', '单脚站立30秒', '捏着鼻子说完一句话',
+  '倒立靠墙10秒（做不到就平板支撑）', '原地转5圈然后走直线',
+  '用最夸张的语气朗读一段天气预报', '模仿你最喜欢的动物叫声持续10秒',
+  // hot
+  '给对方的备注改成"我错了"，用一天', '发一条语音给TA说今晚都听你的',
+  '让对方在你脸上画胡子', '做20个高抬腿，一边做一边说我最棒',
+  '模仿一个韩剧里最肉麻的台词', '把头像换成对方指定的图片用一天',
+  '用屁股写自己的名字', '对着镜子说三遍你最好看，要发自内心',
+  // hard
+  '发一条朋友圈说今天我是猪，不能删', '给对方洗脚',
+  '把你最囧的一张照片设成手机壁纸一天', '拍一个15秒的搞笑视频发给对方',
+  '给对方做一顿饭吃（不能是泡面）', '把你最私密的一个秘密写在纸上然后烧掉',
+  '用对方的口吻给TA的闺蜜/兄弟发一条消息', '在小区楼下对着天空大喊一声对方的名字',
+  '亲一下对方的脚背', '全程用撒娇的语气说话直到下一轮结束',
+]);
+
+// 原始惩罚列表(包含成人向内容,以下数组中部分项仅出现在 COUPLE_PENALTIES 中)
+const RAW_PENALTIES: TDPenalty[] = [
   // soft
   { difficulty: 'soft', text: '做10个深蹲' },
   { difficulty: 'soft', text: '学猫叫三声' },
@@ -804,7 +944,7 @@ export const PENALTIES: TDPenalty[] = [
   { difficulty: 'hard', text: '在小区楼下对着天空大喊一声对方的名字' },
   { difficulty: 'hard', text: '亲一下对方的脚背' },
   { difficulty: 'hard', text: '全程用撒娇的语气说话直到下一轮结束' },
-  // extreme
+  // extreme (couple 专属)
   { difficulty: 'extreme', text: '在楼下大声喊对方的名字说我爱你' },
   { difficulty: 'extreme', text: '把手机里最尴尬的一张截图发朋友圈' },
   { difficulty: 'extreme', text: '一周内对方说的要求你都必须答应' },
@@ -837,57 +977,17 @@ export const PENALTIES: TDPenalty[] = [
   { difficulty: 'extreme', text: '被对方绑住双手后完成一个性挑战' },
 ];
 
+// 情侣惩罚 = 全部
+export const COUPLE_PENALTIES: TDPenalty[] = RAW_PENALTIES;
+
+// 普通惩罚 = 显式白名单(完全独立于 couple 库,不可能混入成人内容)
+export const NORMAL_PENALTIES: TDPenalty[] = RAW_PENALTIES.filter(p =>
+  NORMAL_PENALTY_TEXTS.has(p.text)
+);
+
 // ========================================================================
-//  HELPERS
+//  DIFFICULTIES & PICKER
 // ========================================================================
-
-export const ALL_QUESTIONS: TDQuestion[] = [
-  ...SWEET_TRUTHS, ...SWEET_DARES,
-  ...SPICY_TRUTHS, ...SPICY_DARES,
-  ...CONFESSION_TRUTHS, ...CONFESSION_DARES,
-  ...ROLEPLAY_TRUTHS, ...ROLEPLAY_DARES,
-  ...KINKY_TRUTHS, ...KINKY_DARES,
-  ...BDSM_TRUTHS, ...BDSM_DARES,
-  ...TABOO_TRUTHS, ...TABOO_DARES,
-];
-
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-export function pickQuestion(
-  type: 'truth' | 'dare',
-  difficulty: TDDifficulty,
-  themes: TDTheme[],
-  currentPlayer: 0 | 1,
-  playerRoles: ['male' | 'female', 'male' | 'female'],
-): TDQuestion | null {
-  const playerTarget = playerRoles[currentPlayer];
-  let pool = ALL_QUESTIONS.filter(q =>
-    q.type === type &&
-    q.difficulty === difficulty &&
-    themes.includes(q.theme) &&
-    (q.target === 'both' || q.target === playerTarget)
-  );
-
-  // fallback: if nothing matches for gender-specific, try both
-  if (pool.length === 0) {
-    pool = ALL_QUESTIONS.filter(q =>
-      q.type === type &&
-      q.difficulty === difficulty &&
-      themes.includes(q.theme)
-    );
-  }
-
-  if (pool.length === 0) return null;
-  return pickRandom(pool);
-}
-
-export function pickPenalty(difficulty: TDDifficulty): TDPenalty | null {
-  const filtered = PENALTIES.filter(p => p.difficulty === difficulty);
-  if (filtered.length === 0) return null;
-  return pickRandom(filtered);
-}
 
 export const DIFFICULTIES: { key: TDDifficulty; label: string; color: string }[] = [
   { key: 'soft', label: '温和', color: '#30D158' },
@@ -895,3 +995,14 @@ export const DIFFICULTIES: { key: TDDifficulty; label: string; color: string }[]
   { key: 'hard', label: '猛烈', color: '#FF375F' },
   { key: 'extreme', label: '极限', color: '#BF5AF2' },
 ];
+
+export function pickPenalty(
+  difficulty: TDDifficulty,
+  mode: GameMode = 'couple',
+): TDPenalty | null {
+  // 关键: 直接根据 mode 选池,不再做模式过滤
+  const sourcePool = mode === 'couple' ? COUPLE_PENALTIES : NORMAL_PENALTIES;
+  const filtered = sourcePool.filter(p => p.difficulty === difficulty);
+  if (filtered.length === 0) return null;
+  return pickRandom(filtered);
+}

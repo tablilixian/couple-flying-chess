@@ -1,24 +1,41 @@
-import { useState } from 'react';
-import { TDDifficulty, TDTheme, TD_THEMES } from '../../types';
-import { DIFFICULTIES, ALL_QUESTIONS, PENALTIES } from '../../data/truthDare';
+import { useState, useEffect, useMemo } from 'react';
+import { TDDifficulty, TDTheme, TD_THEMES, GameMode } from '../../types';
+import { DIFFICULTIES, COUPLE_QUESTIONS, NORMAL_QUESTIONS, COUPLE_PENALTIES, NORMAL_PENALTIES } from '../../data/truthDare';
 import { ArrowLeft } from 'lucide-react';
 
 interface TruthDareHomeViewProps {
+  mode: GameMode;
   defaultNames: [string, string];
   onStart: (names: [string, string], difficulty: TDDifficulty, themes: TDTheme[]) => void;
   onBack: () => void;
 }
 
-const ALL_THEME_KEYS = TD_THEMES.map(t => t.key);
+export function TruthDareHomeView({ mode, defaultNames, onStart, onBack }: TruthDareHomeViewProps) {
+  // 当前 mode 可用主题
+  const availableThemes = useMemo(
+    () => TD_THEMES.filter(t => t.modes.includes(mode)),
+    [mode]
+  );
+  const availableThemeKeys = useMemo(
+    () => availableThemes.map(t => t.key),
+    [availableThemes]
+  );
 
-export function TruthDareHomeView({ defaultNames, onStart, onBack }: TruthDareHomeViewProps) {
+  const questionPool = mode === 'couple' ? COUPLE_QUESTIONS : NORMAL_QUESTIONS;
+  const penaltyPool = mode === 'couple' ? COUPLE_PENALTIES : NORMAL_PENALTIES;
+
   const [names, setNames] = useState<[string, string]>(defaultNames);
   const [difficulty, setDifficulty] = useState<TDDifficulty>('soft');
-  const [selectedThemes, setSelectedThemes] = useState<TDTheme[]>(ALL_THEME_KEYS);
+  const [selectedThemes, setSelectedThemes] = useState<TDTheme[]>(availableThemeKeys);
 
-  const playerLabels: [string, string] = ['他', '她'];
-  const playerIcons: [string, string] = ['♂', '♀'];
-  const playerColors: [string, string] = ['#0A84FF', '#FF375F'];
+  // mode 切换时,重置已选主题到当前可用主题
+  useEffect(() => {
+    setSelectedThemes(availableThemeKeys);
+  }, [availableThemeKeys]);
+
+  const playerLabels: [string, string] = mode === 'couple' ? ['他', '她'] : ['玩家 1', '玩家 2'];
+  const playerIcons: [string, string] = mode === 'couple' ? ['♂', '♀'] : ['A', 'B'];
+  const playerColors: [string, string] = mode === 'couple' ? ['#0A84FF', '#FF375F'] : ['#5E5CE6', '#FF9F0A'];
 
   const canStart = names[0].trim().length > 0 && names[1].trim().length > 0 && selectedThemes.length > 0;
 
@@ -28,13 +45,13 @@ export function TruthDareHomeView({ defaultNames, onStart, onBack }: TruthDareHo
     );
   };
 
-  const totalTruth = ALL_QUESTIONS.filter(q =>
+  const totalTruth = questionPool.filter(q =>
     q.type === 'truth' && q.difficulty === difficulty && selectedThemes.includes(q.theme)
   ).length;
-  const totalDare = ALL_QUESTIONS.filter(q =>
+  const totalDare = questionPool.filter(q =>
     q.type === 'dare' && q.difficulty === difficulty && selectedThemes.includes(q.theme)
   ).length;
-  const totalPenalty = PENALTIES.filter(p => p.difficulty === difficulty).length;
+  const totalPenalty = penaltyPool.filter(p => p.difficulty === difficulty).length;
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -111,9 +128,9 @@ export function TruthDareHomeView({ defaultNames, onStart, onBack }: TruthDareHo
               选择主题  <span className="text-gray-600">（已选 {selectedThemes.length} 个）</span>
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
-              {TD_THEMES.map(t => {
+              {availableThemes.map(t => {
                 const isSelected = selectedThemes.includes(t.key);
-                const questionCount = ALL_QUESTIONS.filter(q =>
+                const questionCount = questionPool.filter(q =>
                   q.difficulty === difficulty && q.theme === t.key
                 ).length;
                 return (

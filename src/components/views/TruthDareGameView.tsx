@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { TDDifficulty, TDTheme, TDQuestion, TDPenalty, TDPlayer, TD_THEMES } from '../../types';
+import { TDDifficulty, TDTheme, TDQuestion, TDPenalty, TDPlayer, TD_THEMES, GameMode } from '../../types';
 import { pickQuestion, pickPenalty, DIFFICULTIES } from '../../data/truthDare';
 import { ArrowLeft, Heart, Sparkles, AlertTriangle, RotateCcw } from 'lucide-react';
 
 interface TruthDareGameViewProps {
+  mode: GameMode;
   names: [string, string];
   difficulty: TDDifficulty;
   themes: TDTheme[];
@@ -12,11 +13,8 @@ interface TruthDareGameViewProps {
 
 type Phase = 'choice' | 'display' | 'penalty' | 'transition';
 
-const PLAYER_COLORS: [string, string] = ['#0A84FF', '#FF375F'];
-const PLAYER_ICONS: [string, string] = ['♂', '♀'];
-
-export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDareGameViewProps) {
-  const [currentPlayer, setCurrentPlayer] = useState(0);
+export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: TruthDareGameViewProps) {
+  const [currentPlayer, setCurrentPlayer] = useState<0 | 1>(0);
   const [round, setRound] = useState(1);
   const [phase, setPhase] = useState<Phase>('choice');
   const [currentQuestion, setCurrentQuestion] = useState<TDQuestion | null>(null);
@@ -31,6 +29,10 @@ export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDa
   const flipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const diffConfig = DIFFICULTIES.find(d => d.key === difficulty)!;
+  const playerColors: [string, string] = mode === 'couple' ? ['#0A84FF', '#FF375F'] : ['#5E5CE6', '#FF9F0A'];
+  const playerIcons: [string, string] = mode === 'couple' ? ['♂', '♀'] : ['A', 'B'];
+  // couple 模式用男/女 target,normal 模式不区分 target
+  const playerRoles: ['male' | 'female', 'male' | 'female'] = mode === 'couple' ? ['male', 'female'] : ['male', 'female'];
 
   const switchToNextPlayer = useCallback(() => {
     setPhase('transition');
@@ -48,10 +50,8 @@ export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDa
     }, 1500);
   }, [currentPlayer, round, names]);
 
-  const playerRoles: ['male', 'female'] = ['male', 'female'];
-
   const handleChoice = useCallback((type: 'truth' | 'dare') => {
-    const question = pickQuestion(type, difficulty, themes, currentPlayer, playerRoles);
+    const question = pickQuestion(type, difficulty, themes, currentPlayer, playerRoles, mode);
     if (!question) return;
     setCurrentQuestion(question);
     setPhase('display');
@@ -63,14 +63,14 @@ export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDa
       next[currentPlayer] = { ...next[currentPlayer], [statsKey]: next[currentPlayer][statsKey] + 1 };
       return next;
     });
-  }, [difficulty, themes, currentPlayer, playerRoles]);
+  }, [difficulty, themes, currentPlayer, playerRoles, mode]);
 
   const handleComplete = useCallback(() => {
     switchToNextPlayer();
   }, [switchToNextPlayer]);
 
   const handlePenalty = useCallback(() => {
-    const penalty = pickPenalty(difficulty);
+    const penalty = pickPenalty(difficulty, mode);
     if (!penalty) return;
     setCurrentPenalty(penalty);
     setPhase('penalty');
@@ -107,7 +107,7 @@ export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDa
       <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: `${PLAYER_COLORS[currentPlayer]}22` }}>
+            style={{ backgroundColor: `${playerColors[currentPlayer]}22` }}>
             <Sparkles className="text-[#30D158]" size={32} />
           </div>
           <div className="text-white text-xl font-bold">{transitionText}</div>
@@ -245,8 +245,8 @@ export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDa
                       : 'opacity-40'
                   }`}
                   style={{
-                    backgroundColor: currentPlayer === i ? `${PLAYER_COLORS[i]}33` : 'transparent',
-                    color: currentPlayer === i ? PLAYER_COLORS[i] : '#6B7280',
+                    backgroundColor: currentPlayer === i ? `${playerColors[i]}33` : 'transparent',
+                    color: currentPlayer === i ? playerColors[i] : '#6B7280',
                   }}
                 >
                   <span className="text-xs font-bold">{names[i]}</span>
@@ -265,9 +265,9 @@ export function TruthDareGameView({ names, difficulty, themes, onBack }: TruthDa
           <div className="text-center">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-3"
-              style={{ backgroundColor: `${PLAYER_COLORS[currentPlayer]}22`, color: PLAYER_COLORS[currentPlayer] }}
+              style={{ backgroundColor: `${playerColors[currentPlayer]}22`, color: playerColors[currentPlayer] }}
             >
-              {PLAYER_ICONS[currentPlayer]}
+              {playerIcons[currentPlayer]}
             </div>
             <div className="text-white text-xl font-bold">{names[currentPlayer]}</div>
             <div className="text-gray-500 text-xs mt-1">选择一种挑战类型</div>

@@ -107,14 +107,14 @@ export interface TDPlayer {
   penaltyCount: number;
 }
 
-export const TD_THEMES: { key: TDTheme; label: string; desc: string; color: string }[] = [
-  { key: 'sweet', label: '甜蜜', desc: '温馨浪漫，适合热身', color: '#FF9F0A' },
-  { key: 'spicy', label: '火辣', desc: '暧昧升温，脸红心跳', color: '#FF375F' },
-  { key: 'confession', label: '坦白局', desc: '深层对话，灵魂拷问', color: '#BF5AF2' },
-  { key: 'roleplay', label: '角色扮演', desc: '代入角色，玩出新花样', color: '#5E5CE6' },
-  { key: 'kinky', label: '调教', desc: '主导与顺从，探索边界', color: '#FF6482' },
-  { key: 'bdsm', label: '束缚', desc: '禁忌游戏，深度体验', color: '#FF453A' },
-  { key: 'taboo', label: '禁忌', desc: '大胆突破，解锁幻想', color: '#8E8E93' },
+export const TD_THEMES: { key: TDTheme; label: string; desc: string; color: string; modes: GameMode[] }[] = [
+  { key: 'sweet',      label: '甜蜜',     desc: '温馨浪漫，适合热身',   color: '#FF9F0A', modes: ['couple', 'normal'] },
+  { key: 'spicy',      label: '火辣',     desc: '暧昧升温，脸红心跳',   color: '#FF375F', modes: ['couple'] },
+  { key: 'confession', label: '坦白局',   desc: '深层对话，灵魂拷问',   color: '#BF5AF2', modes: ['couple', 'normal'] },
+  { key: 'roleplay',   label: '角色扮演', desc: '代入角色，玩出新花样', color: '#5E5CE6', modes: ['couple', 'normal'] },
+  { key: 'kinky',      label: '调教',     desc: '主导与顺从，探索边界', color: '#FF6482', modes: ['couple'] },
+  { key: 'bdsm',       label: '束缚',     desc: '禁忌游戏，深度体验',   color: '#FF453A', modes: ['couple'] },
+  { key: 'taboo',      label: '禁忌',     desc: '大胆突破，解锁幻想',   color: '#8E8E93', modes: ['couple'] },
 ];
 
 export interface ScriptCharacter {
