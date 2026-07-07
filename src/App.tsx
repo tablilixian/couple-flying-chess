@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Settings, History } from 'lucide-react';
+import { ArrowLeft, Settings, History } from 'lucide-react';
 import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty, TDTheme } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { clearAudioCache } from './utils/ttsService';
@@ -196,7 +196,6 @@ function AppInner({ mode }: { mode: GameMode }) {
     if (confirm('离开游戏？进度不会保存')) {
       finalizeCurrentSession();
       resetGame();
-      setAppSubview('hub');
     }
   };
 
@@ -377,6 +376,14 @@ function AppInner({ mode }: { mode: GameMode }) {
       <div className="relative z-10 w-full max-w-[430px] h-full flex flex-col bg-black/20">
         <header className="pt-12 pb-2 px-6 shrink-0 flex justify-between items-start">
           <div>
+            <button
+              onClick={() => setAppSubview('hub')}
+              className="text-gray-400 hover:text-white transition-colors mb-2 flex items-center gap-1"
+              title="返回游戏中心"
+            >
+              <ArrowLeft size={18} />
+              <span className="text-xs">返回</span>
+            </button>
             <div className={`text-[11px] font-semibold ${config.accentText} uppercase tracking-widest mb-1`}>
               {config.subtitle}
             </div>

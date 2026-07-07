@@ -1,4 +1,6 @@
 import { TDQuestion, TDPenalty, TDDifficulty, TDTheme, TDTarget, GameMode } from '../types';
+import { NORMAL_QUESTIONS } from './normalQuestions';
+import { NORMAL_PENALTIES } from './normalPenalties';
 
 // ========================================================================
 //  1. SWEET — 甜蜜 (温馨浪漫 · 增进了解 · 适合热身)
@@ -65,6 +67,18 @@ const SWEET_TRUTHS: TDQuestion[] = [
   { type: 'truth', difficulty: 'hot', theme: 'sweet', target: 'both', text: '你更想要浪漫的约会还是日常的陪伴？' },
   { type: 'truth', difficulty: 'hard', theme: 'sweet', target: 'both', text: '你曾经为我做过最勇敢的事是什么？' },
   { type: 'truth', difficulty: 'hard', theme: 'sweet', target: 'both', text: '你觉得我们之间最需要改善的是什么？' },
+  { type: 'truth', difficulty: 'soft', theme: 'sweet', target: 'both', text: '你曾经在梦里完整地和我过完了一生，那个梦里我们是什么结局？' },
+  { type: 'truth', difficulty: 'hot', theme: 'sweet', target: 'both', text: '如果让你选一个瞬间永远停留，你会选我们在一起的哪个片段？' },
+  { type: 'truth', difficulty: 'hard', theme: 'sweet', target: 'both', text: '你有没有哪一刻觉得"就是这个人了"，确定要共度余生？' },
+  { type: 'truth', difficulty: 'hard', theme: 'sweet', target: 'both', text: '你为我放弃过什么重要的东西吗？后悔过吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'sweet', target: 'both', text: '你觉得我们之间最接近分手的瞬间是因为什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'sweet', target: 'both', text: '如果有一天我失忆了，你会用什么方式让我重新爱上你？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'sweet', target: 'both', text: '你有没有嫉妒过我和别人的关系？哪怕只是友情？' },
+  { type: 'truth', difficulty: 'soft', theme: 'sweet', target: 'male', text: '她让你最想成家的一刻是什么时候？' },
+  { type: 'truth', difficulty: 'soft', theme: 'sweet', target: 'female', text: '他做过的哪件事让你觉得这个男人值得托付？' },
+  { type: 'truth', difficulty: 'hot', theme: 'sweet', target: 'male', text: '你有没有偷偷想过和她生一个孩子？孩子像谁更好？' },
+  { type: 'truth', difficulty: 'hot', theme: 'sweet', target: 'female', text: '你希望他求婚的场合是什么样的？' },
+  { type: 'truth', difficulty: 'hard', theme: 'sweet', target: 'both', text: '如果我们的父母坚决反对我们在一起，你会怎么选？' },
 ];
 
 const SWEET_DARES: TDQuestion[] = [
@@ -114,6 +128,18 @@ const SWEET_DARES: TDQuestion[] = [
   { type: 'dare', difficulty: 'hot', theme: 'sweet', target: 'both', text: '在对方脖子上种一颗草莓' },
   { type: 'dare', difficulty: 'hard', theme: 'sweet', target: 'both', text: '一起计划一次未来的旅行，具体到每个细节' },
   { type: 'dare', difficulty: 'hard', theme: 'sweet', target: 'both', text: '给对方写一首情诗，当场朗诵' },
+  { type: 'dare', difficulty: 'soft', theme: 'sweet', target: 'both', text: '现在打电话给你们的父母，让他们说一句祝福你们的话' },
+  { type: 'dare', difficulty: 'soft', theme: 'sweet', target: 'both', text: '为对方写一首三行情诗，当场念出来' },
+  { type: 'dare', difficulty: 'hot', theme: 'sweet', target: 'both', text: '一起翻出手机里最早的一张合照，重现那个姿势拍一张新的' },
+  { type: 'dare', difficulty: 'hot', theme: 'sweet', target: 'both', text: '互相喂对方吃完一口水果，全程不许用手' },
+  { type: 'dare', difficulty: 'hard', theme: 'sweet', target: 'both', text: '把你觉得最能代表你们的歌设为铃声，用外放听一遍' },
+  { type: 'dare', difficulty: 'hard', theme: 'sweet', target: 'both', text: '现在就去纹身店，让对方给你选一个小小的情侣纹身图案（纹身贴也可）' },
+  { type: 'dare', difficulty: 'hard', theme: 'sweet', target: 'male', text: '跪下来重新求婚一次，即使已经结婚' },
+  { type: 'dare', difficulty: 'hard', theme: 'sweet', target: 'female', text: '穿上你最美的裙子，为他跳一支专属的舞' },
+  { type: 'dare', difficulty: 'soft', theme: 'sweet', target: 'both', text: '闭着眼睛让对方牵着你走一段路，完全信任' },
+  { type: 'dare', difficulty: 'hot', theme: 'sweet', target: 'both', text: '把你最珍贵的个人物品送给对方作为信物保管一周' },
+  { type: 'dare', difficulty: 'extreme', theme: 'sweet', target: 'both', text: '用你们的照片和故事，临时做一个3分钟的短视频发朋友圈' },
+  { type: 'dare', difficulty: 'extreme', theme: 'sweet', target: 'both', text: '立刻订一间好酒店，今晚抛下所有事情只属于两个人' },
 ];
 
 // ========================================================================
@@ -236,6 +262,26 @@ const SPICY_TRUTHS: TDQuestion[] = [
   { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你幻想过在婚礼/宴会等场合偷偷做爱吗？' },
   { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你觉得你身体哪个部位最性感？对方最喜欢你哪里？' },
   { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你做过最疯狂的一次性爱是在哪里？发生了什么？' },
+  { type: 'truth', difficulty: 'hot', theme: 'spicy', target: 'both', text: '你第一次看A片是什么时候？当时是什么反应？' },
+  { type: 'truth', difficulty: 'hot', theme: 'spicy', target: 'male', text: '你最爱她穿哪一套内衣？描述一下细节' },
+  { type: 'truth', difficulty: 'hot', theme: 'spicy', target: 'female', text: '他给你口的时候你最享受哪个动作？' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'both', text: '你有没有在和他/她做爱的时候幻想过另一个人？是谁？' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'both', text: '你最想让我在床上叫你什么？脏一点也没关系' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'both', text: '你有没有偷偷给自己买过情趣玩具？用过几次？' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'male', text: '你射精量最大的一次是因为什么？射在了哪里？' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'female', text: '你高潮最强烈的一次是被怎么操的？描述一下过程' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你幻想过被陌生人强奸然后发现很爽的情节吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你最想尝试的多人性爱场景是几个男人几个女人？描述一下你的角色' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你有没有在网上匿名发过自己的裸照或视频？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'male', text: '她给你口交的时候你有没有想过按着她的头射在喉咙里？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'female', text: '你最想让他射在你身体的哪个地方？有没有试过吞下去？' },
+  { type: 'truth', difficulty: 'hot', theme: 'spicy', target: 'both', text: '你觉得我们之间谁在床上更会玩？对方还有哪些潜力没开发？' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'both', text: '你最长的一次性爱前戏进行了多久？怎么玩的？' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'both', text: '你有没有在用玩具的时候被对方撞见过？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你能否接受和我一起拍性爱视频？愿意拍到什么尺度？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '如果让你选一个人加入我们的性爱，你会选谁？为什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '你偷偷搜索过哪些你觉得很变态的性癖关键词？' },
+  { type: 'truth', difficulty: 'hard', theme: 'spicy', target: 'both', text: '你有没有因为我的性能力/技巧而偷偷想过出轨？' },
 ];
 
 const SPICY_DARES: TDQuestion[] = [
@@ -334,6 +380,28 @@ const SPICY_DARES: TDQuestion[] = [
   { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '把跳蛋塞入后用遥控器，让对方决定什么时候开' },
   { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '做爱的时候开着免提跟朋友聊天（不暴露在做爱）' },
   { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '用脚尖挑逗对方的性器官直到对方受不了' },
+  { type: 'dare', difficulty: 'hot', theme: 'spicy', target: 'both', text: '互相脱掉对方的上衣，然后用舌尖在对方锁骨上写自己的名字' },
+  { type: 'dare', difficulty: 'hot', theme: 'spicy', target: 'male', text: '把你老婆抱到床上，像剥糖果一样慢慢脱掉她的衣服，每脱一件亲一下' },
+  { type: 'dare', difficulty: 'hot', theme: 'spicy', target: 'female', text: '用你的脚趾夹着冰块放进你老公的内裤里，然后用舌头把它找出来' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'both', text: '蒙住对方的眼睛，用你的私密部位磨蹭对方的全身，但不能插入' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'both', text: '现在去浴室，用沐浴露给对方全身打泡沫，然后互相蹭干净' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'male', text: '让她给你打手枪，你闭着眼睛想象是她最好的闺蜜在帮你' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'female', text: '让你老公给你口交，但你要把手伸下去摸着他的头控制节奏' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '打开手机录像，相互给对方口交，录下来回看（看完可删）' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '在离窗户最近的地方做爱，不拉窗帘，让月亮和城市看着你们' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'male', text: '射在她脸上，然后温柔地帮她擦掉并亲吻她的额头' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'female', text: '让他射在你胸上，然后你把精液当护肤品涂抹在胸口' },
+  { type: 'dare', difficulty: 'hot', theme: 'spicy', target: 'both', text: '互相用舌尖在对方肚脐上画圈，直到有人受不了叫停' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'both', text: '用枕头垫高臀部，让他从后面进入，你同时自己抚摸阴蒂' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'both', text: '一起看一部色情片，看到高潮片段时就暂停，然后模仿里面的动作' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'male', text: '让你的老婆坐在你脸上，你给她口交直到她腿软' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'female', text: '骑在你老公脸上，让他为你服务，你抓住床头控制力度' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '把跳蛋放入体内，遥控器交给对方，去楼下便利店买套套再回来' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'both', text: '现在去车里，开到无人的地方，在后座做爱直到两个人都高潮' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'male', text: '让她给你乳交，用乳房夹着你的阴茎，你看着她慢慢动' },
+  { type: 'dare', difficulty: 'extreme', theme: 'spicy', target: 'female', text: '用你的乳房给他乳交，可以加一点润滑液，看着他享受的表情' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'both', text: '在镜子前做爱，一边做一边描述镜子里的你们在干什么' },
+  { type: 'dare', difficulty: 'hard', theme: 'spicy', target: 'both', text: '今天整个晚上，你们都要保持身体接触，即使吃饭上厕所也要一只手牵着' },
 ];
 
 // ========================================================================
@@ -410,6 +478,24 @@ const CONFESSION_TRUTHS: TDQuestion[] = [
   { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你有没有因为性方面的原因哭过？' },
   { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你有没有在亲密关系中说出口之后立刻后悔的话？' },
   { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '如果你可以重来一次你们的关系，你会改变什么？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'both', text: '你手机里有没有一个我绝对不能看的隐私内容？是什么？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'both', text: '你有没有在和前任联系的时候对我撒过谎？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'both', text: '你心里有没有一个"如果TA知道了肯定会离开我"的秘密？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你曾经为了和我在一起牺牲了什么？这段关系真的让你快乐吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '如果明天会死，你最后悔没和我一起做的一件事是什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你有没有怀疑过我不够爱你？是什么举动让你这么想？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'male', text: '你有没有在心里觉得她不如你的某一任女友？哪方面？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'female', text: '你有没有在缺钱/无助的时候想过去找前男友帮忙？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'both', text: '你对我隐瞒过最大的事情是什么？（除了出轨）' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你有没有背着我借过钱/欠过债？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '如果让你用一句话总结我们关系的真相，会是什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你上一次为别人心动是什么时候？因为什么？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'both', text: '你有没有觉得我在某些方面配不上你？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'both', text: '你偷看过我的哪些聊天记录？发现了什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你做过最后悔的一次关于我们关系的决定是什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你有没有和我的朋友/闺蜜私下吐槽过我们的床事？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'confession', target: 'both', text: '你觉得自己在这段关系里付出更多还是索取更多？' },
+  { type: 'truth', difficulty: 'hard', theme: 'confession', target: 'both', text: '你有没有觉得我们的性生活已经变成了例行公事？' },
 ];
 
 const CONFESSION_DARES: TDQuestion[] = [
@@ -448,6 +534,18 @@ const CONFESSION_DARES: TDQuestion[] = [
   { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '坦白一个关于你原生家庭的秘密' },
   { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '把手机交给对方一整天' },
   { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '向对方坦白你最恨自己的一点' },
+  { type: 'dare', difficulty: 'hard', theme: 'confession', target: 'both', text: '把你的手机解锁，让对方任意查看一个你不想被看到的 APP 内容' },
+  { type: 'dare', difficulty: 'hard', theme: 'confession', target: 'both', text: '给对方念出你最近一周的搜索记录，并解释每一条' },
+  { type: 'dare', difficulty: 'hard', theme: 'confession', target: 'both', text: '写一张"原谅卡"给对方，上面写"我原谅你曾经对我做过的 XX 事"，然后签名' },
+  { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '把你的购物记录里最羞耻的一笔（如情趣用品、特殊书籍）展示并解释' },
+  { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '现在发消息给你曾经心动过的人，说"我已经遇到了更好的人，祝你幸福"然后删除' },
+  { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '把你偷偷记下的关于对方的不满清单写出来，逐条念给TA听' },
+  { type: 'dare', difficulty: 'hard', theme: 'confession', target: 'both', text: '打开你聊天记录里和闺蜜/兄弟吐槽对方的那些话，当面读一段' },
+  { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '坦白一个你从没说过的小癖好，然后让对方现在就配合你完成' },
+  { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '写下你觉得这段关系里最不公平的一件事，互相交换阅读' },
+  { type: 'dare', difficulty: 'hard', theme: 'confession', target: 'both', text: '拿出双方所有银行卡和支付软件，核对一下对方不知道的开销' },
+  { type: 'dare', difficulty: 'hard', theme: 'confession', target: 'both', text: '各自写下最想让对方戒掉的一个习惯，签上名，贴在冰箱上' },
+  { type: 'dare', difficulty: 'extreme', theme: 'confession', target: 'both', text: '如果你有秘密日记，现在读一页你觉得最能伤害对方的内容（安全前提下）' },
 ];
 
 // ========================================================================
@@ -486,6 +584,18 @@ const ROLEPLAY_TRUTHS: TDQuestion[] = [
   { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'male', text: '你想过扮演她的爸爸惩罚她吗？' },
   { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'female', text: '你想过扮演他的女儿被他管教吗？' },
   { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '你幻想过警察和犯人的角色扮演吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '你最想让我扮演哪个电影或游戏里的角色和你做爱？' },
+  { type: 'truth', difficulty: 'hard', theme: 'roleplay', target: 'male', text: '你想让我扮演被你抓住的女间谍然后逼供的情节吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'roleplay', target: 'female', text: '你想让我扮演闯入你房间的窃贼然后被你制服的戏码吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '你是否想尝试完整的"养成"剧情，比如你把我从小调教成你想要的样子？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '你幻想过被卖到妓院然后被各种客人轮流使用的剧本吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '如果允许禁忌角色，你最想让我扮演你的谁？比如继父、老师、学长？' },
+  { type: 'truth', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '你希望角色扮演中我完全入戏不笑场，还是可以偶尔破功？' },
+  { type: 'truth', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '你愿意尝试历史人物扮演吗？比如埃及艳后与凯撒。' },
+  { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '你想在扮演中被"洗脑"然后完全服从于我吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '你幻想过自己被当成拍卖品，在众人面前被出价竞拍的场景吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '你觉得角色扮演时说什么样的台词最能让你瞬间兴奋？' },
+  { type: 'truth', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '你想让我穿上制服然后把你当成犯罪嫌疑人审问吗？' },
 ];
 
 const ROLEPLAY_DARES: TDQuestion[] = [
@@ -519,6 +629,18 @@ const ROLEPLAY_DARES: TDQuestion[] = [
   { type: 'dare', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '角色扮演5分钟：修理工和寂寞主妇' },
   { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '角色扮演15分钟：乱伦兄妹/姐弟偷情被发现的场景' },
   { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '角色扮演15分钟：你是主人，TA是被你囚禁的性奴' },
+  { type: 'dare', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '角色扮演10分钟：你是严厉的军官，我是犯错的新兵，你要惩罚我' },
+  { type: 'dare', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '角色扮演15分钟：我是上门按摩师，你是独居的寂寞太太，剧情自己编' },
+  { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '角色扮演20分钟：我是被你绑架的仇家女儿，你要审问我并得到你想要的情报' },
+  { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '今晚的做爱变成一场"交易"：你是妓女/男妓，我是嫖客，谈好价格再开始' },
+  { type: 'dare', difficulty: 'hard', theme: 'roleplay', target: 'male', text: '扮演一个衣冠禽兽的教授，她是你的学生，你来"辅导功课"' },
+  { type: 'dare', difficulty: 'hard', theme: 'roleplay', target: 'female', text: '扮演新来的女仆，不小心打碎了花瓶，请求主人原谅并接受惩罚' },
+  { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '角色扮演：我是昏迷的病人，你是照顾我的护士，然后我醒来"报答"你' },
+  { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '你们是初次约会的网友，从见面尴尬到干柴烈火，全程即兴演出来' },
+  { type: 'dare', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '把对方当成你暗恋已久但不敢表白的人，现在借着酒劲终于表白并发生关系' },
+  { type: 'dare', difficulty: 'hard', theme: 'roleplay', target: 'both', text: '你是一名服务生，我是喝醉的客人，你可以对我"为所欲为"但我不记得' },
+  { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '扮演一对偷情的兄妹/姐弟，在父母隔壁房间偷偷做爱，不能出声' },
+  { type: 'dare', difficulty: 'extreme', theme: 'roleplay', target: 'both', text: '角色扮演：我是被你抓住的盗贼，你要把我交给警察还是私下惩罚？你来决定' },
 ];
 
 // ========================================================================
@@ -568,6 +690,22 @@ const KINKY_TRUTHS: TDQuestion[] = [
   { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你对尿/喝尿的玩法能接受吗？' },
   { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你愿意在性爱中被扇耳光吗？轻还是重？' },
   { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你幻想过24/7全天候的主奴关系吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'kinky', target: 'both', text: '你更希望我命令你做一些羞耻的事，还是粗暴地直接强迫你做？' },
+  { type: 'truth', difficulty: 'hard', theme: 'kinky', target: 'male', text: '你想让我舔你的脚吗？或者让你舔我的脚？' },
+  { type: 'truth', difficulty: 'hard', theme: 'kinky', target: 'female', text: '你愿意让我把你当作家具使用吗？比如脚凳、烟灰缸？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你最多能接受在身上穿刺到什么程度？乳环、阴环、舌钉？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你对24/7全天候主奴关系感兴趣吗？愿意试多久？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你愿意被我牵着项圈到户外（如小区花园）走一圈吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'kinky', target: 'both', text: '你喜欢被骂脏话还是被温柔羞辱？两者分别喜欢什么词？' },
+  { type: 'truth', difficulty: 'hard', theme: 'kinky', target: 'both', text: '你有没有自慰的时候想过被我完全控制身体、剥夺感官的场景？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '如果让你设计一个调教合约，上面必须写的三条规矩是什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'male', text: '你想让我在你嘴里撒尿吗？或者我喝你的？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'female', text: '你愿意让我在你身上撒尿标记领地吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你幻想过在调教中使用电击项圈吗？电到什么程度？' },
+  { type: 'truth', difficulty: 'hard', theme: 'kinky', target: 'both', text: '你希望我在做爱时扇你耳光吗？多用力？' },
+  { type: 'truth', difficulty: 'hard', theme: 'kinky', target: 'both', text: '你幻想过被我关进笼子过夜吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '你能接受到什么程度的身体改造（如暂时缝合、穿刺）？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '有没有一种调教方式让你又怕又兴奋？是什么？' },
 ];
 
 const KINKY_DARES: TDQuestion[] = [
@@ -612,6 +750,22 @@ const KINKY_DARES: TDQuestion[] = [
   { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '被对方用衣夹夹在乳头上（力度适中）' },
   { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '让对方在你身上用指甲划出TA想写的字' },
   { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '在对方的注视下，自己用手指插入自己的后面' },
+  { type: 'dare', difficulty: 'hard', theme: 'kinky', target: 'both', text: '让对方像狗一样趴在地上，用嘴把地上的衣服叼到床上' },
+  { type: 'dare', difficulty: 'hard', theme: 'kinky', target: 'male', text: '命令你老婆给你舔脚，从脚趾到脚背，直到你喊停' },
+  { type: 'dare', difficulty: 'hard', theme: 'kinky', target: 'female', text: '跪在你老公面前，双手背在后面，用嘴解开他的腰带' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '在身上最羞耻的地方用马克笔写上"母狗/公狗"字样，保持到游戏结束' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '戴上项圈，被对方牵着在房间内爬三圈，每爬一步说一声"谢谢主人"' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'male', text: '命令你老婆蹲在墙角，面壁自慰，你不说停她不能停' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'female', text: '让你老公把你绑在椅子上，然后用跳蛋折磨你，直到你答应他的一个要求' },
+  { type: 'dare', difficulty: 'hard', theme: 'kinky', target: 'both', text: '让被支配方用口接住支配方吐出的任何液体（水、酒等）' },
+  { type: 'dare', difficulty: 'hard', theme: 'kinky', target: 'both', text: '命令对方当着你面抚摸自己最隐秘的部位，同时描述感受' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '把尿不湿穿在里面，然后喝一大杯水，一小时后才允许脱掉' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '在被支配方的体内（阴道/肛门）塞入一个震动的跳蛋，去阳台站一分钟' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'male', text: '让你老婆给你灌肠，然后你憋着让她在后面玩弄你' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'female', text: '让你老公给你灌肠，你憋着让他用嘴或手刺激你前面' },
+  { type: 'dare', difficulty: 'hard', theme: 'kinky', target: 'both', text: '互相用皮带在对方手心轻轻抽三下，力度由对方规定' },
+  { type: 'dare', difficulty: 'hard', theme: 'kinky', target: 'both', text: '对着窗户，让对方从后面拽着你的头发操你，嘴里要说"再深一点"' },
+  { type: 'dare', difficulty: 'extreme', theme: 'kinky', target: 'both', text: '让支配方用穿过的内裤塞进被支配方的嘴里，保持5分钟不许吐出来' },
 ];
 
 // ========================================================================
@@ -645,6 +799,18 @@ const BDSM_TRUTHS: TDQuestion[] = [
   { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你接受被强迫高潮（过度刺激）吗？' },
   { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你对电击/电流玩具了解多少？想试试吗？' },
   { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你觉得自己能承受多强的疼痛？从1到10打分' },
+  { type: 'truth', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '你最多能承受被连续鞭打多少下？用什么工具？' },
+  { type: 'truth', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '你喜欢被绑在什么材质上？麻绳、皮革还是金属手铐？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你对悬挂捆绑感兴趣吗？如果保证安全愿意试吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你愿意尝试真空床或木乃伊式的全身包裹吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你幻想过被倒吊起来然后被任意操弄吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '你最想让我在你身上滴蜡的敏感区域是哪里？' },
+  { type: 'truth', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '你有过在束缚中达到干性高潮的经历吗？想不想试试？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你想尝试用胶带完全封住嘴巴和眼睛，仅靠触觉被玩弄吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你有没有想过在束缚中加入低温或高温元素（如热蜡、冰块）？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你想被绑在十字架上像耶稣一样被折磨吗？' },
+  { type: 'truth', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '你更想当被绑的那个，还是绑人的那个？为什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '你幻想过在BDSM聚会上被当众调教吗？' },
 ];
 
 const BDSM_DARES: TDQuestion[] = [
@@ -678,6 +844,18 @@ const BDSM_DARES: TDQuestion[] = [
   { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '被绑住双腿分开固定，对方决定什么时候结束' },
   { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '在安全词的保障下，让对方突破你一个平时的底线' },
   { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '让对方用低温蜡烛在你身上滴蜡，你先选一个部位' },
+  { type: 'dare', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '用领带或绳子将对方的双手绑在床头，然后用手抚摸全身直到TA求饶' },
+  { type: 'dare', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '把眼睛蒙上，耳朵用耳机放白噪音，然后让对方用不同温度的东西碰你' },
+  { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '将对方用龟甲缚绑好，然后放置30分钟，期间在面前自慰但不许碰TA' },
+  { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '用低温蜡烛在对方后背滴出一个心形，然后拍照留念' },
+  { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '双手被吊在门框上（脚可着地），蒙眼，让对方用皮鞭轻抽大腿内侧' },
+  { type: 'dare', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '把冰块放进对方的肛门或阴道，直到融化完' },
+  { type: 'dare', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '让对方用木梳轻轻拍打你的屁股，每打一下你说一个自己的缺点' },
+  { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '蒙眼被束缚后，用振动棒刺激到边缘，但每次快高潮就停下，反复三次' },
+  { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '用夹子夹住对方的乳头和阴蒂/龟头，然后用手指轻弹' },
+  { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '尝试轻度窒息：用手轻压颈部侧边，同时进行后入式，每30秒松开' },
+  { type: 'dare', difficulty: 'hard', theme: 'bdsm', target: 'both', text: '将对方四肢固定成大字形，然后用羽毛和冰块交替刺激敏感带' },
+  { type: 'dare', difficulty: 'extreme', theme: 'bdsm', target: 'both', text: '在安全词的保护下，进行一次"审讯"模拟，对方不招供就一直轻度折磨' },
 ];
 
 // ========================================================================
@@ -734,6 +912,16 @@ const TABOO_TRUTHS: TDQuestion[] = [
   { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你对食人/吸血等极端幻想有什么看法？' },
   { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你有没有幻想过跟AI/机器人做爱？' },
   { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '如果对方变成异性一天，你最想跟TA做什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你有没有幻想过和自己的亲兄弟姐妹发生关系？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你对真实的乱伦关系（如母子）有什么看法？幻想过吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你能否接受我在你面前和动物发生性行为？或者你与动物？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你幻想过强奸或被强奸吗？希望怎么发生？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你想过在太平间或者墓地做爱吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你幻想过在公众演讲或舞台上当众做爱吗？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你想不想尝试吃下或者使用我的排泄物？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你有没有在网上主动寻找过儿童色情或者极端暴力内容？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '如果法律和道德都不存在，你最想对我做的三件事是什么？' },
+  { type: 'truth', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '你心中最不能接受的性癖好是什么？为什么？' },
 ];
 
 const TABOO_DARES: TDQuestion[] = [
@@ -768,15 +956,25 @@ const TABOO_DARES: TDQuestion[] = [
   { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '在商场的试衣间里接吻抚摸（注意安全）' },
   { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '用变声软件给对方打电话说色情内容' },
   { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '在阳台/窗边自慰给对方看' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '现在一起去成人用品店，每人选一个你最想试的玩具，当场买回来用' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '打开匿名聊天软件，假装自己是单身，跟陌生人调情5分钟，给对方看' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '在对方的社交账号上发一张你的性感部位特写（不露脸），保留一小时' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '如果条件允许，今晚去天体海滩或裸体温泉，享受全裸的时光' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '把你的姓名和号码写在对方大腿内侧，像标记一样，一天不能擦掉' },
+  { type: 'dare', difficulty: 'hard', theme: 'taboo', target: 'both', text: '一起看一部乱伦题材的成人片，看完后分享感受并讨论是否想尝试' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '在对方的社交圈里，找一个你私下幻想过的人，现在告诉对方并描述幻想' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '驾车到郊外，找一个没人的地方，全裸在车前盖上做爱' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '写下一份"性爱愿望清单"，列出你们想一起完成的10件最疯狂的事' },
+  { type: 'dare', difficulty: 'hard', theme: 'taboo', target: 'both', text: '现在开始，你们是彼此的一个"出租情人"，用最职业的态度互相服务' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '让对方在你身体任何一个部位留下一个永久可见的痕迹（如咬痕、淤青），不许遮掩' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '用手机录制一段语音，描述你最想和对方做的一件违法但刺激的事，然后一起删除' },
+  { type: 'dare', difficulty: 'hard', theme: 'taboo', target: 'both', text: '今晚睡觉时，你们要裸体相拥，但是全程不许有任何性行为，只感受体温' },
+  { type: 'dare', difficulty: 'extreme', theme: 'taboo', target: 'both', text: '如果你有人格面具，现在切换到你最黑暗的那个人格，和对方相处一小时' },
 ];
 
 // ========================================================================
-//  COUPLE / NORMAL 物理分离的题库
-//  - 14 个原始数组(SWEET/SPICY/.../TABOO)保持不变 = 情侣题库的全部数据
-//  - 普通题库用「显式白名单」从 14 个原始数组中按 text 命中挑选
-//  - 关键安全保证: 没有"按 mode 字段自动过滤"的逻辑,
-//                  normal 题库只可能是白名单里出现过的 text
-//                  改 normal 题目只需在 NORMAL_QUESTION_TEXTS 里增删 text
+//  COUPLE 题库 — 全部 14 个原始数组
+//  NORMAL 题库在 ./normalQuestions.ts 中定义，完全独立
 // ========================================================================
 
 // 情侣题库 = 全部 14 个原始数组
@@ -790,69 +988,7 @@ export const COUPLE_QUESTIONS: TDQuestion[] = [
   ...TABOO_TRUTHS, ...TABOO_DARES,
 ];
 
-// 普通题库白名单(text 集合)
-// 编辑此集合即可调整普通模式的题库,与情侣题库完全独立
-// 选题原则: 派对向、搞笑向、朋友之间也能玩; 排除含性/越界/亲密肢体接触的题
-const NORMAL_QUESTION_TEXTS: Set<string> = new Set([
-  // ── sweet/soft 全部(48 题,恋爱情感向,无性无越界)──
-  '你第一次对我心动是什么时候？',
-  '和我在一起最开心的一件事是什么？',
-  '你最喜欢我身上的哪个特质？',
-  '第一次约会前你紧张吗？',
-  '你最喜欢我们一起去的哪个地方？',
-  '你觉得我什么时候最可爱？',
-  '你第一次牵我的手是什么感觉？',
-  '如果用一个词形容我，你会用什么？',
-  '你觉得我们之间最有默契的一件事是什么？',
-  '你更想要早安吻还是晚安吻？',
-  '你收藏过我们之间的哪张照片？',
-  '你觉得我是更感性还是更理性的人？',
-  '你觉得她穿什么颜色最好看？',
-  '你觉得他做什么表情最可爱？',
-  '我们之间你最不想失去的是什么？',
-  '你理想中的周末约会是什么样？',
-  '你最喜欢我穿哪件衣服？为什么？',
-  '你觉得我最迷人的小习惯是什么？',
-  '你回忆一下，我们之间最安静但是最幸福的一个瞬间',
-  '她哭的时候你第一反应是什么？',
-  '他累的时候你一般怎么做？',
-  '你有没有偷偷学过我喜欢的某样东西？',
-  '你觉得我们什么时候最般配？',
-  '如果有一个按钮可以重置我们的关系，你会按吗？',
-  '你觉得我们的爱能打败什么困难？',
-  '你最喜欢我们之间哪一个小秘密？',
-  '你觉得和我在一起后你最大的变化是什么？',
-  '你什么时候最想紧紧抱住我？',
-  '她什么时候看起来最美？素颜还是化妆？',
-  '他穿什么衣服你觉得最帅？',
-  '你偷偷给我起过什么昵称？',
-  '你更想要浪漫的约会还是日常的陪伴？',
-  // ── sweet/soft dares(搞笑、互动,无身体接触)──
-  '给对方一个真诚的拥抱，持续10秒',
-  '闭上眼睛，让对方在你手心画一个图案，猜是什么',
-  '用三句话夸对方，不能重复',
-  '模仿一个可爱的小动物的叫声',
-  '做10个深蹲，一边做一边说对方最棒',
-  '给对方的备注改成你最想叫的昵称',
-  '和对方自拍一张搞怪合照',
-  '重现你们第一次见面时的自我介绍',
-  '用方言说一句我爱你',
-  '用手机录一段10秒的语音描述对方今天的样子',
-  '和对方对视20秒，不许笑',
-  '给你最好的朋友发一条消息夸你的另一半',
-  '把手机壁纸换成对方的照片用一天',
-  '和对方一起计划一次未来的旅行，具体到每个细节',
-  '一起哼一首你们共同喜欢的歌',
-  '和对方一起做一个未来的约定',
-  '说三个对方让你心动的瞬间',
-  '给对方唱一首情歌，不管跑不跑调',
-]);
-
-// 普通题库 = 从情侣题库中按白名单 text 命中挑选
-//   注意: 这是普通题库的唯一来源,与情侣题库不再共享自动过滤逻辑
-export const NORMAL_QUESTIONS: TDQuestion[] = COUPLE_QUESTIONS.filter(q =>
-  NORMAL_QUESTION_TEXTS.has(q.text)
-);
+// 普通题库在 ./normalQuestions.ts 中定义，完全独立
 
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -866,7 +1002,6 @@ export function pickQuestion(
   playerRoles: ['male' | 'female', 'male' | 'female'],
   mode: GameMode = 'couple',
 ): TDQuestion | null {
-  // 关键: 直接根据 mode 选池,不再做模式过滤
   const sourcePool = mode === 'couple' ? COUPLE_QUESTIONS : NORMAL_QUESTIONS;
 
   const playerTarget = playerRoles[currentPlayer];
@@ -893,25 +1028,7 @@ export function pickQuestion(
 //  PENALTIES — 惩罚 (完全分离的 couple/normal 池)
 // ========================================================================
 
-// 普通惩罚白名单(搞笑/体能向,朋友之间也能玩)
-// 注意: 此集合的每个 text 都必须存在于下方 RAW_PENALTIES
-const NORMAL_PENALTY_TEXTS: Set<string> = new Set([
-  // soft
-  '做10个深蹲', '学猫叫三声', '单脚站立30秒', '捏着鼻子说完一句话',
-  '倒立靠墙10秒（做不到就平板支撑）', '原地转5圈然后走直线',
-  '用最夸张的语气朗读一段天气预报', '模仿你最喜欢的动物叫声持续10秒',
-  // hot
-  '给对方的备注改成"我错了"，用一天', '发一条语音给TA说今晚都听你的',
-  '让对方在你脸上画胡子', '做20个高抬腿，一边做一边说我最棒',
-  '模仿一个韩剧里最肉麻的台词', '把头像换成对方指定的图片用一天',
-  '用屁股写自己的名字', '对着镜子说三遍你最好看，要发自内心',
-  // hard
-  '发一条朋友圈说今天我是猪，不能删', '给对方洗脚',
-  '把你最囧的一张照片设成手机壁纸一天', '拍一个15秒的搞笑视频发给对方',
-  '给对方做一顿饭吃（不能是泡面）', '把你最私密的一个秘密写在纸上然后烧掉',
-  '用对方的口吻给TA的闺蜜/兄弟发一条消息', '在小区楼下对着天空大喊一声对方的名字',
-  '亲一下对方的脚背', '全程用撒娇的语气说话直到下一轮结束',
-]);
+// 普通惩罚在 ./normalPenalties.ts 中定义，完全独立
 
 // 原始惩罚列表(包含成人向内容,以下数组中部分项仅出现在 COUPLE_PENALTIES 中)
 const RAW_PENALTIES: TDPenalty[] = [
@@ -980,10 +1097,7 @@ const RAW_PENALTIES: TDPenalty[] = [
 // 情侣惩罚 = 全部
 export const COUPLE_PENALTIES: TDPenalty[] = RAW_PENALTIES;
 
-// 普通惩罚 = 显式白名单(完全独立于 couple 库,不可能混入成人内容)
-export const NORMAL_PENALTIES: TDPenalty[] = RAW_PENALTIES.filter(p =>
-  NORMAL_PENALTY_TEXTS.has(p.text)
-);
+// 普通惩罚在 ./normalPenalties.ts 中定义，完全独立
 
 // ========================================================================
 //  DIFFICULTIES & PICKER

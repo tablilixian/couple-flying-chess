@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TDDifficulty, TDTheme, TD_THEMES, GameMode } from '../../types';
-import { DIFFICULTIES, COUPLE_QUESTIONS, NORMAL_QUESTIONS, COUPLE_PENALTIES, NORMAL_PENALTIES } from '../../data/truthDare';
+import { TDDifficulty, TDTheme, COUPLE_THEMES, NORMAL_THEMES, GameMode } from '../../types';
+import { DIFFICULTIES, COUPLE_QUESTIONS, COUPLE_PENALTIES } from '../../data/truthDare';
+import { NORMAL_QUESTIONS } from '../../data/normalQuestions';
+import { NORMAL_PENALTIES } from '../../data/normalPenalties';
 import { ArrowLeft } from 'lucide-react';
 
 interface TruthDareHomeViewProps {
@@ -11,11 +13,7 @@ interface TruthDareHomeViewProps {
 }
 
 export function TruthDareHomeView({ mode, defaultNames, onStart, onBack }: TruthDareHomeViewProps) {
-  // 当前 mode 可用主题
-  const availableThemes = useMemo(
-    () => TD_THEMES.filter(t => t.modes.includes(mode)),
-    [mode]
-  );
+  const availableThemes = mode === 'couple' ? COUPLE_THEMES : NORMAL_THEMES;
   const availableThemeKeys = useMemo(
     () => availableThemes.map(t => t.key),
     [availableThemes]

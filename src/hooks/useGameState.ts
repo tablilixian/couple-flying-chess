@@ -515,7 +515,7 @@ export function useGameState(mode: GameMode) {
       ...prev,
       view: 'home',
       turn: 0,
-      players: prev.players.map(p => ({ ...p, themeId: null, step: 0 })),
+      players: prev.players.map(p => ({ ...p, step: 0 })),
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
       isRolling: false,
