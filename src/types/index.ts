@@ -83,7 +83,7 @@ export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select'
 
 export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
 
-export type TDTheme = 'sweet' | 'spicy' | 'confession' | 'roleplay' | 'kinky' | 'bdsm' | 'taboo' | 'dirtytalk';
+export type TDTheme = 'sweet' | 'spicy' | 'confession' | 'roleplay' | 'kinky' | 'bdsm' | 'taboo' | 'dirtytalk' | 'slutwife' | 'swing' | 'exposure';
 
 export type TDTarget = 'male' | 'female' | 'both';
 
@@ -123,6 +123,9 @@ export const COUPLE_THEMES: ThemeConfig[] = [
   { key: 'bdsm',       label: '束缚',     desc: '禁忌游戏，深度体验',   color: '#FF453A' },
   { key: 'taboo',      label: '禁忌',     desc: '大胆突破，解锁幻想',   color: '#8E8E93' },
   { key: 'dirtytalk',  label: '脏话',     desc: '言语挑逗，粗口刺激',     color: '#FF6B35' },
+  { key: 'slutwife',   label: '淫荡妻子', desc: '暴露幻想，多P想象',       color: '#FF2D55' },
+  { key: 'swing',      label: '交换',     desc: '伴侣共享，换偶幻想',       color: '#FF6482' },
+  { key: 'exposure',   label: '户外露出', desc: '公共场合暴露体验',         color: '#00C853' },
 ];
 
 export const NORMAL_THEMES: ThemeConfig[] = [
