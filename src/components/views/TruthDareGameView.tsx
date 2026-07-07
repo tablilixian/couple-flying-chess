@@ -35,9 +35,10 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
   const roundStartTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
+    const themeLabels = themes.map(t => TD_THEMES.find(c => c.key === t)?.label || t).join('·');
     startNewSession(mode, [
-      { id: 0, name: names[0], themeName: themes.join('·') },
-      { id: 1, name: names[1], themeName: themes.join('·') },
+      { id: 0, name: names[0], themeName: themeLabels },
+      { id: 1, name: names[1], themeName: themeLabels },
     ]);
   }, []);
 
