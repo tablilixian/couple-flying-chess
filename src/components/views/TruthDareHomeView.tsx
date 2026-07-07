@@ -3,7 +3,8 @@ import { TDDifficulty, TDTheme, COUPLE_THEMES, NORMAL_THEMES, GameMode } from '.
 import { DIFFICULTIES, COUPLE_QUESTIONS, COUPLE_PENALTIES } from '../../data/truthDare';
 import { NORMAL_QUESTIONS } from '../../data/normalQuestions';
 import { NORMAL_PENALTIES } from '../../data/normalPenalties';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, History } from 'lucide-react';
+import { HistoryModal } from '../modals/HistoryModal';
 
 interface TruthDareHomeViewProps {
   mode: GameMode;
@@ -13,6 +14,7 @@ interface TruthDareHomeViewProps {
 }
 
 export function TruthDareHomeView({ mode, defaultNames, onStart, onBack }: TruthDareHomeViewProps) {
+  const [showHistory, setShowHistory] = useState(false);
   const availableThemes = mode === 'couple' ? COUPLE_THEMES : NORMAL_THEMES;
   const availableThemeKeys = useMemo(
     () => availableThemes.map(t => t.key),
@@ -66,7 +68,14 @@ export function TruthDareHomeView({ mode, defaultNames, onStart, onBack }: Truth
           >
             <ArrowLeft className="text-white" size={20} />
           </button>
-          <div className="text-white text-lg font-bold">真心话大冒险</div>
+          <div className="flex-1 text-white text-lg font-bold">真心话大冒险</div>
+          <button
+            onClick={() => setShowHistory(true)}
+            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ios-btn border border-white/5"
+            title="游戏历史"
+          >
+            <History className="text-gray-400" size={20} />
+          </button>
         </header>
 
         <div className="flex-1 px-6 flex flex-col justify-center gap-5 overflow-y-auto py-4">
@@ -186,6 +195,7 @@ export function TruthDareHomeView({ mode, defaultNames, onStart, onBack }: Truth
           </button>
         </div>
       </div>
+      <HistoryModal isOpen={showHistory} onClose={() => setShowHistory(false)} />
     </div>
   );
 }

@@ -52,12 +52,18 @@ export function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
     collision: '追尾',
     lucky: '幸运',
     trap: '陷阱',
+    truth: '真心话',
+    dare: '大冒险',
+    penalty: '惩罚',
   };
 
   const typeColors: Record<string, string> = {
     collision: 'text-yellow-400',
     lucky: 'text-[#FF375F]',
     trap: 'text-[#BF5AF2]',
+    truth: 'text-[#FF375F]',
+    dare: 'text-[#FF9F0A]',
+    penalty: 'text-[#FF453A]',
   };
 
   const formatDuration = (seconds: number): string => {

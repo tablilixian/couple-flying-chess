@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { TDDifficulty, TDTheme, TDQuestion, TDPenalty, TDPlayer, TD_THEMES, GameMode } from '../../types';
 import { pickQuestion, pickPenalty, DIFFICULTIES } from '../../data/truthDare';
+import {
+  startNewSession, addEntryToCurrentSession, finalizeCurrentSession,
+  discardCurrentSession, getCurrentSession,
+} from '../../utils/gameSession';
 import { ArrowLeft, Heart, Sparkles, AlertTriangle, RotateCcw } from 'lucide-react';
 
 interface TruthDareGameViewProps {
@@ -26,7 +30,24 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
   const [transitionText, setTransitionText] = useState('');
   const [isFlipped, setIsFlipped] = useState(false);
   const [isPenaltyFlipped, setIsPenaltyFlipped] = useState(false);
+  const [usedTexts, setUsedTexts] = useState<string[]>([]);
   const flipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const roundStartTimeRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    startNewSession(mode, [
+      { id: 0, name: names[0], themeName: themes.join('·') },
+      { id: 1, name: names[1], themeName: themes.join('·') },
+    ]);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    const session = getCurrentSession();
+    if (session) {
+      session.entries.length > 0 ? finalizeCurrentSession() : discardCurrentSession();
+    }
+    onBack();
+  }, [onBack]);
 
   const diffConfig = DIFFICULTIES.find(d => d.key === difficulty)!;
   const playerColors: [string, string] = mode === 'couple' ? ['#0A84FF', '#FF375F'] : ['#5E5CE6', '#FF9F0A'];
@@ -51,11 +72,12 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
   }, [currentPlayer, round, names]);
 
   const handleChoice = useCallback((type: 'truth' | 'dare') => {
-    const question = pickQuestion(type, difficulty, themes, currentPlayer, playerRoles, mode);
+    const question = pickQuestion(type, difficulty, themes, currentPlayer, playerRoles, mode, usedTexts);
     if (!question) return;
     setCurrentQuestion(question);
     setPhase('display');
     setIsFlipped(false);
+    setUsedTexts(prev => [...prev, question.text]);
 
     const statsKey = type === 'truth' ? 'truthCount' : 'dareCount';
     setStats(prev => {
@@ -63,13 +85,40 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
       next[currentPlayer] = { ...next[currentPlayer], [statsKey]: next[currentPlayer][statsKey] + 1 };
       return next;
     });
-  }, [difficulty, themes, currentPlayer, playerRoles, mode]);
+    roundStartTimeRef.current = Date.now();
+  }, [difficulty, themes, currentPlayer, playerRoles, mode, usedTexts]);
 
   const handleComplete = useCallback(() => {
+    if (currentQuestion) {
+      addEntryToCurrentSession({
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: roundStartTimeRef.current,
+        resolvedAt: Date.now(),
+        duration: Math.round((Date.now() - roundStartTimeRef.current) / 1000),
+        round,
+        executorName: names[currentPlayer],
+        task: currentQuestion.text,
+        completed: true,
+        type: currentQuestion.type,
+      });
+    }
     switchToNextPlayer();
-  }, [switchToNextPlayer]);
+  }, [switchToNextPlayer, currentQuestion, round, names, currentPlayer]);
 
   const handlePenalty = useCallback(() => {
+    if (currentQuestion) {
+      addEntryToCurrentSession({
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: roundStartTimeRef.current,
+        resolvedAt: Date.now(),
+        duration: Math.round((Date.now() - roundStartTimeRef.current) / 1000),
+        round,
+        executorName: names[currentPlayer],
+        task: currentQuestion.text,
+        completed: false,
+        type: currentQuestion.type,
+      });
+    }
     const penalty = pickPenalty(difficulty, mode);
     if (!penalty) return;
     setCurrentPenalty(penalty);
@@ -80,11 +129,25 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
       next[currentPlayer] = { ...next[currentPlayer], penaltyCount: next[currentPlayer].penaltyCount + 1 };
       return next;
     });
-  }, [difficulty, currentPlayer]);
+    roundStartTimeRef.current = Date.now();
+  }, [difficulty, currentPlayer, currentQuestion, round, names]);
 
   const handlePenaltyComplete = useCallback(() => {
+    if (currentPenalty) {
+      addEntryToCurrentSession({
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: roundStartTimeRef.current,
+        resolvedAt: Date.now(),
+        duration: Math.round((Date.now() - roundStartTimeRef.current) / 1000),
+        round,
+        executorName: names[currentPlayer],
+        task: currentPenalty.text,
+        completed: true,
+        type: 'penalty',
+      });
+    }
     switchToNextPlayer();
-  }, [switchToNextPlayer]);
+  }, [switchToNextPlayer, currentPenalty, round, names, currentPlayer]);
 
   useEffect(() => {
     if (phase === 'display' && !isFlipped) {
@@ -229,7 +292,7 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
       <div className="relative z-10 flex flex-col h-full max-w-[430px] mx-auto w-full">
         <header className="pt-12 pb-2 px-4 flex items-center gap-4 shrink-0">
           <button
-            onClick={onBack}
+            onClick={handleBack}
             className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ios-btn border border-white/5"
           >
             <ArrowLeft className="text-white" size={20} />

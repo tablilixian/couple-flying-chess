@@ -83,7 +83,7 @@ export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select'
 
 export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
 
-export type TDTheme = 'sweet' | 'spicy' | 'confession' | 'roleplay' | 'kinky' | 'bdsm' | 'taboo';
+export type TDTheme = 'sweet' | 'spicy' | 'confession' | 'roleplay' | 'kinky' | 'bdsm' | 'taboo' | 'dirtytalk';
 
 export type TDTarget = 'male' | 'female' | 'both';
 
@@ -122,6 +122,7 @@ export const COUPLE_THEMES: ThemeConfig[] = [
   { key: 'kinky',      label: '调教',     desc: '主导与顺从，探索边界', color: '#FF6482' },
   { key: 'bdsm',       label: '束缚',     desc: '禁忌游戏，深度体验',   color: '#FF453A' },
   { key: 'taboo',      label: '禁忌',     desc: '大胆突破，解锁幻想',   color: '#8E8E93' },
+  { key: 'dirtytalk',  label: '脏话',     desc: '言语挑逗，粗口刺激',     color: '#FF6B35' },
 ];
 
 export const NORMAL_THEMES: ThemeConfig[] = [
