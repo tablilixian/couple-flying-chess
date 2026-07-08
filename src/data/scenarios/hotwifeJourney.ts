@@ -2,13 +2,17 @@ import { Scenario } from '../../types';
 
 export const HOTWIFE_JOURNEY: Scenario = {
   id: 'hotwife-journey',
+  mode: 'couple',
   title: '淫妻启蒙',
   emoji: '💋',
-  desc: '一场关于幻想、信任与探索的旅程。由丈夫引导妻子，从心理到言语到行动，一步步打开心扉。',
+  desc: '一场关于幻想、信任与探索的旅程。由{actor}引导{partner}，从心理到言语到行动，一步步打开心扉。',
   roles: ['引导者（丈夫）', '探索者（妻子）'],
   roleEmojis: ['👑', '💃'],
   difficulty: 'hard',
   estimatedMinutes: 45,
+  definitions: [
+    { term: '淫妻（Hotwife）', meaning: '指妻子在丈夫知情且同意的情况下，与其他男性发生性关系或暧昧互动。核心在于丈夫从中获得性兴奋，而非隐瞒或背叛。' },
+  ],
   acts: [
     {
       title: '心锚对话',
@@ -23,6 +27,15 @@ export const HOTWIFE_JOURNEY: Scenario = {
           type: 'question',
           actor: 1,
           text: '你幻想过被别的男人欣赏甚至渴望吗？你最想被什么样的男人注视？',
+          suggestions: [
+            '刘德华那样的帅大叔',
+            '鹿晗那种小鲜肉',
+            '胸肌发达肌肉男',
+            '鸡巴很大的猛男',
+            '很聪明的高智商类型',
+            '温柔体贴暖男型',
+            '坏坏的痞帅型',
+          ],
         },
         {
           type: 'question',
@@ -38,17 +51,26 @@ export const HOTWIFE_JOURNEY: Scenario = {
         {
           type: 'command',
           actor: 0,
-          text: '看着她的眼睛，告诉她你幻想她被别人抱在怀里的样子。说完后问她：听到这些你身体的哪个部位有反应？',
+          text: '看着{partner}的眼睛，告诉她你幻想她被别人抱在怀里的样子。说完后问她：听到这些你身体的哪个部位有反应？',
         },
         {
           type: 'command',
           actor: 1,
-          text: '闭上眼睛，想象一个陌生男人在注视你。描述你从头顶到脚尖的感觉——他最喜欢你哪个部位？',
+          text: '闭上眼睛，想象一个陌生男人在注视你。描述{actor}从头顶到脚尖的感觉——他最喜欢{actor}哪个部位？',
+          suggestions: [
+            '胸',
+            '屁股',
+            '腰',
+            '腿',
+            '锁骨',
+            '脚',
+            '嘴唇',
+          ],
         },
         {
           type: 'command',
           actor: 0,
-          text: '打开手机录音，对着它描述你想象中她在别人身下的样子。录完后放给她听，观察她的表情。',
+          text: '打开手机录音，对着它描述你想象中{partner}在别人身下的样子。录完后放给她听，观察她的表情。',
         },
       ],
     },
@@ -59,7 +81,7 @@ export const HOTWIFE_JOURNEY: Scenario = {
         {
           type: 'action',
           actor: 1,
-          text: '今晚穿一件你平时觉得"太大胆了"的衣服，在他的陪伴下出门散步或去酒吧。回来后描述你感受到的视线。',
+          text: '今晚穿一件{actor}平时觉得"太大胆了"的衣服，在{partner}的陪伴下出门散步或去酒吧。回来后描述你感受到的视线。',
           note: '不一定非得很暴露，可以是一件紧身裙、深V、或者不穿内衣。重点是你的心态。',
         },
         {
@@ -70,7 +92,7 @@ export const HOTWIFE_JOURNEY: Scenario = {
         {
           type: 'question',
           actor: 1,
-          text: '被其他男人注视的时候，你在想什么？你有想到他吗？你希望那时他在看你的表情，还是在看其他男人的反应？',
+          text: '被其他男人注视的时候，你在想什么？你有想到{partner}吗？你希望那时他在看你的表情，还是在看其他男人的反应？',
         },
       ],
     },
@@ -86,7 +108,7 @@ export const HOTWIFE_JOURNEY: Scenario = {
         {
           type: 'command',
           actor: 0,
-          text: '告诉她你为她今晚的勇气感到骄傲。用最温柔的方式和她做爱——不是出于欲望，而是出于连接。',
+          text: '告诉{partner}你为她今晚的勇气感到骄傲。用最温柔的方式和她做爱——不是出于欲望，而是出于连接。',
         },
       ],
     },

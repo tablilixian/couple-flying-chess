@@ -207,6 +207,7 @@ export interface ISStep {
   actor: ISActor;
   note?: string;
   options?: { label: string; nextStep?: number }[];
+  suggestions?: string[];
 }
 
 export interface ISAct {
@@ -217,6 +218,7 @@ export interface ISAct {
 
 export interface Scenario {
   id: string;
+  mode: GameMode;
   title: string;
   emoji: string;
   desc: string;
@@ -225,4 +227,5 @@ export interface Scenario {
   difficulty: TDDifficulty;
   estimatedMinutes: number;
   acts: ISAct[];
+  definitions?: { term: string; meaning: string }[];
 }

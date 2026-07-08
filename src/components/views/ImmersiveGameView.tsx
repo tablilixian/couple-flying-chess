@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Scenario } from '../../types';
+import { useState, useCallback, useMemo } from 'react';
+import { Scenario, ISActor } from '../../types';
 import { X, ChevronRight } from 'lucide-react';
 
 interface ImmersiveGameViewProps {
@@ -8,12 +8,22 @@ interface ImmersiveGameViewProps {
   onEnd: () => void;
 }
 
+function replacePlaceholders(text: string, actor: ISActor, names: [string, string]): string {
+  const actorIdx = actor === 'both' ? -1 : actor;
+  const partnerIdx = actor === 0 ? 1 : actor === 1 ? 0 : -1;
+  return text
+    .replaceAll('{actor}', actorIdx >= 0 ? names[actorIdx] : '你们')
+    .replaceAll('{partner}', partnerIdx >= 0 ? names[partnerIdx] : '对方')
+    .replaceAll('{0}', names[0])
+    .replaceAll('{1}', names[1]);
+}
+
 export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: ImmersiveGameViewProps) {
   const [currentActIdx, setCurrentActIdx] = useState(0);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [showActIntro, setShowActIntro] = useState(true);
-  const [completedStepTexts, setCompletedStepTexts] = useState<string[]>([]);
   const [showEnding, setShowEnding] = useState(false);
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
 
   const currentAct = scenario.acts[currentActIdx];
   const currentStep = currentAct?.steps[currentStepIdx];
@@ -23,10 +33,12 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
     .slice(0, currentActIdx)
     .reduce((acc, act) => acc + act.steps.length, 0) + currentStepIdx;
 
-  const getActorLabel = useCallback((actor: 0 | 1 | 'both') => {
+  const names = roleAssignment;
+
+  const getActorLabel = useCallback((actor: ISActor) => {
     if (actor === 'both') return '👥 双方';
-    return `${scenario.roleEmojis[actor]} ${roleAssignment[actor]}`;
-  }, [scenario, roleAssignment]);
+    return `${scenario.roleEmojis[actor]} ${names[actor]}`;
+  }, [scenario, names]);
 
   const getStepActionLabel = useCallback((type: string) => {
     switch (type) {
@@ -37,13 +49,33 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
     }
   }, []);
 
+  const processedText = useMemo(() => {
+    if (!currentStep) return '';
+    return replacePlaceholders(currentStep.text, currentStep.actor, names);
+  }, [currentStep, names]);
+
+  const processedNote = useMemo(() => {
+    if (!currentStep?.note) return undefined;
+    return replacePlaceholders(currentStep.note, currentStep.actor, names);
+  }, [currentStep, names]);
+
+  const processedSuggestions = useMemo(() => {
+    if (!currentStep?.suggestions) return undefined;
+    return currentStep.suggestions.map(s => replacePlaceholders(s, currentStep.actor, names));
+  }, [currentStep, names]);
+
+  const handleToggleSuggestion = (idx: number) => {
+    setSelectedSuggestions(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
   const handleNext = () => {
     if (!currentAct) return;
-
-    // Mark step as completed
-    if (currentStep) {
-      setCompletedStepTexts(prev => [...prev, currentStep.text]);
-    }
+    setSelectedSuggestions(new Set());
 
     const nextStepIdx = currentStepIdx + 1;
     if (nextStepIdx < currentAct.steps.length) {
@@ -126,28 +158,22 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
           </button>
           <div className="text-xs text-gray-500">{completedSoFar}/{totalSteps}</div>
         </div>
-        {/* Progress bar */}
         <div className="w-full h-1 bg-white/[0.06] rounded-full overflow-hidden">
           <div
             className="h-full bg-pink-500 rounded-full transition-all duration-500"
             style={{ width: `${(completedSoFar / totalSteps) * 100}%` }}
           />
         </div>
-        {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-500">
-          <span className="text-pink-400 font-semibold">
-            {currentAct.title}
-          </span>
+          <span className="text-pink-400 font-semibold">{currentAct.title}</span>
           <ChevronRight size={12} className="text-gray-600" />
-          <span className="text-gray-400">
-            步骤 {currentStepIdx + 1}/{currentAct.steps.length}
-          </span>
+          <span className="text-gray-400">步骤 {currentStepIdx + 1}/{currentAct.steps.length}</span>
         </div>
       </div>
 
       {/* Step content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 pb-4">
-        <div className="text-center max-w-sm">
+      <div className="flex-1 flex flex-col items-center justify-center px-8 pb-4 overflow-y-auto">
+        <div className="text-center max-w-sm w-full">
           {/* Actor badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-5"
             style={{
@@ -161,13 +187,35 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
 
           {/* Step text */}
           <div className="text-white text-lg font-bold leading-relaxed mb-4">
-            {currentStep.text}
+            {processedText}
           </div>
 
+          {/* Suggestions */}
+          {processedSuggestions && processedSuggestions.length > 0 && (
+            <div className="mb-4">
+              <div className="text-gray-500 text-[11px] mb-2">备选参考（可选）：</div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {processedSuggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleToggleSuggestion(i)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all active:scale-[0.95] ${
+                      selectedSuggestions.has(i)
+                        ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
+                        : 'bg-white/[0.06] text-gray-400 border border-white/[0.08] hover:bg-white/[0.10]'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Note */}
-          {currentStep.note && (
+          {processedNote && (
             <div className="px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-gray-400 text-xs leading-relaxed">
-              💡 {currentStep.note}
+              💡 {processedNote}
             </div>
           )}
 
