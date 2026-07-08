@@ -79,7 +79,7 @@ export interface TaskEventData {
 
 export type StepType = 'narration' | 'timer' | 'counter';
 export type ScriptMood = 'sweet' | 'romantic' | 'intense' | 'calm';
-export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending' | 'truth-dare-home' | 'truth-dare-game';
+export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending' | 'truth-dare-home' | 'truth-dare-game' | 'immersive-select' | 'immersive-game';
 
 export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
 
@@ -193,4 +193,36 @@ export interface ScriptGameSnapshot {
   stepIndex: number;
   stepLog: StepLogEntry[];
   mood: ScriptMood;
+}
+
+// ===== 沉浸剧场 Types =====
+
+export type ISActor = 0 | 1 | 'both';
+
+export type ISStepType = 'command' | 'question' | 'action' | 'narration' | 'choice';
+
+export interface ISStep {
+  type: ISStepType;
+  text: string;
+  actor: ISActor;
+  note?: string;
+  options?: { label: string; nextStep?: number }[];
+}
+
+export interface ISAct {
+  title: string;
+  desc?: string;
+  steps: ISStep[];
+}
+
+export interface Scenario {
+  id: string;
+  title: string;
+  emoji: string;
+  desc: string;
+  roles: [string, string];
+  roleEmojis: [string, string];
+  difficulty: TDDifficulty;
+  estimatedMinutes: number;
+  acts: ISAct[];
 }

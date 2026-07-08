@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ArrowLeft, Settings, History } from 'lucide-react';
-import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty, TDTheme } from './types';
+import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty, TDTheme, Scenario } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { clearAudioCache } from './utils/ttsService';
 import { useGameState } from './hooks/useGameState';
@@ -23,6 +23,8 @@ import { ScriptGameView } from './components/views/ScriptGameView';
 import { EndingView } from './components/views/EndingView';
 import { TruthDareHomeView } from './components/views/TruthDareHomeView';
 import { TruthDareGameView } from './components/views/TruthDareGameView';
+import { ImmersiveSelectView } from './components/views/ImmersiveSelectView';
+import { ImmersiveGameView } from './components/views/ImmersiveGameView';
 
 const MODE_CONFIG: Record<GameMode, {
   title: string;
@@ -107,6 +109,8 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [tdNames, setTdNames] = useState<[string, string]>(['', '']);
   const [tdDifficulty, setTdDifficulty] = useState<TDDifficulty>('soft');
   const [tdThemes, setTdThemes] = useState<TDTheme[]>([]);
+  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
+  const [scenarioRoleAssignment, setScenarioRoleAssignment] = useState<[string, string]>(['', '']);
 
   const config = MODE_CONFIG[mode];
 
@@ -255,6 +259,18 @@ function AppInner({ mode }: { mode: GameMode }) {
     setAppSubview('hub');
   };
 
+  // ===== Immersive Theater =====
+  const handleImmersiveStart = (scenario: Scenario, roleAssignment: [string, string]) => {
+    setSelectedScenario(scenario);
+    setScenarioRoleAssignment(roleAssignment);
+    setAppSubview('immersive-game');
+  };
+
+  const handleImmersiveEnd = () => {
+    setSelectedScenario(null);
+    setAppSubview('hub');
+  };
+
   // ===== Render =====
   // Hub view
   if (appSubview === 'hub') {
@@ -361,6 +377,39 @@ function AppInner({ mode }: { mode: GameMode }) {
         themes={tdThemes}
         onBack={handleTruthDareBack}
       />
+    );
+  }
+
+  // ===== Immersive Theater =====
+  if (appSubview === 'immersive-select') {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="fixed inset-0 z-0">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 opacity-60" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        </div>
+        <div className="relative z-10 w-full max-w-[430px] h-full bg-black/20">
+          <ImmersiveSelectView
+            mode={mode}
+            onStart={handleImmersiveStart}
+            onBack={() => setAppSubview('hub')}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (appSubview === 'immersive-game' && selectedScenario) {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="relative z-10 w-full max-w-[430px] h-full">
+          <ImmersiveGameView
+            scenario={selectedScenario}
+            roleAssignment={scenarioRoleAssignment}
+            onEnd={handleImmersiveEnd}
+          />
+        </div>
+      </div>
     );
   }
 
