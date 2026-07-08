@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, ReactNode } from 'react';
 import { Scenario, ISActor } from '../../types';
-import { X, ChevronRight } from 'lucide-react';
+import { X, ChevronRight, Play, Pause } from 'lucide-react';
 import { saveToStorage, loadFromStorage, removeFromStorage } from '../../utils/localStorage';
 
 interface ImmersiveGameViewProps {
@@ -51,6 +51,9 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
   const [showResume, setShowResume] = useState(false);
   const [savedProgress, setSavedProgress] = useState<{ currentActIdx: number; currentStepIdx: number } | null>(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
+  const [autoPlay, setAutoPlay] = useState(false);
+  const autoPlayRef = useRef(autoPlay);
+  autoPlayRef.current = autoPlay;
 
   const clearProgress = useCallback(() => {
     removeFromStorage(getProgressKey(scenario.id));
@@ -69,6 +72,26 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
 
   const currentAct = scenario.acts[currentActIdx];
   const currentStep = currentAct?.steps[currentStepIdx];
+
+  useEffect(() => {
+    if (!autoPlayRef.current) return;
+    let timer: number;
+    if (showActIntro) {
+      timer = window.setTimeout(() => setShowActIntro(false), 1200);
+    } else if (showResume || showEnding) {
+      return;
+    } else if (currentStep) {
+      const delay = currentStep.type === 'question' ? 2000 : 2500;
+      timer = window.setTimeout(() => {
+        if (!autoPlayRef.current) return;
+        if (currentStep.suggestions && currentStep.suggestions.length > 0) {
+          setSelectedSuggestions(new Set([Math.floor(Math.random() * currentStep.suggestions.length)]));
+        }
+        handleNext();
+      }, delay);
+    }
+    return () => clearTimeout(timer);
+  }, [autoPlay, currentStepIdx, currentActIdx, showActIntro, showResume, showEnding, currentStep?.type, currentStep?.suggestions?.length]);
 
   const totalSteps = scenario.acts.reduce((acc, act) => acc + act.steps.length, 0);
   const completedSoFar = scenario.acts
@@ -280,7 +303,20 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
           >
             <X size={16} />
           </button>
-          <div className="text-xs text-gray-500">{completedSoFar}/{totalSteps}</div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setAutoPlay(prev => !prev)}
+              className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
+                autoPlay
+                  ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30'
+                  : 'bg-white/[0.06] text-gray-500 hover:bg-white/[0.10]'
+              }`}
+              title={autoPlay ? '关闭自动播放' : '自动播放'}
+            >
+              {autoPlay ? <Pause size={13} /> : <Play size={13} />}
+            </button>
+            <span className="text-xs text-gray-500 min-w-[3ch] text-right">{completedSoFar}/{totalSteps}</span>
+          </div>
         </div>
         <div className="w-full h-1 bg-white/[0.06] rounded-full overflow-hidden">
           <div
