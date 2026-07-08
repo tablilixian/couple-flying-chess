@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Download, Trash2, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { GameMode } from '../../types';
 import {
   GameSession, SessionSummary,
   loadSessions, clearAllSessions, downloadSessionsAsJson, sessionToSummary
@@ -8,23 +9,26 @@ import {
 interface HistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode: GameMode;
 }
 
 type View = 'list' | 'detail';
 
-export function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
+export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
   const [view, setView] = useState<View>('list');
   const [summaries, setSummaries] = useState<SessionSummary[]>([]);
   const [selectedSession, setSelectedSession] = useState<GameSession | null>(null);
 
+  const modeLabel = mode === 'couple' ? '情侣' : '普通';
+
   useEffect(() => {
     if (isOpen) {
-      const sessions = loadSessions();
+      const sessions = loadSessions().filter(s => s.mode === mode);
       setSummaries(sessions.map(sessionToSummary));
       setView('list');
       setSelectedSession(null);
     }
-  }, [isOpen]);
+  }, [isOpen, mode]);
 
   if (!isOpen) return null;
 
@@ -90,7 +94,7 @@ export function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
               </button>
             )}
             <h2 className="text-lg font-bold text-white">
-              {view === 'list' ? '游戏历史' : '局详情'}
+              {view === 'list' ? `${modeLabel}模式 · 游戏历史` : '局详情'}
             </h2>
           </div>
           <div className="flex items-center gap-2">

@@ -5,7 +5,7 @@ import {
   startNewSession, addEntryToCurrentSession, finalizeCurrentSession,
   discardCurrentSession, getCurrentSession,
 } from '../../utils/gameSession';
-import { ArrowLeft, Heart, Sparkles, AlertTriangle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Heart, Sparkles, AlertTriangle, RotateCcw, XCircle, CheckCircle } from 'lucide-react';
 
 interface TruthDareGameViewProps {
   mode: GameMode;
@@ -53,6 +53,8 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
   const diffConfig = DIFFICULTIES.find(d => d.key === difficulty)!;
   const playerColors: [string, string] = mode === 'couple' ? ['#0A84FF', '#FF375F'] : ['#5E5CE6', '#FF9F0A'];
   const playerIcons: [string, string] = mode === 'couple' ? ['♂', '♀'] : ['A', 'B'];
+  const selectedThemeCfgs = themes.map(t => TD_THEMES.find(c => c.key === t)!).filter(Boolean);
+  const otherPlayer = currentPlayer === 0 ? 1 : 0;
   // couple 模式用男/女 target,normal 模式不区分 target
   const playerRoles: ['male' | 'female', 'male' | 'female'] = mode === 'couple' ? ['male', 'female'] : ['male', 'female'];
 
@@ -184,7 +186,7 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
   if (phase === 'display' && currentQuestion) {
     const isTruth = currentQuestion.type === 'truth';
     return (
-      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center px-6">
+      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center px-4">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
         <div className="relative w-full max-w-sm h-[420px] perspective-1000">
           <div className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}>
@@ -201,9 +203,14 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
                 {isTruth ? '说出你的答案' : '接受挑战吧'}
               </p>
             </div>
-            <div className="flip-card-back bg-[#1C1C1E] border border-white/10 p-6 shadow-2xl flex flex-col">
-              <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="flex items-center gap-2 mb-4">
+            <div className="flip-card-back bg-[#1C1C1E] border border-white/10 px-2 pb-5 pt-6 shadow-2xl flex flex-col">
+              <div className="flex-1 flex flex-col items-center">
+                <div className="flex items-center justify-center gap-1 text-[11px] text-gray-500 mb-3">
+                  <span className="font-semibold text-gray-400">Round {round}</span>
+                  <span className="mx-1">·</span>
+                  <span>{names[currentPlayer]} 的回合</span>
+                </div>
+                <div className="flex items-center gap-2 mb-4 flex-wrap justify-center">
                   {(() => {
                     const themeCfg = TD_THEMES.find(t => t.key === currentQuestion.theme);
                     return (
@@ -218,22 +225,39 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
                     {diffConfig.label}
                   </div>
                 </div>
-                <div className="text-white text-lg font-medium text-center leading-relaxed px-2">
+                <div className="text-white text-xl font-bold text-center leading-relaxed px-2">
                   {currentQuestion.text}
                 </div>
+                {(() => {
+                  const target = currentQuestion.target;
+                  const targetIdx = target === 'both' ? currentPlayer : (target === 'male' ? playerRoles.indexOf('male') : playerRoles.indexOf('female'));
+                  const targetName = names[targetIdx];
+                  const targetColor = playerColors[targetIdx];
+                  const label = currentQuestion.type === 'truth' ? '作答' : '完成';
+                  return (
+                    <div className="mt-auto mb-1 px-3 py-1.5 rounded-lg text-sm font-bold text-center"
+                      style={{ backgroundColor: `${targetColor}15`, color: targetColor, borderColor: `${targetColor}30`, borderWidth: 1, borderStyle: 'solid' }}>
+                      👤 由 <span className="underline decoration-dotted underline-offset-2">{targetName}</span> {label}
+                    </div>
+                  );
+                })()}
               </div>
-              <div className="flex gap-3 mt-auto shrink-0">
+              <div className="flex justify-center gap-5 shrink-0">
                 <button
                   onClick={handlePenalty}
-                  className="flex-1 h-12 rounded-full bg-[#3A3A3C] text-[#FF453A] font-bold text-sm ios-btn border border-transparent hover:border-[#FF453A]/30 transition-colors"
+                  className="w-20 h-20 rounded-full flex flex-col items-center justify-center font-bold text-base ios-btn transition-all duration-200 active:scale-[0.97] leading-tight tracking-wider"
+                  style={{ backgroundColor: '#FF453A15', color: '#FF453A', borderColor: '#FF453A25', borderWidth: 1, borderStyle: 'solid' }}
                 >
-                  接受惩罚
+                  <span>接受</span>
+                  <span>惩罚</span>
                 </button>
                 <button
                   onClick={handleComplete}
-                  className="flex-1 h-12 rounded-full bg-white text-black font-bold text-sm ios-btn shadow-lg transition-colors"
+                  className="w-20 h-20 rounded-full flex flex-col items-center justify-center font-bold text-base ios-btn shadow-lg transition-all duration-200 active:scale-[0.97] leading-tight tracking-wider"
+                  style={{ backgroundColor: '#30D158', color: '#000' }}
                 >
-                  已完成
+                  <span>已</span>
+                  <span>完成</span>
                 </button>
               </div>
             </div>
@@ -245,7 +269,7 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
 
   if (phase === 'penalty' && currentPenalty) {
     return (
-      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center px-6">
+      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center px-4">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
         <div className="relative w-full max-w-sm h-[420px] perspective-1000">
           <div className={`flip-card-inner ${isPenaltyFlipped ? 'flipped' : ''}`}>
@@ -259,19 +283,30 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
               </p>
             </div>
             <div className="flip-card-back bg-[#1C1C1E] border border-white/10 p-6 shadow-2xl flex flex-col">
-              <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="flex-1 flex flex-col items-center">
+                <div className="flex items-center justify-center gap-1 text-[11px] text-gray-500 mb-3">
+                  <span className="font-semibold text-gray-400">Round {round}</span>
+                  <span className="mx-1">·</span>
+                  <span>{names[currentPlayer]} 的惩罚</span>
+                </div>
                 <div className="w-fit mb-4 px-3 py-1 rounded-full text-xs font-semibold"
                   style={{ backgroundColor: '#FF453A22', color: '#FF453A' }}>
                   惩罚 · {diffConfig.label}
                 </div>
-                <div className="text-white text-lg font-medium text-center leading-relaxed px-2">
+                <div className="text-white text-xl font-bold text-center leading-relaxed px-2">
                   {currentPenalty.text}
                 </div>
               </div>
+              <div className="mb-3 px-3 py-1.5 rounded-lg text-sm font-bold text-center"
+                style={{ backgroundColor: '#FF453A15', color: '#FF453A', borderColor: '#FF453A30', borderWidth: 1, borderStyle: 'solid' }}>
+                👤 由 <span className="underline decoration-dotted underline-offset-2">{names[currentPlayer]}</span> 接受惩罚
+              </div>
               <button
                 onClick={handlePenaltyComplete}
-                className="w-full h-12 rounded-full bg-[#FF453A] text-white font-bold text-sm ios-btn shadow-lg transition-colors shrink-0"
+                className="w-full h-12 rounded-full flex items-center justify-center gap-1.5 font-bold text-sm ios-btn shadow-lg transition-all duration-200 active:scale-[0.97] shrink-0"
+                style={{ backgroundColor: '#FF453A', color: '#fff' }}
               >
+                <AlertTriangle size={16} />
                 接受惩罚
               </button>
             </div>
@@ -324,61 +359,93 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
           <div className="w-10" />
         </header>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8">
-          {/* Current player indicator */}
-          <div className="text-center">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-3"
-              style={{ backgroundColor: `${playerColors[currentPlayer]}22`, color: playerColors[currentPlayer] }}
-            >
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+          {/* Player card */}
+          <div className="w-full max-w-sm rounded-2xl p-5 flex items-center gap-4"
+            style={{ backgroundColor: `${playerColors[currentPlayer]}12`, borderColor: `${playerColors[currentPlayer]}30`, borderWidth: 1, borderStyle: 'solid' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shrink-0"
+              style={{ backgroundColor: `${playerColors[currentPlayer]}22`, color: playerColors[currentPlayer] }}>
               {playerIcons[currentPlayer]}
             </div>
-            <div className="text-white text-xl font-bold">{names[currentPlayer]}</div>
-            <div className="text-gray-500 text-xs mt-1">选择一种挑战类型</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-lg font-bold truncate">{names[currentPlayer]} 的回合</div>
+              <div className="text-gray-500 text-xs mt-0.5">Round {round} · {diffConfig.label}难度</div>
+              <div className="flex gap-1.5 mt-2 flex-wrap">
+                {selectedThemeCfgs.slice(0, 4).map(t => (
+                  <span key={t.key} className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: `${t.color}20`, color: t.color }}>
+                    {t.label}
+                  </span>
+                ))}
+                {selectedThemeCfgs.length > 4 && (
+                  <span className="text-[10px] text-gray-500">+{selectedThemeCfgs.length - 4}</span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1.5">
+                <Heart size={12} className="text-[#FF375F]" />
+                <span className="text-white text-xs font-bold">{currentStats.truthCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Sparkles size={12} className="text-[#FF9F0A]" />
+                <span className="text-white text-xs font-bold">{currentStats.dareCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle size={12} className="text-[#FF453A]" />
+                <span className="text-white text-xs font-bold">{currentStats.penaltyCount}</span>
+              </div>
+            </div>
           </div>
 
           {/* Choice buttons */}
           <div className="flex gap-4 w-full max-w-sm">
             <button
               onClick={() => handleChoice('truth')}
-              className="flex-1 aspect-square bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3 ios-btn transition-all duration-200 hover:bg-white/10 active:bg-white/[0.12]"
+              className="flex-1 aspect-[3/4] rounded-2xl flex flex-col items-center justify-center gap-3 ios-btn transition-all duration-200 active:scale-[0.97] border"
+              style={{
+                backgroundColor: '#FF375F15',
+                borderColor: '#FF375F30',
+              }}
             >
-              <Heart className="text-[#FF375F]" size={40} />
-              <span className="text-white font-bold text-lg">真心话</span>
-              <span className="text-gray-500 text-xs">说出你的答案</span>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#FF375F20' }}>
+                <Heart className="text-[#FF375F]" size={28} />
+              </div>
+              <div>
+                <div className="text-white font-bold text-lg text-center">真心话</div>
+                <div className="text-[#FF375F] text-xs text-center mt-0.5 opacity-70">说出你的答案</div>
+              </div>
             </button>
             <button
               onClick={() => handleChoice('dare')}
-              className="flex-1 aspect-square bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3 ios-btn transition-all duration-200 hover:bg-white/10 active:bg-white/[0.12]"
+              className="flex-1 aspect-[3/4] rounded-2xl flex flex-col items-center justify-center gap-3 ios-btn transition-all duration-200 active:scale-[0.97] border"
+              style={{
+                backgroundColor: '#FF9F0A15',
+                borderColor: '#FF9F0A30',
+              }}
             >
-              <Sparkles className="text-[#FF9F0A]" size={40} />
-              <span className="text-white font-bold text-lg">大冒险</span>
-              <span className="text-gray-500 text-xs">接受挑战吧</span>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#FF9F0A20' }}>
+                <Sparkles className="text-[#FF9F0A]" size={28} />
+              </div>
+              <div>
+                <div className="text-white font-bold text-lg text-center">大冒险</div>
+                <div className="text-[#FF9F0A] text-xs text-center mt-0.5 opacity-70">接受挑战吧</div>
+              </div>
             </button>
           </div>
 
-          {/* Stats */}
-          <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-2 border border-white/5">
+          {/* Other player preview */}
+          <div className="w-full max-w-sm flex items-center justify-center gap-2 opacity-40">
+            <div className="text-xs text-gray-500">另一玩家:</div>
             <div className="flex items-center gap-1.5">
-              <Heart size={14} className="text-[#FF375F]" />
-              <span className="text-gray-400 text-xs">{currentStats.truthCount}</span>
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style={{ backgroundColor: `${playerColors[otherPlayer]}22`, color: playerColors[otherPlayer] }}>
+                {playerIcons[otherPlayer]}
+              </div>
+              <span className="text-xs text-gray-400">{names[otherPlayer]}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Sparkles size={14} className="text-[#FF9F0A]" />
-              <span className="text-gray-400 text-xs">{currentStats.dareCount}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <AlertTriangle size={14} className="text-[#FF453A]" />
-              <span className="text-gray-400 text-xs">{currentStats.penaltyCount}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Difficulty indicator */}
-        <div className="shrink-0 pb-8 flex justify-center">
-          <div className="text-[10px] text-gray-500 flex items-center gap-2">
-            <span>当前难度</span>
-            <span className="font-semibold" style={{ color: diffConfig.color }}>{diffConfig.label}</span>
           </div>
         </div>
       </div>

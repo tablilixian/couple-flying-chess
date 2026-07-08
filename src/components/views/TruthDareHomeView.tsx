@@ -195,7 +195,7 @@ export function TruthDareHomeView({ mode, defaultNames, onStart, onBack }: Truth
           </button>
         </div>
       </div>
-      <HistoryModal isOpen={showHistory} onClose={() => setShowHistory(false)} />
+      <HistoryModal isOpen={showHistory} onClose={() => setShowHistory(false)} mode={mode} />
     </div>
   );
 }
