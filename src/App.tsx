@@ -111,6 +111,7 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [tdThemes, setTdThemes] = useState<TDTheme[]>([]);
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
   const [scenarioRoleAssignment, setScenarioRoleAssignment] = useState<[string, string]>(['', '']);
+  const [scenarioStartAct, setScenarioStartAct] = useState(0);
 
   const config = MODE_CONFIG[mode];
 
@@ -260,9 +261,10 @@ function AppInner({ mode }: { mode: GameMode }) {
   };
 
   // ===== Immersive Theater =====
-  const handleImmersiveStart = (scenario: Scenario, roleAssignment: [string, string]) => {
+  const handleImmersiveStart = (scenario: Scenario, roleAssignment: [string, string], startActIdx?: number) => {
     setSelectedScenario(scenario);
     setScenarioRoleAssignment(roleAssignment);
+    setScenarioStartAct(startActIdx ?? 0);
     setAppSubview('immersive-game');
   };
 
@@ -406,6 +408,7 @@ function AppInner({ mode }: { mode: GameMode }) {
           <ImmersiveGameView
             scenario={selectedScenario}
             roleAssignment={scenarioRoleAssignment}
+            startActIdx={scenarioStartAct}
             onEnd={handleImmersiveEnd}
           />
         </div>

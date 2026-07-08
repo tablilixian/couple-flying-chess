@@ -1,11 +1,20 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
 import { Scenario, ISActor } from '../../types';
 import { X, ChevronRight } from 'lucide-react';
+import { saveToStorage, loadFromStorage, removeFromStorage } from '../../utils/localStorage';
 
 interface ImmersiveGameViewProps {
   scenario: Scenario;
   roleAssignment: [string, string];
+  startActIdx?: number;
   onEnd: () => void;
+}
+
+const NAME_COLORS = ['#0A84FF', '#FF375F'] as const;
+const PROGRESS_KEY_PREFIX = 'immersive-progress';
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function replacePlaceholders(text: string, actor: ISActor, names: [string, string]): string {
@@ -18,12 +27,45 @@ function replacePlaceholders(text: string, actor: ISActor, names: [string, strin
     .replaceAll('{1}', names[1]);
 }
 
-export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: ImmersiveGameViewProps) {
-  const [currentActIdx, setCurrentActIdx] = useState(0);
+function highlightNames(text: string, names: [string, string]): ReactNode[] {
+  if (!text) return [];
+  const parts = text.split(
+    new RegExp(`(${names.map(n => escapeRegex(n)).join('|')})`, 'g')
+  );
+  return parts.map((part, i) => {
+    if (part === names[0]) return <span key={i} style={{ color: NAME_COLORS[0] }}>{part}</span>;
+    if (part === names[1]) return <span key={i} style={{ color: NAME_COLORS[1] }}>{part}</span>;
+    return part;
+  });
+}
+
+function getProgressKey(scenarioId: string) {
+  return `${PROGRESS_KEY_PREFIX}-${scenarioId}`;
+}
+
+export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, onEnd }: ImmersiveGameViewProps) {
+  const [currentActIdx, setCurrentActIdx] = useState(startActIdx);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [showActIntro, setShowActIntro] = useState(true);
   const [showEnding, setShowEnding] = useState(false);
+  const [showResume, setShowResume] = useState(false);
+  const [savedProgress, setSavedProgress] = useState<{ currentActIdx: number; currentStepIdx: number } | null>(null);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set());
+
+  const clearProgress = useCallback(() => {
+    removeFromStorage(getProgressKey(scenario.id));
+  }, [scenario.id]);
+
+  useEffect(() => {
+    if (startActIdx > 0) return;
+    const saved = loadFromStorage<{ currentActIdx: number; currentStepIdx: number } | null>(
+      getProgressKey(scenario.id), null
+    );
+    if (saved) {
+      setSavedProgress(saved);
+      setShowResume(true);
+    }
+  }, [scenario.id, startActIdx]);
 
   const currentAct = scenario.acts[currentActIdx];
   const currentStep = currentAct?.steps[currentStepIdx];
@@ -49,17 +91,19 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
     }
   }, []);
 
-  const processedText = useMemo(() => {
-    if (!currentStep) return '';
-    return replacePlaceholders(currentStep.text, currentStep.actor, names);
+  const processedText = useMemo((): ReactNode[] => {
+    if (!currentStep) return [];
+    const raw = replacePlaceholders(currentStep.text, currentStep.actor, names);
+    return highlightNames(raw, names);
   }, [currentStep, names]);
 
-  const processedNote = useMemo(() => {
+  const processedNote = useMemo((): ReactNode[] | undefined => {
     if (!currentStep?.note) return undefined;
-    return replacePlaceholders(currentStep.note, currentStep.actor, names);
+    const raw = replacePlaceholders(currentStep.note, currentStep.actor, names);
+    return highlightNames(raw, names);
   }, [currentStep, names]);
 
-  const processedSuggestions = useMemo(() => {
+  const processedSuggestions = useMemo((): string[] | undefined => {
     if (!currentStep?.suggestions) return undefined;
     return currentStep.suggestions.map(s => replacePlaceholders(s, currentStep.actor, names));
   }, [currentStep, names]);
@@ -73,6 +117,10 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
     });
   };
 
+  const saveProgressAt = useCallback((actIdx: number, stepIdx: number) => {
+    saveToStorage(getProgressKey(scenario.id), { currentActIdx: actIdx, currentStepIdx: stepIdx });
+  }, [scenario.id]);
+
   const handleNext = () => {
     if (!currentAct) return;
     setSelectedSuggestions(new Set());
@@ -80,6 +128,7 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
     const nextStepIdx = currentStepIdx + 1;
     if (nextStepIdx < currentAct.steps.length) {
       setCurrentStepIdx(nextStepIdx);
+      saveProgressAt(currentActIdx, nextStepIdx);
       return;
     }
 
@@ -88,11 +137,86 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
       setCurrentActIdx(nextActIdx);
       setCurrentStepIdx(0);
       setShowActIntro(true);
+      saveProgressAt(nextActIdx, 0);
       return;
     }
 
+    clearProgress();
     setShowEnding(true);
   };
+
+  const canGoBack = currentActIdx > 0 || currentStepIdx > 0;
+
+  const handlePrev = () => {
+    if (currentStepIdx > 0) {
+      setCurrentStepIdx(currentStepIdx - 1);
+      saveProgressAt(currentActIdx, currentStepIdx - 1);
+      setSelectedSuggestions(new Set());
+    } else if (currentActIdx > 0) {
+      const prevAct = scenario.acts[currentActIdx - 1];
+      setCurrentActIdx(currentActIdx - 1);
+      setCurrentStepIdx(prevAct.steps.length - 1);
+      setShowActIntro(false);
+      saveProgressAt(currentActIdx - 1, prevAct.steps.length - 1);
+      setSelectedSuggestions(new Set());
+    }
+  };
+
+  const handleResume = (saved: { currentActIdx: number; currentStepIdx: number }) => {
+    setCurrentActIdx(saved.currentActIdx);
+    setCurrentStepIdx(saved.currentStepIdx);
+    setShowActIntro(false);
+    setShowResume(false);
+  };
+
+  const handleRestart = () => {
+    clearProgress();
+    setCurrentActIdx(startActIdx);
+    setCurrentStepIdx(0);
+    setShowActIntro(true);
+    setShowResume(false);
+  };
+
+  const handleQuit = () => {
+    saveProgressAt(currentActIdx, currentStepIdx);
+    onEnd();
+  };
+
+  if (showResume && savedProgress) {
+    const actLabel = `第 ${savedProgress.currentActIdx + 1} 幕`;
+    const stepLabel = `步骤 ${savedProgress.currentStepIdx + 1}`;
+    const totalLabel = `共 ${scenario.acts.length} 幕`;
+    return (
+      <div className="h-full flex flex-col items-center justify-center px-6" style={{ background: '#0d0d1a' }}>
+        <span className="text-6xl mb-6">{scenario.emoji}</span>
+        <h2 className="text-white text-2xl font-bold mb-2">继续旅程？</h2>
+        <p className="text-gray-500 text-center text-sm leading-relaxed mb-2 max-w-xs">
+          上次进行到 <span className="text-gray-300 font-semibold">{actLabel}</span> 的 <span className="text-gray-300 font-semibold">{stepLabel}</span>
+        </p>
+        <p className="text-gray-600 text-center text-xs mb-8 max-w-xs">{scenario.title} · {totalLabel}</p>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <button
+            onClick={() => handleResume(savedProgress)}
+            className="w-full py-3.5 rounded-full bg-pink-500 text-white font-bold text-sm hover:bg-pink-400 active:scale-[0.97] transition-all shadow-lg shadow-pink-500/30"
+          >
+            继续上次进度
+          </button>
+          <button
+            onClick={handleRestart}
+            className="w-full py-3.5 rounded-full bg-white/[0.06] text-white font-bold text-sm hover:bg-white/[0.10] active:scale-[0.97] transition-all"
+          >
+            重新开始
+          </button>
+          <button
+            onClick={handleQuit}
+            className="w-full py-3 rounded-full bg-transparent text-gray-500 text-xs hover:text-gray-400 active:scale-[0.97] transition-all"
+          >
+            返回大厅
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (showEnding) {
     return (
@@ -151,7 +275,7 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
       <div className="shrink-0 px-6 pt-12 pb-3">
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={onEnd}
+            onClick={handleQuit}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-white/[0.06] hover:bg-white/[0.10] text-gray-400 transition-colors"
           >
             <X size={16} />
@@ -177,16 +301,16 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
           {/* Actor badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-5"
             style={{
-              backgroundColor: currentStep.actor === 0 ? '#FF375F15' : currentStep.actor === 1 ? '#0A84FF15' : '#30D15815',
-              color: currentStep.actor === 0 ? '#FF375F' : currentStep.actor === 1 ? '#0A84FF' : '#30D158',
-              border: `1px solid ${currentStep.actor === 0 ? '#FF375F25' : currentStep.actor === 1 ? '#0A84FF25' : '#30D15825'}`,
+              backgroundColor: currentStep.actor === 0 ? `${NAME_COLORS[0]}15` : currentStep.actor === 1 ? `${NAME_COLORS[1]}15` : '#30D15815',
+              color: currentStep.actor === 0 ? NAME_COLORS[0] : currentStep.actor === 1 ? NAME_COLORS[1] : '#30D158',
+              border: `1px solid ${currentStep.actor === 0 ? `${NAME_COLORS[0]}25` : currentStep.actor === 1 ? `${NAME_COLORS[1]}25` : '#30D15825'}`,
             }}
           >
             {getActorLabel(currentStep.actor)}
           </div>
 
           {/* Step text */}
-          <div className="text-white text-lg font-bold leading-relaxed mb-4">
+          <div className="text-white text-lg font-bold leading-relaxed mb-4 whitespace-pre-wrap">
             {processedText}
           </div>
 
@@ -214,7 +338,7 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
 
           {/* Note */}
           {processedNote && (
-            <div className="px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-gray-400 text-xs leading-relaxed">
+            <div className="px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-gray-400 text-xs leading-relaxed whitespace-pre-wrap">
               💡 {processedNote}
             </div>
           )}
@@ -232,21 +356,26 @@ export function ImmersiveGameView({ scenario, roleAssignment, onEnd }: Immersive
 
       {/* Bottom actions */}
       <div className="shrink-0 px-8 pb-10">
-        {isNarration ? (
+        <div className="flex gap-2">
+          {canGoBack && (
+            <button
+              onClick={handlePrev}
+              className="px-4 py-3.5 rounded-full bg-white/[0.04] text-gray-400 font-bold text-sm hover:bg-white/[0.08] active:scale-[0.97] transition-all"
+            >
+              上一句
+            </button>
+          )}
           <button
             onClick={handleNext}
-            className="w-full py-3.5 rounded-full bg-white/[0.06] text-white font-bold text-sm hover:bg-white/[0.10] active:scale-[0.97] transition-all"
+            className={`flex-1 py-3.5 rounded-full font-bold text-sm active:scale-[0.97] transition-all ${
+              isNarration
+                ? 'bg-white/[0.06] text-white hover:bg-white/[0.10]'
+                : 'bg-pink-500 text-white hover:bg-pink-400 shadow-lg shadow-pink-500/30'
+            }`}
           >
-            继续
+            {isNarration ? '继续' : `${getStepActionLabel(currentStep.type)} ✓`}
           </button>
-        ) : (
-          <button
-            onClick={handleNext}
-            className="w-full py-3.5 rounded-full bg-pink-500 text-white font-bold text-sm hover:bg-pink-400 active:scale-[0.97] transition-all shadow-lg shadow-pink-500/30"
-          >
-            {getStepActionLabel(currentStep.type)} ✓
-          </button>
-        )}
+        </div>
       </div>
     </div>
   );

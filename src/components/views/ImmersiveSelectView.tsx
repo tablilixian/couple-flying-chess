@@ -4,7 +4,7 @@ import { ALL_SCENARIOS } from '../../data/scenarios';
 
 interface ImmersiveSelectViewProps {
   mode: GameMode;
-  onStart: (scenario: Scenario, roleAssignment: [string, string]) => void;
+  onStart: (scenario: Scenario, roleAssignment: [string, string], startActIdx?: number) => void;
   onBack: () => void;
 }
 
@@ -22,11 +22,13 @@ function loadPlayerNames(mode: GameMode): [string, string] {
 export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectViewProps) {
   const [selected, setSelected] = useState<Scenario | null>(null);
   const [roleAssignment, setRoleAssignment] = useState<[string, string]>(['', '']);
+  const [startActIdx, setStartActIdx] = useState(0);
 
   const handleSelect = (s: Scenario) => {
     const savedNames = loadPlayerNames(mode);
     setSelected(s);
     setRoleAssignment(savedNames);
+    setStartActIdx(0);
   };
 
   const scenarios = ALL_SCENARIOS.filter(s => s.mode === mode);
@@ -108,11 +110,34 @@ export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectVi
             ))}
           </div>
 
+          {/* Chapter selection */}
+          {selected.acts.length > 1 && (
+            <div className="w-full max-w-sm">
+              <div className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wider">选择章节</div>
+              <div className="flex flex-col gap-1.5">
+                {selected.acts.map((act, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setStartActIdx(i)}
+                    className={`text-left px-4 py-3 rounded-xl border text-sm transition-all ${
+                      startActIdx === i
+                        ? 'bg-pink-500/10 border-pink-500/30 text-pink-300'
+                        : 'bg-white/[0.03] border-white/[0.06] text-gray-400 hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    <div className="font-semibold">{act.title}</div>
+                    <div className="text-xs opacity-60 mt-0.5">{act.steps.length} 步 · {act.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button
-            onClick={() => onStart(selected, roleAssignment)}
+            onClick={() => onStart(selected, roleAssignment, startActIdx)}
             className="w-full max-w-sm py-3.5 rounded-full bg-pink-500 text-white font-bold text-base hover:bg-pink-400 active:scale-[0.97] transition-all shadow-lg shadow-pink-500/30"
           >
-            开始旅程
+            {startActIdx === 0 ? '开始旅程' : `从「${selected.acts[startActIdx].title}」开始`}
           </button>
         </div>
       </div>
