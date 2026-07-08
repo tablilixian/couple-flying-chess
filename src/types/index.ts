@@ -216,6 +216,8 @@ export interface ISAct {
   steps: ISStep[];
 }
 
+export type Act = ISAct;
+
 export interface Scenario {
   id: string;
   mode: GameMode;
