@@ -21,6 +21,8 @@ import { ch19 } from './ch19';
 import { ch20 } from './ch20';
 import { ch21 } from './ch21';
 import { ch22 } from './ch22';
+import { ch23 } from './ch23';
+import { ch24 } from './ch24';
 
 export const HOTWIFE_NOVEL: Scenario = {
   id: 'hotwife-novel',
@@ -38,6 +40,6 @@ export const HOTWIFE_NOVEL: Scenario = {
   ],
   acts: [
     ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10, ch11, ch12, ch13,
-    ch14, ch15, ch16, ch17, ch18, ch19, ch20, ch21, ch22,
+    ch14, ch15, ch16, ch17, ch18, ch19, ch20, ch21, ch22, ch23, ch24,
   ],
 };
