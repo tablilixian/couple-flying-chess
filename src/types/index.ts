@@ -79,7 +79,7 @@ export interface TaskEventData {
 
 export type StepType = 'narration' | 'timer' | 'counter';
 export type ScriptMood = 'sweet' | 'romantic' | 'intense' | 'calm';
-export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending' | 'truth-dare-home' | 'truth-dare-game' | 'immersive-select' | 'immersive-game';
+export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending' | 'truth-dare-home' | 'truth-dare-game' | 'immersive-select' | 'immersive-game' | 'radio-player';
 
 export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
 

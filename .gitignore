@@ -21,3 +21,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# 广播剧工具链临时文件
+.cache/
+scripts/radio/output/
+src/data/scenarios/hotwifeNovel/radio/output/

@@ -25,6 +25,7 @@ import { TruthDareHomeView } from './components/views/TruthDareHomeView';
 import { TruthDareGameView } from './components/views/TruthDareGameView';
 import { ImmersiveSelectView } from './components/views/ImmersiveSelectView';
 import { ImmersiveGameView } from './components/views/ImmersiveGameView';
+import { RadioPlayerView } from './components/views/RadioPlayerView';
 
 const MODE_CONFIG: Record<GameMode, {
   title: string;
@@ -411,6 +412,21 @@ function AppInner({ mode }: { mode: GameMode }) {
             startActIdx={scenarioStartAct}
             onEnd={handleImmersiveEnd}
           />
+        </div>
+      </div>
+    );
+  }
+
+  // ===== Radio Player =====
+  if (appSubview === 'radio-player') {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="fixed inset-0 z-0">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 opacity-60" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        </div>
+        <div className="relative z-10 w-full max-w-[430px] h-full bg-black/20">
+          <RadioPlayerView mode={mode} onBack={() => setAppSubview('hub')} />
         </div>
       </div>
     );
