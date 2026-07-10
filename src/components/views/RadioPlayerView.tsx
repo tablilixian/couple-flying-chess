@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Trash2, Download } from 'lucide-react';
 import { GameMode } from '../../types';
+import { getCachedAudio, fetchAndCacheAudio, getCacheInfo, clearAudioCache } from '../../utils/audioCache';
 
 interface RadioChapter {
   id: string;
@@ -25,6 +26,11 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function formatSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
   const accentColor = mode === 'couple' ? '#FF375F' : '#0A84FF';
   const [chapters, setChapters] = useState<RadioChapter[]>([]);
@@ -37,11 +43,23 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
   const [speed, setSpeed] = useState(1.0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [playError, setPlayError] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [cacheInfo, setCacheInfo] = useState({ count: 0, size: 0 });
 
-  // 加载manifest
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentBlobUrlRef = useRef<string | null>(null);
+  const playTokenRef = useRef(0);
+  const shouldPlayRef = useRef(false);
+
+  const refreshCacheInfo = useCallback(async () => {
+    const info = await getCacheInfo();
+    setCacheInfo(info);
+  }, []);
+
+  // 加载manifest (按mode区分)
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}audio/radio/manifest.json`)
+    const manifestFile = `manifest-${mode}.json`;
+    fetch(`${import.meta.env.BASE_URL}audio/radio/${manifestFile}`)
       .then(r => {
         if (!r.ok) throw new Error('manifest加载失败');
         return r.json();
@@ -51,7 +69,8 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
         if (data.length > 0) setDuration(data[0].duration);
       })
       .catch(e => setLoadError(e.message));
-  }, []);
+    refreshCacheInfo();
+  }, [mode, refreshCacheInfo]);
 
   const currentChapter = chapters[currentIndex];
 
@@ -65,8 +84,8 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     };
     const onTimeUpdate = () => setCurrentTime(audio.currentTime);
     const onEnded = () => {
-      // 自动播放下一章
       if (currentIndex < chapters.length - 1) {
+        shouldPlayRef.current = true;
         setCurrentIndex(i => i + 1);
       } else {
         setIsPlaying(false);
@@ -78,6 +97,7 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     const onError = () => {
       setPlayError(`音频加载失败：${currentChapter.file}`);
       setIsPlaying(false);
+      setIsLoading(false);
     };
 
     audio.addEventListener('loadedmetadata', onLoadedMeta);
@@ -97,22 +117,70 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     };
   }, [currentChapter, currentIndex, chapters.length]);
 
-  // 切换章节时重新加载
+  // 切换章节：加载音频（优先缓存）
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentChapter) return;
-    audio.src = `${import.meta.env.BASE_URL}audio/radio/${currentChapter.file}`;
-    audio.load();
-    setCurrentTime(0);
-    setPlayError(null);
-    if (isPlaying) {
-      audio.play().catch((e) => {
-        setIsPlaying(false);
-        setPlayError(`播放失败：${e.message || '未知错误'}`);
-      });
+
+    // 先暂停并清理上一个 Blob URL
+    audio.pause();
+    if (currentBlobUrlRef.current) {
+      URL.revokeObjectURL(currentBlobUrlRef.current);
+      currentBlobUrlRef.current = null;
     }
+
+    const token = ++playTokenRef.current;
+    setIsLoading(true);
+    setPlayError(null);
+    setCurrentTime(0);
+
+    const fileName = currentChapter.file;
+    const remoteUrl = `${import.meta.env.BASE_URL}audio/radio/${fileName}`;
+
+    (async () => {
+      try {
+        // 优先从缓存读取
+        let blobUrl = await getCachedAudio(fileName);
+        if (!blobUrl) {
+          // 缓存未命中，从远端拉取并缓存
+          blobUrl = await fetchAndCacheAudio(remoteUrl, fileName);
+          refreshCacheInfo();
+        }
+
+        // 防止过时的加载覆盖最新请求
+        if (token !== playTokenRef.current) {
+          URL.revokeObjectURL(blobUrl);
+          return;
+        }
+
+        currentBlobUrlRef.current = blobUrl;
+        audio.src = blobUrl;
+        audio.load();
+
+        if (shouldPlayRef.current) {
+          shouldPlayRef.current = false;
+          try {
+            await audio.play();
+          } catch (e) {
+            if (token === playTokenRef.current) {
+              setIsPlaying(false);
+              setPlayError(`播放失败：${(e as Error).message || '未知错误'}`);
+            }
+          }
+        }
+      } catch (e) {
+        if (token === playTokenRef.current) {
+          setPlayError(`音频加载失败：${(e as Error).message}`);
+          setIsPlaying(false);
+        }
+      } finally {
+        if (token === playTokenRef.current) {
+          setIsLoading(false);
+        }
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex]);
+  }, [currentIndex, chapters]);
 
   // 音量/倍速同步
   useEffect(() => {
@@ -122,12 +190,22 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     }
   }, [volume, muted, speed]);
 
+  // 清理 Blob URL (组件卸载时)
+  useEffect(() => {
+    return () => {
+      if (currentBlobUrlRef.current) {
+        URL.revokeObjectURL(currentBlobUrlRef.current);
+      }
+    };
+  }, []);
+
   const togglePlay = () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || isLoading) return;
     if (isPlaying) {
       audio.pause();
     } else {
+      shouldPlayRef.current = false;
       audio.play().catch((e) => {
         setIsPlaying(false);
         setPlayError(`播放失败：${e.message || '未知错误'}`);
@@ -145,21 +223,26 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
 
   const prevChapter = () => {
     if (currentIndex > 0) {
+      shouldPlayRef.current = true;
       setCurrentIndex(i => i - 1);
-      setIsPlaying(true);
     }
   };
 
   const nextChapter = () => {
     if (currentIndex < chapters.length - 1) {
+      shouldPlayRef.current = true;
       setCurrentIndex(i => i + 1);
-      setIsPlaying(true);
     }
   };
 
   const selectChapter = (idx: number) => {
+    shouldPlayRef.current = true;
     setCurrentIndex(idx);
-    setIsPlaying(true);
+  };
+
+  const handleClearCache = async () => {
+    await clearAudioCache();
+    refreshCacheInfo();
   };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -190,6 +273,15 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
           </div>
           <h1 className="text-xl font-bold text-white">广播剧</h1>
         </div>
+        {cacheInfo.count > 0 && (
+          <button
+            onClick={handleClearCache}
+            className="text-gray-500 hover:text-red-400 transition-colors"
+            title={`已缓存 ${cacheInfo.count} 章 (${formatSize(cacheInfo.size)})，点击清理`}
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
 
       {/* 加载中/错误 */}
@@ -206,8 +298,11 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
       {!loadError && chapters.length === 0 && (
         <div className="relative z-10 flex-1 flex items-center justify-center px-6">
           <div className="text-center">
-            <div className="text-4xl mb-3 animate-pulse">📻</div>
-            <div className="text-gray-400 text-sm">加载中...</div>
+            <div className="text-4xl mb-3">📻</div>
+            <div className="text-gray-400 text-sm mb-1">
+              {mode === 'normal' ? '普通模式广播剧即将上线' : '暂无内容'}
+            </div>
+            <div className="text-gray-600 text-xs">敬请期待</div>
           </div>
         </div>
       )}
@@ -227,7 +322,12 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
                   style={{ filter: isPlaying ? 'drop-shadow(0 0 12px ' + accentColor + ')' : 'none' }}>
                   📻
                 </div>
-                {isPlaying && (
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <div className="text-2xl animate-spin">⏳</div>
+                  </div>
+                )}
+                {isPlaying && !isLoading && (
                   <div className="absolute bottom-3 right-3 flex items-end gap-0.5 h-4">
                     {[0, 1, 2, 3].map(i => (
                       <div key={i} className="w-0.5 rounded-full animate-pulse"
@@ -329,7 +429,8 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
 
                   <button
                     onClick={togglePlay}
-                    className="w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-95"
+                    disabled={isLoading}
+                    className="w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-50"
                     style={{ background: accentColor }}
                   >
                     {isPlaying ? (
@@ -363,8 +464,16 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
 
           {/* 章节列表 */}
           <div className="relative z-10 flex-1 min-h-0 overflow-y-auto px-6 pb-6">
-            <div className="text-xs font-semibold text-gray-500 tracking-widest mb-3">
-              全部章节 ({chapters.length})
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-xs font-semibold text-gray-500 tracking-widest">
+                全部章节 ({chapters.length})
+              </div>
+              {cacheInfo.count > 0 && (
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                  <Download size={11} />
+                  <span>已缓存 {cacheInfo.count}/{chapters.length} 章</span>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               {chapters.map((ch, idx) => {
