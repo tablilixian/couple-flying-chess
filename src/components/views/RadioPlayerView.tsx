@@ -36,6 +36,7 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState(1.0);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [playError, setPlayError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // 加载manifest
@@ -74,12 +75,17 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
+    const onError = () => {
+      setPlayError(`音频加载失败：${currentChapter.file}`);
+      setIsPlaying(false);
+    };
 
     audio.addEventListener('loadedmetadata', onLoadedMeta);
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('ended', onEnded);
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPause);
+    audio.addEventListener('error', onError);
 
     return () => {
       audio.removeEventListener('loadedmetadata', onLoadedMeta);
@@ -87,6 +93,7 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
       audio.removeEventListener('ended', onEnded);
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPause);
+      audio.removeEventListener('error', onError);
     };
   }, [currentChapter, currentIndex, chapters.length]);
 
@@ -97,8 +104,12 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     audio.src = `${import.meta.env.BASE_URL}audio/radio/${currentChapter.file}`;
     audio.load();
     setCurrentTime(0);
+    setPlayError(null);
     if (isPlaying) {
-      audio.play().catch(() => setIsPlaying(false));
+      audio.play().catch((e) => {
+        setIsPlaying(false);
+        setPlayError(`播放失败：${e.message || '未知错误'}`);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
@@ -117,7 +128,10 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play().catch(() => setIsPlaying(false));
+      audio.play().catch((e) => {
+        setIsPlaying(false);
+        setPlayError(`播放失败：${e.message || '未知错误'}`);
+      });
     }
   };
 
@@ -243,6 +257,14 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
                     </span>
                   ))}
                 </div>
+
+                {/* 播放错误提示 */}
+                {playError && (
+                  <div className="mt-3 px-3 py-2 rounded-lg text-xs"
+                    style={{ background: 'rgba(255,59,48,0.12)', color: '#FF6B6B' }}>
+                    ⚠ {playError}
+                  </div>
+                )}
               </div>
 
               {/* 进度条 */}
