@@ -371,18 +371,24 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 
 # 音效关键词映射表：描述关键词 → 本地音效目录 + 文件名模式
 SFX_KEYWORD_MAP = {
-    # ASMR 女声类
-    "女声低声喘息": ("asmr/female_breath", "female_breath_*.mp3"),
-    "女声急促喘息": ("asmr/female_pant", "female_pant_*.mp3"),
-    "女声断续喘息": ("asmr/female_pant", "female_pant_*.mp3"),
-    "女声过度刺激喘息": ("asmr/female_pant", "female_pant_*.mp3"),
+    # ASMR 女声类 - 所有喘息统一用 groan female 01
+    "女声低声喘息": ("asmr/female_breath", "female_breath_groan.mp3"),
+    "女声急促喘息": ("asmr/female_breath", "female_breath_groan.mp3"),
+    "女声断续喘息": ("asmr/female_breath", "female_breath_groan.mp3"),
+    "女声过度刺激喘息": ("asmr/female_breath", "female_breath_groan.mp3"),
+    "女声持续喘息": ("asmr/female_breath", "female_breath_groan.mp3"),
+    "女声微弱呼吸": ("asmr/female_breath", "female_breath_groan.mp3"),
+    "女声无力轻笑": ("asmr/female_breath", "female_breath_groan.mp3"),
+    # 女声呻吟/尖叫保持独立音效
     "女声呻吟": ("asmr/female_moan", "female_moan_*.mp3"),
     "女声高昂呻吟": ("asmr/female_moan", "female_moan_*.mp3"),
     "女声短促惊叫": ("asmr/female_scream", "female_scream_*.mp3"),
     "女声尖叫": ("asmr/female_scream", "female_scream_*.mp3"),
     "女声潮吹尖叫": ("asmr/female_scream", "female_scream_*.mp3"),
-    "女声无力轻笑": ("asmr/female_breath", "female_breath_*.mp3"),
-    "女声微弱呼吸": ("asmr/female_breath", "female_breath_*.mp3"),
+    # ASMR 男声类 - 所有喘息统一用 human moan 369
+    "男声喘息": ("asmr/male_breath", "male_breath_moan.mp3"),
+    "男声低喘": ("asmr/male_breath", "male_breath_moan.mp3"),
+    "男声粗重呼吸": ("asmr/male_breath", "male_breath_moan.mp3"),
     # ASMR 拍打/摩擦类
     "皮肤拍打声": ("asmr/skin_slap", "slap_*.mp3"),
     "节奏性皮肤拍打声": ("asmr/skin_slap", "slap_slow_*.mp3"),
@@ -423,7 +429,11 @@ def match_sfx(desc: str) -> Optional[Path]:
 
 
 def load_sfx(desc: str, target_duration_ms: int) -> Optional[AudioSegment]:
-    """加载并裁剪音效到指定时长"""
+    """加载并裁剪音效到指定时长
+
+    喘息类音效（含"喘息"/"呼吸"/"低喘"）循环时会插入短暂静音间隔，
+    模拟真实呼吸节奏（呼气-停顿-呼气），避免机械拼接感。
+    """
     sfx_file = match_sfx(desc)
     if not sfx_file:
         return None
@@ -433,14 +443,26 @@ def load_sfx(desc: str, target_duration_ms: int) -> Optional[AudioSegment]:
         if seg is None:
             return None
 
-        # 循环或裁剪到目标时长
         target_ms = max(target_duration_ms, 500)
+
+        # 判断是否为喘息类音效（需要带间隔循环）
+        is_breath = any(k in desc for k in ("喘息", "呼吸", "低喘", "粗重呼吸"))
+
         if len(seg) < target_ms:
-            # 循环延长
-            loops = (target_ms // len(seg)) + 1
-            seg = (seg * loops)[:target_ms]
+            if is_breath:
+                # 喘息循环：截断尾音后直接拼接，新片段从上一片段 70% 处开始
+                # 截掉尾部 30%，让每次喘息更短促，避免过于密集
+                breath_clip = seg[:int(len(seg) * 0.7)]
+                # 每次喘息之间留 20% 的静音间隔（相对单次时长）
+                gap_ms = int(len(breath_clip) * 0.2)
+                unit = breath_clip + AudioSegment.silent(duration=gap_ms)
+                loops = (target_ms // len(unit)) + 1
+                seg = (unit * loops)[:target_ms]
+            else:
+                # 普通音效直接循环
+                loops = (target_ms // len(seg)) + 1
+                seg = (seg * loops)[:target_ms]
         else:
-            # 裁剪
             seg = seg[:target_ms]
 
         # 淡入淡出
