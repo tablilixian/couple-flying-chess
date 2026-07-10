@@ -26,3 +26,9 @@ dist-ssr
 .cache/
 scripts/radio/output/
 src/data/scenarios/hotwifeNovel/radio/output/
+
+# ASMR音效本地素材（下载脚本与备份，不上传）
+scripts/radio/assets/asmr/_test/
+scripts/radio/assets/asmr/**/.tts_backup/
+scripts/radio/assets/asmr/*.html
+scripts/radio/test_breath_loop.py
