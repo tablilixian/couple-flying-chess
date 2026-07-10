@@ -139,21 +139,32 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
 
     (async () => {
       try {
-        // 优先从缓存读取
+        // 优先从缓存读取（离线可用）
         let blobUrl = await getCachedAudio(fileName);
+        let useRemote = false;
+
         if (!blobUrl) {
-          // 缓存未命中，从远端拉取并缓存
-          blobUrl = await fetchAndCacheAudio(remoteUrl, fileName);
-          refreshCacheInfo();
+          // 缓存未命中：手机端直接用远端 URL 流式播放（Range 请求，内存友好）
+          // 不再阻塞等待 fetch 整文件，避免 iOS "Failed to fetch"
+          useRemote = true;
+          blobUrl = remoteUrl;
+
+          // 后台异步缓存（不阻塞播放，失败静默忽略）
+          fetchAndCacheAudio(remoteUrl, fileName)
+            .then(() => refreshCacheInfo())
+            .catch(() => {/* 网络弱或内存不足时忽略，下次再缓存 */});
         }
 
         // 防止过时的加载覆盖最新请求
         if (token !== playTokenRef.current) {
-          URL.revokeObjectURL(blobUrl);
+          if (!useRemote) URL.revokeObjectURL(blobUrl);
           return;
         }
 
-        currentBlobUrlRef.current = blobUrl;
+        // 只有 Blob URL 才需要记录并稍后 revoke
+        if (!useRemote) {
+          currentBlobUrlRef.current = blobUrl;
+        }
         audio.src = blobUrl;
         audio.load();
 
