@@ -3,7 +3,11 @@ import { GameMode } from '../types';
 
 interface VerificationGateProps {
   onVerified: (mode: GameMode) => void;
+  onEnterNovel?: () => void;
 }
+
+// 特殊暗号：进入书房（小说列表）
+const NOVEL_CODE = '9527';
 
 const PASSWORD_DEFAULTS: Record<GameMode, string> = {
   couple: '1314',
@@ -29,7 +33,7 @@ function checkPassword(code: string): GameMode | null {
   return null;
 }
 
-export function VerificationGate({ onVerified }: VerificationGateProps) {
+export function VerificationGate({ onVerified, onEnterNovel }: VerificationGateProps) {
   const [digits, setDigits] = useState<string[]>([]);
   const [error, setError] = useState(false);
 
@@ -40,6 +44,10 @@ export function VerificationGate({ onVerified }: VerificationGateProps) {
     setError(false);
     if (newDigits.length === 4) {
       const code = newDigits.join('');
+      if (code === NOVEL_CODE && onEnterNovel) {
+        onEnterNovel();
+        return;
+      }
       const mode = checkPassword(code);
       if (mode) {
         onVerified(mode);

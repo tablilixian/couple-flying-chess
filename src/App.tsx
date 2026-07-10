@@ -26,6 +26,7 @@ import { TruthDareGameView } from './components/views/TruthDareGameView';
 import { ImmersiveSelectView } from './components/views/ImmersiveSelectView';
 import { ImmersiveGameView } from './components/views/ImmersiveGameView';
 import { RadioPlayerView } from './components/views/RadioPlayerView';
+import { NovelView } from './components/views/NovelView';
 
 const MODE_CONFIG: Record<GameMode, {
   title: string;
@@ -62,9 +63,19 @@ const MODE_CONFIG: Record<GameMode, {
 function App() {
   const [verified, setVerified] = useState(false);
   const [mode, setMode] = useState<GameMode>('couple');
+  const [novelMode, setNovelMode] = useState(false);
+
+  if (novelMode) {
+    return <NovelView onExit={() => { setNovelMode(false); setVerified(false); }} />;
+  }
 
   if (!verified) {
-    return <VerificationGate onVerified={(m) => { setMode(m); setVerified(true); }} />;
+    return (
+      <VerificationGate
+        onVerified={(m) => { setMode(m); setVerified(true); }}
+        onEnterNovel={() => setNovelMode(true)}
+      />
+    );
   }
 
   return <AppInner mode={mode} key={mode} />;
