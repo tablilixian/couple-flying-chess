@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ArrowLeft, Play, Square, RotateCcw, Plus, Trash2, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Play, Square, RotateCcw, Plus, Trash2, Volume2, VolumeX, ChevronDown, Music2, Activity, Sparkles, Clock, LayoutGrid } from 'lucide-react';
 import { GameMode } from '../../types';
 import { saveToStorage, loadFromStorage } from '../../utils/localStorage';
 
@@ -219,6 +219,7 @@ function playClick(ctx: AudioContext, vol: number) {
 }
 
 function playSound(type: SoundType, volume: number) {
+  if (volume <= 0) return;
   try {
     const ctx = getAudioContext();
     switch (type) {
@@ -272,13 +273,19 @@ function getEasedPosition(t: number, curve: EasingCurve): number {
   }
 }
 
-// === Helper ===
+// === Helpers ===
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)}s`;
   const m = Math.floor(seconds / 60);
   const s = Math.round(seconds % 60);
   return `${m}m${s > 0 ? `${s}s` : ''}`;
+}
+
+function formatClock(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = Math.floor(totalSeconds % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 // === Component ===
@@ -303,6 +310,11 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
   const [liveFreq, setLiveFreq] = useState(frequency);
   const [visualEffect, setVisualEffect] = useState<VisualEffect>('none');
   const [livePos, setLivePos] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [activeStepIdx, setActiveStepIdx] = useState(-1);
+  const [soundPanelOpen, setSoundPanelOpen] = useState(false);
+  const [planPanelOpen, setPlanPanelOpen] = useState(false);
+  const [prevVolume, setPrevVolume] = useState(0.7);
 
   // === Refs (for animation loop) ===
   const animRef = useRef<number>(0);
@@ -324,6 +336,7 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
   const ripplesRef = useRef<{ age: number; maxAge: number; key: number }[]>([]);
   const livePosRef = useRef(0);
   const waveformPhaseRef = useRef(0);
+  const elapsedRef = useRef(0);
 
   // Sync refs
   useEffect(() => {
@@ -384,6 +397,7 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
         if (stepIdx !== prevStepIdxRef.current) {
           prevTRef.current = 0;
           prevStepIdxRef.current = stepIdx;
+          setActiveStepIdx(stepIdx % activePlan.length);
         }
 
         effectiveFreq = activePlan[stepIdx % activePlan.length].frequency;
@@ -456,6 +470,12 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
         .filter(r => r.age < r.maxAge);
     }
 
+    const newElapsed = totalElapsed;
+    if (Math.abs(newElapsed - elapsedRef.current) >= 0.5) {
+      elapsedRef.current = newElapsed;
+      setElapsed(newElapsed);
+    }
+
     animRef.current = requestAnimationFrame(animateRef.current!);
   };
 
@@ -484,13 +504,14 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
     if (isRunning) {
       stopAnimation();
     } else {
-      setCount(0);
       startAnimation();
     }
   };
 
   const handleReset = () => {
     setCount(0);
+    elapsedRef.current = 0;
+    setElapsed(0);
   };
 
   const handleEditPlan = () => {
@@ -533,6 +554,20 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
     persistPlan(planSteps, next);
   };
 
+  const handleToggleMute = () => {
+    if (volume > 0) {
+      setPrevVolume(volume);
+      setVolume(0);
+    } else {
+      setVolume(prevVolume > 0 ? prevVolume : 0.7);
+    }
+  };
+
+  const soundSummary = `${SOUND_CONFIG[soundType].label}·${Math.round(volume * 100)}%·${CURVE_CONFIG[curve].label}`;
+  const planSummary = planSteps.length > 0
+    ? planSteps.map(s => s.frequency > 0 ? s.frequency : '停').join('→')
+    : '暂无计划';
+
   // === Render ===
 
   return (
@@ -558,8 +593,9 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
                 小工具
               </span>
               <button
-                onClick={() => setVolume(v => v > 0 ? 0 : 0.7)}
+                onClick={handleToggleMute}
                 className="text-gray-400 hover:text-white transition-colors"
+                title={volume > 0 ? '静音' : '取消静音'}
               >
                 {volume > 0 ? <Volume2 size={18} /> : <VolumeX size={18} />}
               </button>
@@ -570,207 +606,258 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
 
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
-          <div className="flex justify-center pt-4 pb-2">
-            <div className="relative flex flex-col items-center">
-              {/* Ambient glow */}
-              <div className="absolute" style={{
-                width: 200,
-                height: 200,
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                background: `radial-gradient(ellipse at center, ${accentColor}15 0%, transparent 70%)`,
-                pointerEvents: 'none',
-              }} />
-
-              <div ref={trackRef} className="relative" style={{ width: 28, height: 200 }}>
-                {/* Cylinder body */}
-                <div className="absolute inset-0" style={{
-                  borderRadius: 14,
-                  background: [
-                    'linear-gradient(90deg,',
-                    '  rgba(255,255,255,0.12) 0%,',
-                    '  rgba(255,255,255,0.06) 25%,',
-                    '  transparent 45%,',
-                    '  rgba(0,0,0,0.15) 65%,',
-                    '  rgba(0,0,0,0.3) 100%',
-                    ')',
-                    ',',
-                    'linear-gradient(180deg,',
-                    '  rgba(180,120,70,0.5) 0%,',
-                    '  rgba(160,100,50,0.5) 40%,',
-                    '  rgba(140,85,45,0.5) 60%,',
-                    '  rgba(120,70,40,0.5) 100%',
-                    ')',
-                  ].join(''),
-                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)',
-                }}>
-                  {/* Top cap highlight */}
-                  <div className="absolute top-0 left-0 right-0" style={{
-                    height: 14,
-                    borderRadius: '14px 14px 0 0',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.1), transparent)',
-                  }} />
-                  {/* Bottom cap shadow */}
-                  <div className="absolute bottom-0 left-0 right-0" style={{
-                    height: 14,
-                    borderRadius: '0 0 14px 14px',
-                    background: 'linear-gradient(0deg, rgba(0,0,0,0.2), transparent)',
-                  }} />
-                  {/* Center track line */}
-                  <div className="absolute inset-x-0 top-4 bottom-4 mx-auto" style={{
-                    width: 2,
-                    background: `linear-gradient(180deg, transparent 0%, ${accentColor}30 20%, ${accentColor}30 80%, transparent 100%)`,
-                    borderRadius: 1,
-                  }} />
-                  {/* Tick marks */}
-                  <div className="absolute -left-1 top-6 w-3 h-px bg-white/10" />
-                  <div className="absolute -right-1 top-6 w-3 h-px bg-white/10" />
-                  <div className="absolute -left-1" style={{ top: '50%', width: 3, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-                  <div className="absolute -right-1" style={{ top: '50%', width: 3, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-                  <div className="absolute -left-1 bottom-6 w-3 h-px bg-white/10" />
-                  <div className="absolute -right-1 bottom-6 w-3 h-px bg-white/10" />
+          {/* === Unified panel: left stats | cylinder | right config === */}
+          <div className="ios-card mx-4 p-4 flex items-stretch" style={{ gap: 8 }}>
+            {/* Left: stats (right-aligned to panel inner-left) */}
+            <div className="flex flex-col justify-center items-end gap-4 shrink-0" style={{ width: 96, textAlign: 'right' }}>
+              <div>
+                <div className="flex items-center justify-end gap-1 text-gray-500 mb-0.5">
+                  <Clock size={11} />
+                  <span className="text-[10px] uppercase tracking-widest">计时</span>
                 </div>
-
-                {/* Top position indicator */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                </div>
-                {/* Bottom position indicator */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                </div>
-
-                {/* Bead */}
-                <div
-                  ref={beadRef}
-                  className="absolute left-1/2"
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    bottom: 0,
-                    transform: 'translateX(-50%)',
-                    background: 'radial-gradient(circle at 35% 30%, #FFE066, #FFB800 40%, #E89400 70%, #CC7700 100%)',
-                    boxShadow: impactFlash
-                      ? `0 0 40px ${accentColor}, 0 0 80px ${accentColor}60, inset 0 -3px 6px rgba(0,0,0,0.3), inset 0 3px 6px rgba(255,255,255,0.35)`
-                      : `0 0 20px ${accentColor}60, 0 0 40px ${accentColor}30, inset 0 -3px 6px rgba(0,0,0,0.3), inset 0 3px 6px rgba(255,255,255,0.3)`,
-                    transition: impactFlash ? 'none' : 'box-shadow 0.2s',
-                  }}
-                >
-                  <div className="absolute" style={{
-                    width: 16,
-                    height: 10,
-                    background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, transparent 70%)',
-                    top: 8,
-                    left: 8,
-                    borderRadius: '50%',
-                  }} />
-                </div>
-
-                {/* Effects overlay */}
-                <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 14 }}>
-                  {/* Particles */}
-                  {visualEffect === 'particles' && particlesRef.current.map((p, i) => (
-                    <div key={i} style={{
-                      position: 'absolute',
-                      width: 5,
-                      height: 5,
-                      borderRadius: '50%',
-                      background: accentColor,
-                      opacity: Math.max(0, p.opacity * 0.5),
-                      bottom: p.y,
-                      left: `calc(50% + ${p.xOff}px)`,
-                      transform: 'translateX(-50%)',
-                    }} />
-                  ))}
-
-                  {/* Waveform */}
-                  {visualEffect === 'waveform' && (
-                    <svg className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
-                      <path
-                        d={(() => {
-                          const h = trackRef.current?.offsetHeight ?? 200;
-                          const w = 28;
-                          const amp = livePos < 5 ? 0 : Math.min(livePos / (h - 44), 1) * 8;
-                          const phase = waveformPhaseRef.current;
-                          let d = '';
-                          for (let y = 0; y <= h; y += 4) {
-                            const x = w / 2 + Math.sin((y / h) * Math.PI * 3 + phase) * amp * (1 - y / h);
-                            d += (y === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
-                          }
-                          return d;
-                        })()}
-                        fill="none"
-                        stroke={accentColor}
-                        strokeWidth="1.5"
-                        opacity="0.5"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  )}
-
-                  {/* Flame/Energy Pillar */}
-                  {visualEffect === 'flame' && (
-                    <div style={{
-                      position: 'absolute',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      bottom: Math.max(0, livePos),
-                      width: 12,
-                      height: Math.max(0, livePos),
-                      background: `linear-gradient(0deg, ${accentColor}80 0%, ${accentColor}40 40%, transparent 100%)`,
-                      borderRadius: '6px 6px 0 0',
-                      transition: 'height 0.05s, bottom 0.05s',
-                      opacity: livePos > 3 ? 0.6 : 0,
-                    }} />
-                  )}
-
-                  {/* Ripple rings (also used by pulse) */}
-                  {(visualEffect === 'ripple' || visualEffect === 'pulse') && ripplesRef.current.map(r => {
-                    const progress = r.age / r.maxAge;
-                    const size = progress * 80;
-                    return (
-                      <div key={r.key} style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: size,
-                        height: size,
-                        borderRadius: '50%',
-                        border: `1.5px solid ${visualEffect === 'pulse' ? accentColor : 'rgba(255,255,255,0.4)'}`,
-                        opacity: 1 - progress,
-                      }} />
-                    );
-                  })}
+                <div className="text-lg font-bold text-white tabular-nums tracking-tight leading-none">
+                  {formatClock(elapsed)}
                 </div>
               </div>
-
-              {/* Frequency display below cylinder */}
-              <div className="mt-4 text-center">
-                <div className="text-3xl font-bold text-white tabular-nums tracking-tight">
-                  {liveFreq}
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5">计次</div>
+                <div className="text-lg font-bold text-white tabular-nums tracking-tight leading-none">
+                  {count}
                 </div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">BPM</div>
+              </div>
+              {planEnabled && activeStepIdx >= 0 && (
+                <div>
+                  <div className="flex items-center justify-end gap-1 text-gray-500 mb-0.5">
+                    <LayoutGrid size={11} />
+                    <span className="text-[10px] uppercase tracking-widest">计划</span>
+                  </div>
+                  <div className="text-sm font-semibold leading-none" style={{ color: accentColor }}>
+                    第{activeStepIdx + 1}步
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {planSteps[activeStepIdx]?.frequency > 0 ? `${planSteps[activeStepIdx].frequency}BPM` : '静止'}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Center: cylinder + bead (centered) */}
+            <div className="relative flex-1 flex flex-col items-center justify-center">
+                <div className="absolute" style={{
+                  width: 220,
+                  height: 220,
+                  top: 110,
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  background: `radial-gradient(ellipse at center, ${accentColor}15 0%, transparent 70%)`,
+                  pointerEvents: 'none',
+                }} />
+
+                <div ref={trackRef} className="relative" style={{ width: 28, height: 220 }}>
+                  {/* Cylinder body */}
+                  <div className="absolute inset-0" style={{
+                    borderRadius: 14,
+                    background: [
+                      'linear-gradient(90deg,',
+                      '  rgba(255,255,255,0.12) 0%,',
+                      '  rgba(255,255,255,0.06) 25%,',
+                      '  transparent 45%,',
+                      '  rgba(0,0,0,0.15) 65%,',
+                      '  rgba(0,0,0,0.3) 100%',
+                      ')',
+                      ',',
+                      'linear-gradient(180deg,',
+                      '  rgba(180,120,70,0.5) 0%,',
+                      '  rgba(160,100,50,0.5) 40%,',
+                      '  rgba(140,85,45,0.5) 60%,',
+                      '  rgba(120,70,40,0.5) 100%',
+                      ')',
+                    ].join(''),
+                    boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)',
+                  }}>
+                    <div className="absolute top-0 left-0 right-0" style={{
+                      height: 14,
+                      borderRadius: '14px 14px 0 0',
+                      background: 'linear-gradient(180deg, rgba(255,255,255,0.1), transparent)',
+                    }} />
+                    <div className="absolute bottom-0 left-0 right-0" style={{
+                      height: 14,
+                      borderRadius: '0 0 14px 14px',
+                      background: 'linear-gradient(0deg, rgba(0,0,0,0.2), transparent)',
+                    }} />
+                    <div className="absolute inset-x-0 top-4 bottom-4 mx-auto" style={{
+                      width: 2,
+                      background: `linear-gradient(180deg, transparent 0%, ${accentColor}30 20%, ${accentColor}30 80%, transparent 100%)`,
+                      borderRadius: 1,
+                    }} />
+                    <div className="absolute -left-1 top-6 w-3 h-px bg-white/10" />
+                    <div className="absolute -right-1 top-6 w-3 h-px bg-white/10" />
+                    <div className="absolute -left-1" style={{ top: '50%', width: 3, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+                    <div className="absolute -right-1" style={{ top: '50%', width: 3, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+                    <div className="absolute -left-1 bottom-6 w-3 h-px bg-white/10" />
+                    <div className="absolute -right-1 bottom-6 w-3 h-px bg-white/10" />
+                  </div>
+
+                  {/* Top position indicator */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                  </div>
+                  {/* Bottom position indicator */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                  </div>
+
+                  {/* Bead */}
+                  <div
+                    ref={beadRef}
+                    className="absolute left-1/2"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      bottom: 0,
+                      transform: 'translateX(-50%)',
+                      background: 'radial-gradient(circle at 35% 30%, #FFE066, #FFB800 40%, #E89400 70%, #CC7700 100%)',
+                      boxShadow: impactFlash
+                        ? `0 0 40px ${accentColor}, 0 0 80px ${accentColor}60, inset 0 -3px 6px rgba(0,0,0,0.3), inset 0 3px 6px rgba(255,255,255,0.35)`
+                        : `0 0 20px ${accentColor}60, 0 0 40px ${accentColor}30, inset 0 -3px 6px rgba(0,0,0,0.3), inset 0 3px 6px rgba(255,255,255,0.3)`,
+                      transition: impactFlash ? 'none' : 'box-shadow 0.2s',
+                    }}
+                  >
+                    <div className="absolute" style={{
+                      width: 16,
+                      height: 10,
+                      background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, transparent 70%)',
+                      top: 8,
+                      left: 8,
+                      borderRadius: '50%',
+                    }} />
+                  </div>
+
+                  {/* Effects overlay (outside the narrow cylinder, halo) */}
+                  <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 14, overflow: 'visible' }}>
+                    {/* Particles */}
+                    {visualEffect === 'particles' && particlesRef.current.map((p, i) => (
+                      <div key={i} style={{
+                        position: 'absolute',
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        background: accentColor,
+                        opacity: Math.max(0, p.opacity * 0.5),
+                        bottom: p.y,
+                        left: `calc(50% + ${p.xOff}px)`,
+                        transform: 'translateX(-50%)',
+                      }} />
+                    ))}
+
+                    {/* Waveform */}
+                    {visualEffect === 'waveform' && (
+                      <svg className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
+                        <path
+                          d={(() => {
+                            const h = trackRef.current?.offsetHeight ?? 220;
+                            const w = 28;
+                            const amp = livePos < 5 ? 0 : Math.min(livePos / (h - 44), 1) * 14;
+                            const phase = waveformPhaseRef.current;
+                            let d = '';
+                            for (let y = 0; y <= h; y += 4) {
+                              const x = w / 2 + Math.sin((y / h) * Math.PI * 3 + phase) * amp * (1 - y / h);
+                              d += (y === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+                            }
+                            return d;
+                          })()}
+                          fill="none"
+                          stroke={accentColor}
+                          strokeWidth="1.5"
+                          opacity="0.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    )}
+
+                    {/* Flame/Energy Pillar */}
+                    {visualEffect === 'flame' && (
+                      <div style={{
+                        position: 'absolute',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        bottom: Math.max(0, livePos),
+                        width: 12,
+                        height: Math.max(0, livePos),
+                        background: `linear-gradient(0deg, ${accentColor}80 0%, ${accentColor}40 40%, transparent 100%)`,
+                        borderRadius: '6px 6px 0 0',
+                        transition: 'height 0.05s, bottom 0.05s',
+                        opacity: livePos > 3 ? 0.6 : 0,
+                      }} />
+                    )}
+
+                    {/* Ripple rings (also used by pulse) */}
+                    {(visualEffect === 'ripple' || visualEffect === 'pulse') && ripplesRef.current.map(r => {
+                      const progress = r.age / r.maxAge;
+                      const size = progress * 110;
+                      return (
+                        <div key={r.key} style={{
+                          position: 'absolute',
+                          left: '50%',
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: size,
+                          height: size,
+                          borderRadius: '50%',
+                          border: `1.5px solid ${visualEffect === 'pulse' ? accentColor : 'rgba(255,255,255,0.4)'}`,
+                          opacity: 1 - progress,
+                        }} />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Frequency display below cylinder */}
+                <div className="mt-4 text-center">
+                  <div className="text-3xl font-bold text-white tabular-nums tracking-tight">
+                    {liveFreq}
+                  </div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">BPM</div>
+                  <div className="text-[10px] text-gray-500 mt-1">
+                    {isRunning ? `实拍中 · ${CURVE_CONFIG[curve].label}` : '已暂停'}
+                  </div>
+                </div>
+            </div>
+
+            {/* Right: config (left-aligned to panel inner-right) */}
+            <div className="flex flex-col justify-center items-start gap-4 shrink-0" style={{ width: 96, textAlign: 'left' }}>
+              <div className="flex items-center gap-1.5 text-gray-300">
+                <Music2 size={13} />
+                <span className="text-xs">{SOUND_CONFIG[soundType].label}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-gray-300">
+                <Activity size={13} />
+                <span className="text-xs">{CURVE_CONFIG[curve].label}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-gray-300">
+                <Sparkles size={13} />
+                <span className="text-xs">{EFFECT_CONFIG[visualEffect].label}</span>
               </div>
             </div>
           </div>
 
-          <div className="px-6 pb-6 space-y-4">
-            {/* --- Frequency Slider --- */}
-            <div className="ios-card p-4">
+          <div className="px-6 pb-6 space-y-3">
+            {/* --- Frequency Slider (disabled when plan controls it) --- */}
+            <div className={`ios-card p-4 transition-opacity ${planEnabled ? 'opacity-50' : ''}`}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">频率</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setFrequency(f => Math.max(10, f - 10))}
-                    className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 text-sm"
+                    disabled={planEnabled}
+                    className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 text-sm disabled:opacity-40 disabled:hover:bg-white/5"
                   >−</button>
-                  <span className="text-sm font-semibold text-white w-12 text-center tabular-nums">{liveFreq}</span>
+                  <span className="text-sm font-semibold text-white w-12 text-center tabular-nums">{frequency}</span>
                   <button
                     onClick={() => setFrequency(f => Math.min(240, f + 10))}
-                    className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 text-sm"
+                    disabled={planEnabled}
+                    className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 text-sm disabled:opacity-40 disabled:hover:bg-white/5"
                   >+</button>
                 </div>
               </div>
@@ -780,15 +867,14 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
                 max={240}
                 step={1}
                 value={frequency}
+                disabled={planEnabled}
                 onChange={e => setFrequency(Number(e.target.value))}
-                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed"
                 style={{
                   background: `linear-gradient(90deg, ${accentColor}40 0%, ${accentColor} ${(frequency - 10) / 230 * 100}%, rgba(255,255,255,0.1) ${(frequency - 10) / 230 * 100}%)`,
                   WebkitAppearance: 'none',
                   outline: 'none',
                 }}
-                onMouseDown={() => { if (isRunning) stopAnimation(); }}
-                onMouseUp={() => { if (!isRunning) startAnimation(); }}
               />
               <style>{`
                 input[type=range]::-webkit-slider-thumb {
@@ -809,112 +895,184 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
                   cursor: pointer;
                   border: 2px solid rgba(255,255,255,0.2);
                 }
+                input[type=range]:disabled::-webkit-slider-thumb {
+                  background: rgba(255,255,255,0.3);
+                  box-shadow: none;
+                }
               `}</style>
+              {planEnabled && (
+                <p className="text-[10px] text-gray-500 mt-2">频率由计划控制 · 关闭计划后可手动调节</p>
+              )}
             </div>
 
-            {/* --- Curve Selector --- */}
-            <div className="ios-card p-4">
-              <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3 block">滑动曲线</span>
-              <div className="flex flex-wrap gap-2">
-                {(Object.keys(CURVE_CONFIG) as EasingCurve[]).map(key => (
-                  <button
-                    key={key}
-                    onClick={() => setCurve(key)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      curve === key
-                        ? 'text-white shadow-lg'
-                        : 'text-gray-400 bg-white/5 hover:bg-white/10'
-                    }`}
-                    style={curve === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
-                  >
-                    {CURVE_CONFIG[key].label}
-                  </button>
-                ))}
+            {/* --- Main control (centered) --- */}
+            <div className="ios-card p-5 flex items-center justify-between">
+              <button
+                onClick={handleReset}
+                className="text-gray-500 hover:text-white transition-colors flex flex-col items-center gap-1"
+                title="重置计时与计次"
+              >
+                <RotateCcw size={18} />
+                <span className="text-[10px]">重置</span>
+              </button>
+              <button
+                onClick={handleToggle}
+                className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ios-btn ${
+                  isRunning ? 'bg-white/10 hover:bg-white/15' : 'text-white shadow-lg'
+                }`}
+                style={!isRunning ? { background: accentColor, boxShadow: `0 0 24px ${accentColor}50` } : undefined}
+              >
+                {isRunning ? (
+                  <Square size={20} className="text-white fill-white" />
+                ) : (
+                  <Play size={22} className="text-white ml-0.5" />
+                )}
+              </button>
+              <div className="flex flex-col items-center gap-1 text-gray-500">
+                <span className="text-[10px] uppercase tracking-widest">状态</span>
+                <span className={`text-xs font-medium ${isRunning ? accentText : 'text-gray-500'}`}>
+                  {isRunning ? '运行中' : '已暂停'}
+                </span>
               </div>
             </div>
 
-            {/* --- Sound Selector + Volume --- */}
-            <div className="ios-card p-4">
-              <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3 block">音效</span>
-              <div className="flex flex-wrap gap-2">
-                {(Object.keys(SOUND_CONFIG) as SoundType[]).map(key => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setSoundType(key);
-                      playSound(key, volume);
-                    }}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      soundType === key
-                        ? 'text-white shadow-lg'
-                        : 'text-gray-400 bg-white/5 hover:bg-white/10'
-                    }`}
-                    style={soundType === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
-                  >
-                    {SOUND_CONFIG[key].label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* --- Visual Effect Selector --- */}
-            <div className="ios-card p-4">
-              <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3 block">动效</span>
-              <div className="flex flex-wrap gap-2">
-                {(Object.keys(EFFECT_CONFIG) as VisualEffect[]).map(key => (
-                  <button
-                    key={key}
-                    onClick={() => setVisualEffect(key)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      visualEffect === key
-                        ? 'text-white shadow-lg'
-                        : 'text-gray-400 bg-white/5 hover:bg-white/10'
-                    }`}
-                    style={visualEffect === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
-                  >
-                    {EFFECT_CONFIG[key].label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* --- Count + Controls --- */}
-            <div className="ios-card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">计次</span>
-                <button
-                  onClick={handleReset}
-                  className="text-gray-500 hover:text-white transition-colors"
-                  title="重置计次"
-                >
-                  <RotateCcw size={14} />
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="text-5xl font-bold text-white tabular-nums tracking-tight">
-                  {count}
-                </div>
-                <button
-                  onClick={handleToggle}
-                  className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ios-btn ${
-                    isRunning ? 'bg-white/10 hover:bg-white/15' : 'text-white shadow-lg'
-                  }`}
-                  style={!isRunning ? { background: accentColor, boxShadow: `0 0 24px ${accentColor}50` } : undefined}
-                >
-                  {isRunning ? (
-                    <Square size={20} className="text-white fill-white" />
-                  ) : (
-                    <Play size={22} className="text-white ml-0.5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* --- Plan Section --- */}
-            <div className="ios-card p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">频率计划</span>
+            {/* --- Sound & Ambiance (collapsible) --- */}
+            <div className="ios-card overflow-hidden">
+              <button
+                onClick={() => setSoundPanelOpen(o => !o)}
+                className="w-full p-4 flex items-center justify-between"
+              >
+                <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">发声 & 氛围</span>
                 <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-500">{soundSummary}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`text-gray-500 transition-transform ${soundPanelOpen ? 'rotate-180' : ''}`}
+                  />
+                </div>
+              </button>
+              <div
+                className="transition-all duration-300 ease-in-out"
+                style={{ maxHeight: soundPanelOpen ? 360 : 0, opacity: soundPanelOpen ? 1 : 0 }}
+              >
+                <div className="px-4 pb-4 space-y-4">
+                  {/* Sound */}
+                  <div>
+                    <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2 block">音效</span>
+                    <div className="flex flex-wrap gap-2">
+                      {(Object.keys(SOUND_CONFIG) as SoundType[]).map(key => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setSoundType(key);
+                            playSound(key, volume);
+                          }}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                            soundType === key ? 'text-white shadow-lg' : 'text-gray-400 bg-white/5 hover:bg-white/10'
+                          }`}
+                          style={soundType === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
+                        >
+                          {SOUND_CONFIG[key].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Volume */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">音量</span>
+                      <span className="text-xs font-semibold text-white tabular-nums">{Math.round(volume * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={volume}
+                      onChange={e => setVolume(Number(e.target.value))}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(90deg, ${accentColor} ${(volume) * 100}%, rgba(255,255,255,0.1) ${(volume) * 100}%)`,
+                        WebkitAppearance: 'none',
+                        outline: 'none',
+                      }}
+                    />
+                    <style>{`
+                      input[type=range].vol-range::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        width: 18px;
+                        height: 18px;
+                        border-radius: 50%;
+                        background: ${accentColor};
+                        cursor: pointer;
+                        border: 2px solid rgba(255,255,255,0.2);
+                      }
+                      input[type=range].vol-range::-moz-range-thumb {
+                        width: 18px;
+                        height: 18px;
+                        border-radius: 50%;
+                        background: ${accentColor};
+                        border: 2px solid rgba(255,255,255,0.2);
+                      }
+                    `}</style>
+                  </div>
+                  {/* Curve */}
+                  <div>
+                    <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2 block">滑动曲线</span>
+                    <div className="flex flex-wrap gap-2">
+                      {(Object.keys(CURVE_CONFIG) as EasingCurve[]).map(key => (
+                        <button
+                          key={key}
+                          onClick={() => setCurve(key)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                            curve === key ? 'text-white shadow-lg' : 'text-gray-400 bg-white/5 hover:bg-white/10'
+                          }`}
+                          style={curve === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
+                        >
+                          {CURVE_CONFIG[key].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Visual effect */}
+                  <div>
+                    <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2 block">动效</span>
+                    <div className="flex flex-wrap gap-2">
+                      {(Object.keys(EFFECT_CONFIG) as VisualEffect[]).map(key => (
+                        <button
+                          key={key}
+                          onClick={() => setVisualEffect(key)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                            visualEffect === key ? 'text-white shadow-lg' : 'text-gray-400 bg-white/5 hover:bg-white/10'
+                          }`}
+                          style={visualEffect === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
+                        >
+                          {EFFECT_CONFIG[key].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* --- Plan Section (collapsible) --- */}
+            <div className="ios-card overflow-hidden">
+              <div className="p-4 flex items-center justify-between">
+                <button
+                  onClick={() => setPlanPanelOpen(o => !o)}
+                  className="flex items-center gap-2"
+                >
+                  <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">频率计划</span>
+                  <ChevronDown
+                    size={16}
+                    className={`text-gray-500 transition-transform ${planPanelOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                <div className="flex items-center gap-2">
+                  {!planPanelOpen && (
+                    <span className="text-[10px] text-gray-500 max-w-[120px] truncate">{planSummary}</span>
+                  )}
                   <button
                     onClick={handleEditPlan}
                     className="text-xs text-gray-400 hover:text-white transition-colors"
@@ -933,53 +1091,62 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
                   </button>
                 </div>
               </div>
-
-              {planSteps.length > 0 ? (
-                <div className="space-y-1">
-                  {planSteps.map((step, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                      <span className="text-gray-500 w-4 text-right">{i + 1}</span>
-                      <div className="flex-1 h-5 rounded bg-white/5 flex items-center px-2">
-                        <div className="flex items-center gap-2 w-full">
-                          {step.frequency > 0 ? (
-                            <>
-                              <span className="text-white font-medium">{step.frequency}</span>
-                              <span className="text-gray-500">BPM</span>
-                            </>
-                          ) : (
-                            <span className="text-gray-400">⏸ 静止</span>
+              <div
+                className="transition-all duration-300 ease-in-out"
+                style={{ maxHeight: planPanelOpen ? 400 : 0, opacity: planPanelOpen ? 1 : 0 }}
+              >
+                <div className="px-4 pb-4">
+                  {planSteps.length > 0 ? (
+                    <div className="space-y-1">
+                      {planSteps.map((step, i) => (
+                        <div key={i} className={`flex items-center gap-2 text-xs rounded px-1 py-0.5 transition-colors ${activeStepIdx === i && planEnabled ? 'bg-white/5' : ''}`}>
+                          <span className="text-gray-500 w-4 text-right">{i + 1}</span>
+                          <div className="flex-1 h-5 rounded bg-white/5 flex items-center px-2">
+                            <div className="flex items-center gap-2 w-full">
+                              {step.frequency > 0 ? (
+                                <>
+                                  <span className="text-white font-medium">{step.frequency}</span>
+                                  <span className="text-gray-500">BPM</span>
+                                </>
+                              ) : (
+                                <span className="text-gray-400">⏸ 静止</span>
+                              )}
+                              <span className="ml-auto text-gray-500">{formatDuration(step.duration)}</span>
+                            </div>
+                          </div>
+                          {activeStepIdx === i && planEnabled && (
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: accentColor }} />
                           )}
-                          <span className="ml-auto text-gray-500">{formatDuration(step.duration)}</span>
                         </div>
+                      ))}
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[10px] text-gray-600">
+                          合计 {formatDuration(planSteps.reduce((a, b) => a + b.duration, 0))} · 循环
+                        </span>
+                        {planEnabled && (
+                          <span className="text-[10px] font-medium" style={{ color: accentColor }}>● 已启用</span>
+                        )}
                       </div>
                     </div>
-                  ))}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-[10px] text-gray-600">
-                      合计 {formatDuration(planSteps.reduce((a, b) => a + b.duration, 0))} · 循环
-                    </span>
-                    {planEnabled && (
-                      <span className="text-[10px] font-medium" style={{ color: accentColor }}>● 已启用</span>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="text-center py-3">
+                      <p className="text-xs text-gray-600 mb-2">暂无计划步骤</p>
+                      <button
+                        onClick={handleEditPlan}
+                        className="text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 transition-colors"
+                      >
+                        创建计划
+                      </button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-3">
-                  <p className="text-xs text-gray-600 mb-2">暂无计划步骤</p>
-                  <button
-                    onClick={handleEditPlan}
-                    className="text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 transition-colors"
-                  >
-                    创建计划
-                  </button>
-                </div>
-              )}
+              </div>
+            </div>
             </div>
 
             <div className="h-4" />
           </div>
         </div>
-      </div>
 
       {/* === Plan Editor Modal === */}
       {showPlanEditor && (
