@@ -9,6 +9,8 @@ type EasingCurve = 'linear' | 'sine' | 'ease-in-out' | 'bounce' | 'elastic';
 
 type SoundType = 'wooden-fish' | 'drum' | 'bell' | 'click';
 
+type VisualEffect = 'none' | 'particles' | 'pulse' | 'waveform' | 'flame' | 'ripple';
+
 interface PlanStep {
   frequency: number;
   duration: number;
@@ -32,6 +34,15 @@ const CURVE_CONFIG: Record<EasingCurve, { label: string }> = {
   'ease-in-out': { label: '缓入缓出' },
   'bounce': { label: '弹跳' },
   'elastic': { label: '弹性' },
+};
+
+const EFFECT_CONFIG: Record<VisualEffect, { label: string }> = {
+  'none': { label: '无' },
+  'particles': { label: '粒子拖尾' },
+  'pulse': { label: '心跳脉冲' },
+  'waveform': { label: '波形环绕' },
+  'flame': { label: '能量柱' },
+  'ripple': { label: '涟漪水波' },
 };
 
 const PRESET_PLANS: { name: string; steps: PlanStep[] }[] = [
@@ -290,6 +301,8 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
   const [editSteps, setEditSteps] = useState<PlanStep[]>([]);
   const [impactFlash, setImpactFlash] = useState(false);
   const [liveFreq, setLiveFreq] = useState(frequency);
+  const [visualEffect, setVisualEffect] = useState<VisualEffect>('none');
+  const [livePos, setLivePos] = useState(0);
 
   // === Refs (for animation loop) ===
   const animRef = useRef<number>(0);
@@ -306,6 +319,11 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
   const planStepsRef = useRef(planSteps);
   const planEnabledRef = useRef(planEnabled);
   const isRunningRef = useRef(false);
+  const visualEffectRef = useRef<VisualEffect>('none');
+  const particlesRef = useRef<{ y: number; opacity: number; xOff: number }[]>([]);
+  const ripplesRef = useRef<{ age: number; maxAge: number; key: number }[]>([]);
+  const livePosRef = useRef(0);
+  const waveformPhaseRef = useRef(0);
 
   // Sync refs
   useEffect(() => {
@@ -319,6 +337,7 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
   useEffect(() => { planStepsRef.current = planSteps; }, [planSteps]);
   useEffect(() => { planEnabledRef.current = planEnabled; }, [planEnabled]);
   useEffect(() => { isRunningRef.current = isRunning; }, [isRunning]);
+  useEffect(() => { visualEffectRef.current = visualEffect; }, [visualEffect]);
 
   // === LocalStorage ===
   useEffect(() => {
@@ -382,11 +401,20 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
       const cycleT = (localTime % cycleDuration) / cycleDuration;
       const pos = getEasedPosition(cycleT, curveRef.current);
 
-      if (prevTRef.current > 0.8 && cycleT < 0.2) {
+      const isBeat = prevTRef.current > 0.8 && cycleT < 0.2;
+
+      if (isBeat) {
         playSound(soundRef.current, volumeRef.current);
         setImpactFlash(true);
         setTimeout(() => setImpactFlash(false), 120);
         setCount(c => c + 1);
+
+        if (visualEffectRef.current === 'ripple') {
+          ripplesRef.current.push({ age: 0, maxAge: 0.6, key: Date.now() + Math.random() });
+        }
+        if (visualEffectRef.current === 'pulse') {
+          ripplesRef.current.push({ age: 0, maxAge: 0.8, key: Date.now() + Math.random() });
+        }
       }
       prevTRef.current = cycleT;
 
@@ -395,12 +423,37 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
         const beadSize = 44;
         const y = pos * Math.max(0, trackHeight - beadSize);
         beadRef.current.style.transform = `translateX(-50%) translateY(${-y}px)`;
+        livePosRef.current = y;
+        setLivePos(y);
+
+        if (isRunningRef.current && visualEffectRef.current === 'particles') {
+          particlesRef.current.push({ y, opacity: 1, xOff: (Math.random() - 0.5) * 18 });
+          particlesRef.current = particlesRef.current.slice(-25);
+          for (const p of particlesRef.current) {
+            p.opacity -= 0.045;
+            p.y += Math.sin(p.xOff) * 0.15;
+          }
+        }
+
+        if (isRunningRef.current && visualEffectRef.current === 'waveform') {
+          waveformPhaseRef.current += 0.04;
+        }
       }
     } else {
       if (beadRef.current) {
         beadRef.current.style.transform = 'translateX(-50%) translateY(0px)';
+        livePosRef.current = 0;
+        setLivePos(0);
       }
       prevTRef.current = 0;
+    }
+
+    // Update ripples
+    if (ripplesRef.current.length > 0) {
+      const dt = 0.016;
+      ripplesRef.current = ripplesRef.current
+        .map(r => ({ ...r, age: r.age + dt }))
+        .filter(r => r.age < r.maxAge);
     }
 
     animRef.current = requestAnimationFrame(animateRef.current!);
@@ -614,6 +667,84 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
                     borderRadius: '50%',
                   }} />
                 </div>
+
+                {/* Effects overlay */}
+                <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: 14 }}>
+                  {/* Particles */}
+                  {visualEffect === 'particles' && particlesRef.current.map((p, i) => (
+                    <div key={i} style={{
+                      position: 'absolute',
+                      width: 5,
+                      height: 5,
+                      borderRadius: '50%',
+                      background: accentColor,
+                      opacity: Math.max(0, p.opacity * 0.5),
+                      bottom: p.y,
+                      left: `calc(50% + ${p.xOff}px)`,
+                      transform: 'translateX(-50%)',
+                    }} />
+                  ))}
+
+                  {/* Waveform */}
+                  {visualEffect === 'waveform' && (
+                    <svg className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
+                      <path
+                        d={(() => {
+                          const h = trackRef.current?.offsetHeight ?? 200;
+                          const w = 28;
+                          const amp = livePos < 5 ? 0 : Math.min(livePos / (h - 44), 1) * 8;
+                          const phase = waveformPhaseRef.current;
+                          let d = '';
+                          for (let y = 0; y <= h; y += 4) {
+                            const x = w / 2 + Math.sin((y / h) * Math.PI * 3 + phase) * amp * (1 - y / h);
+                            d += (y === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+                          }
+                          return d;
+                        })()}
+                        fill="none"
+                        stroke={accentColor}
+                        strokeWidth="1.5"
+                        opacity="0.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )}
+
+                  {/* Flame/Energy Pillar */}
+                  {visualEffect === 'flame' && (
+                    <div style={{
+                      position: 'absolute',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      bottom: Math.max(0, livePos),
+                      width: 12,
+                      height: Math.max(0, livePos),
+                      background: `linear-gradient(0deg, ${accentColor}80 0%, ${accentColor}40 40%, transparent 100%)`,
+                      borderRadius: '6px 6px 0 0',
+                      transition: 'height 0.05s, bottom 0.05s',
+                      opacity: livePos > 3 ? 0.6 : 0,
+                    }} />
+                  )}
+
+                  {/* Ripple rings (also used by pulse) */}
+                  {(visualEffect === 'ripple' || visualEffect === 'pulse') && ripplesRef.current.map(r => {
+                    const progress = r.age / r.maxAge;
+                    const size = progress * 80;
+                    return (
+                      <div key={r.key} style={{
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: size,
+                        height: size,
+                        borderRadius: '50%',
+                        border: `1.5px solid ${visualEffect === 'pulse' ? accentColor : 'rgba(255,255,255,0.4)'}`,
+                        opacity: 1 - progress,
+                      }} />
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Frequency display below cylinder */}
@@ -721,6 +852,27 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
                     style={soundType === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
                   >
                     {SOUND_CONFIG[key].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* --- Visual Effect Selector --- */}
+            <div className="ios-card p-4">
+              <span className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3 block">动效</span>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(EFFECT_CONFIG) as VisualEffect[]).map(key => (
+                  <button
+                    key={key}
+                    onClick={() => setVisualEffect(key)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      visualEffect === key
+                        ? 'text-white shadow-lg'
+                        : 'text-gray-400 bg-white/5 hover:bg-white/10'
+                    }`}
+                    style={visualEffect === key ? { background: accentColor, boxShadow: `0 0 12px ${accentColor}40` } : undefined}
+                  >
+                    {EFFECT_CONFIG[key].label}
                   </button>
                 ))}
               </div>
