@@ -26,6 +26,7 @@ import { TruthDareGameView } from './components/views/TruthDareGameView';
 import { ImmersiveSelectView } from './components/views/ImmersiveSelectView';
 import { ImmersiveGameView } from './components/views/ImmersiveGameView';
 import { RadioPlayerView } from './components/views/RadioPlayerView';
+import { MetronomeView } from './components/views/MetronomeView';
 import { NovelView } from './components/views/NovelView';
 
 const MODE_CONFIG: Record<GameMode, {
@@ -438,6 +439,20 @@ function AppInner({ mode }: { mode: GameMode }) {
         </div>
         <div className="relative z-10 w-full max-w-[430px] h-full bg-black/20">
           <RadioPlayerView mode={mode} onBack={() => setAppSubview('hub')} />
+        </div>
+      </div>
+    );
+  }
+
+  // ===== Metronome =====
+  if (appSubview === 'metronome') {
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
+        <div className="relative z-10 w-full max-w-[430px] h-full">
+          <MetronomeView
+            mode={mode}
+            onBack={() => setAppSubview('hub')}
+          />
         </div>
       </div>
     );

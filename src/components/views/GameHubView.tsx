@@ -31,7 +31,7 @@ export function GameHubView({ mode, onNavigate }: GameHubViewProps) {
         </div>
       </div>
 
-      <div className="relative z-10 px-6 flex-1 flex flex-col gap-4 pb-8 justify-center">
+      <div className="relative z-10 px-6 flex-1 min-h-0 flex flex-col gap-4 pb-8 overflow-y-auto no-scrollbar">
         {/* Flying Chess */}
         <button
           onClick={() => onNavigate('flying-home')}
@@ -115,6 +115,24 @@ export function GameHubView({ mode, onNavigate }: GameHubViewProps) {
             </div>
             <span className="text-xs font-semibold text-white px-2.5 py-1 rounded-full"
               style={{ background: accentColor }}>BETA</span>
+          </div>
+        </button>
+
+        {/* Metronome Tool */}
+        <button
+          onClick={() => onNavigate('metronome')}
+          className="w-full bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12]
+                     border border-white/[0.08] rounded-2xl p-6 transition-all text-left group"
+          style={{ borderColor: `${accentColor}33` }}
+        >
+          <div className="flex items-center gap-4">
+            <span className="text-4xl">🥁</span>
+            <div className="flex-1">
+              <div className="text-white text-lg font-semibold">节拍器</div>
+              <div className="text-gray-500 text-sm mt-0.5">节奏训练 · 频率计划 · 音效反馈</div>
+            </div>
+            <span className="text-xs font-semibold text-white px-2.5 py-1 rounded-full"
+              style={{ background: accentColor }}>NEW</span>
           </div>
         </button>
 
