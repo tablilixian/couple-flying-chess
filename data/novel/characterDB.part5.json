@@ -1,7 +1,6 @@
 {
   "characters": {
-    "yuemu": { "lastAppearChapter": 60, "appearCount": 14 },
-    "huangyue": { "lastAppearChapter": 44, "appearCount": 1 },
+    "xunannan": { "lastAppearChapter": 60, "appearCount": 14 },
     "moshang_nanren": {
       "id": "moshang_nanren",
       "name": "蒙面男人",
@@ -74,10 +73,10 @@
         { "chapter": 54, "eventType": "other", "summary": "简宁瑜伽裤里塞跳蛋上课", "participants": ["jianning", "qinyubing"] },
         { "chapter": 55, "eventType": "other", "summary": "简宁离开，李有有焦虑，决定坦诚面对", "participants": ["liyouyou", "jianning"] },
         { "chapter": 56, "eventType": "sex", "summary": "简宁被绑在沙发上高潮，黄鹤雨带回高挑女人", "participants": ["jianning", "lixiaomeng_cousin", "gaotiao_nvren"] },
-        { "chapter": 57, "eventType": "milestone", "summary": "岳母救简宁，推走黄鹤雨", "participants": ["yuemu", "jianning", "lixiaomeng_cousin"] },
-        { "chapter": 58, "eventType": "other", "summary": "李有有在黄鹤雨楼下看了一夜，三人一起下楼", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin", "yuemu"] },
+        { "chapter": 57, "eventType": "milestone", "summary": "岳母救简宁，推走黄鹤雨", "participants": ["xunannan", "jianning", "lixiaomeng_cousin"] },
+        { "chapter": 58, "eventType": "other", "summary": "李有有在黄鹤雨楼下看了一夜，三人一起下楼", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin", "xunannan"] },
         { "chapter": 59, "eventType": "other", "summary": "画室场景：简宁被男生看裸体画素描", "participants": ["jianning"] },
-        { "chapter": 60, "eventType": "milestone", "summary": "一周后简宁肛门恢复上学，国安查硬盘拿回视频", "participants": ["jianning", "liyouyou", "yuemu", "heyu"] }
+        { "chapter": 60, "eventType": "milestone", "summary": "一周后简宁肛门恢复上学，国安查硬盘拿回视频", "participants": ["jianning", "liyouyou", "xunannan", "heyu"] }
       ]
     },
     {
@@ -86,20 +85,20 @@
         { "chapter": 41, "eventType": "other", "summary": "李有有旁听方伟逼简宁说淫语", "participants": ["liyouyou", "jianning", "fangwei"] },
         { "chapter": 42, "eventType": "conflict", "summary": "蒙面男人强奸简宁，李有有不在场", "participants": ["jianning", "moshang_nanren", "fangwei", "chenwen"] },
         { "chapter": 43, "eventType": "other", "summary": "李有有陪简宁去迪士尼，帮她戒断自慰成瘾", "participants": ["liyouyou", "jianning"] },
-        { "chapter": 44, "eventType": "discover", "summary": "李有有发现何俪带黄鹤雨去岳母家", "participants": ["liyouyou", "lixiaomeng_cousin", "heyu", "yuemu"] },
+        { "chapter": 44, "eventType": "discover", "summary": "李有有发现何俪带黄鹤雨去岳母家", "participants": ["liyouyou", "lixiaomeng_cousin", "heyu", "xunannan"] },
         { "chapter": 46, "eventType": "other", "summary": "李有有潜入黄鹤雨新家发现催情药", "participants": ["liyouyou"] },
-        { "chapter": 47, "eventType": "other", "summary": "李有有监视黄鹤雨新家，看到岳母被下药", "participants": ["liyouyou", "lixiaomeng_cousin", "yuemu"] },
+        { "chapter": 47, "eventType": "other", "summary": "李有有监视黄鹤雨新家，看到岳母被下药", "participants": ["liyouyou", "lixiaomeng_cousin", "xunannan"] },
         { "chapter": 48, "eventType": "other", "summary": "李有有听到电话中简宁被陈书文打屁股", "participants": ["liyouyou", "jianning", "chenwen"] },
         { "chapter": 49, "eventType": "other", "summary": "黄鹤雨离开，李有有安心", "participants": ["liyouyou", "lixiaomeng_cousin"] },
         { "chapter": 55, "eventType": "milestone", "summary": "李有有决定彻底坦诚面对妻子", "participants": ["liyouyou"] },
         { "chapter": 58, "eventType": "other", "summary": "李有有在黄鹤雨楼下坐了一夜", "participants": ["liyouyou"] },
-        { "chapter": 60, "eventType": "milestone", "summary": "全书终：简宁恢复上学，国安查获硬盘，岳母小姨恢复平静", "participants": ["liyouyou", "jianning", "yuemu", "heyu"] }
+        { "chapter": 60, "eventType": "milestone", "summary": "全书终：简宁恢复上学，国安查获硬盘，岳母小姨恢复平静", "participants": ["liyouyou", "jianning", "xunannan", "heyu"] }
       ]
     },
     {
-      "id": "lixiaomeng_cousin-yuemu-master_slave",
+      "id": "lixiaomeng_cousin-xunannan-master_slave",
       "from": "lixiaomeng_cousin",
-      "to": "yuemu",
+      "to": "xunannan",
       "type": "master_slave",
       "status": "ongoing",
       "intensity": 4,
@@ -107,8 +106,8 @@
       "keyEvents": [
         { "chapter": 48, "eventType": "sex", "summary": "黄鹤雨边插何俪边骂简宁", "participants": ["lixiaomeng_cousin", "heyu", "jianning"] },
         { "chapter": 56, "eventType": "other", "summary": "黄鹤雨回住处发现简宁在沙发上", "participants": ["lixiaomeng_cousin", "jianning"] },
-        { "chapter": 57, "eventType": "other", "summary": "岳母救简宁，岳母推走黄鹤雨", "participants": ["yuemu", "jianning", "lixiaomeng_cousin"] },
-        { "chapter": 58, "eventType": "other", "summary": "黄鹤雨带岳母出门", "participants": ["lixiaomeng_cousin", "yuemu"] }
+        { "chapter": 57, "eventType": "other", "summary": "岳母救简宁，岳母推走黄鹤雨", "participants": ["xunannan", "jianning", "lixiaomeng_cousin"] },
+        { "chapter": 58, "eventType": "other", "summary": "黄鹤雨带岳母出门", "participants": ["lixiaomeng_cousin", "xunannan"] }
       ]
     },
     {
@@ -148,26 +147,26 @@
     { "chapter": 43, "title": "第43章", "charactersPresent": ["liyouyou", "jianning"], "keyEvents": [
       { "chapter": 43, "eventType": "other", "summary": "李有有陪简宁去迪士尼散心，帮她戒断自慰成瘾", "participants": ["liyouyou", "jianning"] }
     ], "wordCount": 7387 },
-    { "chapter": 44, "title": "第44章", "charactersPresent": ["liyouyou", "lixiaomeng_cousin", "heyu", "yuemu"], "keyEvents": [
+    { "chapter": 44, "title": "第44章", "charactersPresent": ["liyouyou", "lixiaomeng_cousin", "heyu", "xunannan"], "keyEvents": [
       { "chapter": 44, "eventType": "sex", "summary": "何俪带黄鹤雨去岳母家，黄鹤雨在厨房插何俪", "participants": ["lixiaomeng_cousin", "heyu"] },
       { "chapter": 44, "eventType": "discover", "summary": "李有有通过监控发现黄鹤雨出现在岳母家", "participants": ["liyouyou", "lixiaomeng_cousin"] }
     ], "wordCount": 7718 },
-    { "chapter": 45, "title": "第45章", "charactersPresent": ["lixiaomeng_cousin", "yuemu", "heyu"], "keyEvents": [
-      { "chapter": 45, "eventType": "sex", "summary": "黄鹤雨插岳母，何俪在旁边亲吻姐姐", "participants": ["lixiaomeng_cousin", "yuemu", "heyu"] }
+    { "chapter": 45, "title": "第45章", "charactersPresent": ["lixiaomeng_cousin", "xunannan", "heyu"], "keyEvents": [
+      { "chapter": 45, "eventType": "sex", "summary": "黄鹤雨插岳母，何俪在旁边亲吻姐姐", "participants": ["lixiaomeng_cousin", "xunannan", "heyu"] }
     ], "wordCount": 8769 },
     { "chapter": 46, "title": "第46章", "charactersPresent": ["liyouyou", "lixiaomeng_cousin"], "keyEvents": [
       { "chapter": 46, "eventType": "discover", "summary": "李有有潜入黄鹤雨新家，发现催情药等物品", "participants": ["liyouyou"] }
     ], "wordCount": 7150 },
-    { "chapter": 47, "title": "第47章", "charactersPresent": ["liyouyou", "lixiaomeng_cousin", "yuemu", "heyu"], "keyEvents": [
-      { "chapter": 47, "eventType": "sex", "summary": "岳母被下催情药，黄鹤雨深插岳母", "participants": ["lixiaomeng_cousin", "yuemu"] }
+    { "chapter": 47, "title": "第47章", "charactersPresent": ["liyouyou", "lixiaomeng_cousin", "xunannan", "heyu"], "keyEvents": [
+      { "chapter": 47, "eventType": "sex", "summary": "岳母被下催情药，黄鹤雨深插岳母", "participants": ["lixiaomeng_cousin", "xunannan"] }
     ], "wordCount": 8778 },
     { "chapter": 48, "title": "第48章", "charactersPresent": ["liyouyou", "jianning", "heyu", "chenwen", "fangwei"], "keyEvents": [
       { "chapter": 48, "eventType": "sex", "summary": "陈书文打简宁屁股留红印，简宁电话中挑衅黄鹤雨", "participants": ["jianning", "chenwen", "fangwei"] },
       { "chapter": 48, "eventType": "sex", "summary": "黄鹤雨边插何俪边骂简宁", "participants": ["lixiaomeng_cousin", "heyu", "jianning"] }
     ], "wordCount": 8177 },
-    { "chapter": 49, "title": "第49章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "heyu", "yuemu"], "keyEvents": [
+    { "chapter": 49, "title": "第49章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "heyu", "xunannan"], "keyEvents": [
       { "chapter": 49, "eventType": "other", "summary": "黄鹤雨离开，李有有观察简宁是否有异常", "participants": ["liyouyou", "jianning"] },
-      { "chapter": 49, "eventType": "other", "summary": "简宁在岳母家住了几天，回SH", "participants": ["jianning", "yuemu", "heyu"] }
+      { "chapter": 49, "eventType": "other", "summary": "简宁在岳母家住了几天，回SH", "participants": ["jianning", "xunannan", "heyu"] }
     ], "wordCount": 6955 },
     { "chapter": 50, "title": "第50章", "charactersPresent": ["jianning", "lixiaomeng_cousin", "liyouyou"], "keyEvents": [
       { "chapter": 50, "eventType": "other", "summary": "黄鹤雨逼简宁刮阴毛，简宁哀求怕被老公发现", "participants": ["jianning", "lixiaomeng_cousin"] }
@@ -188,21 +187,21 @@
       { "chapter": 55, "eventType": "milestone", "summary": "李有有陷入焦虑，决定坦诚面对妻子", "participants": ["liyouyou"] },
       { "chapter": 55, "eventType": "other", "summary": "简宁离开画室，夫妻之间有隔膜", "participants": ["liyouyou", "jianning"] }
     ], "wordCount": 11070 },
-    { "chapter": 56, "title": "第56章", "charactersPresent": ["jianning", "lixiaomeng_cousin", "gaotiao_nvren", "yuemu"], "keyEvents": [
+    { "chapter": 56, "title": "第56章", "charactersPresent": ["jianning", "lixiaomeng_cousin", "gaotiao_nvren", "xunannan"], "keyEvents": [
       { "chapter": 56, "eventType": "sex", "summary": "简宁被绑在沙发上高潮，黄鹤雨带回高挑女人", "participants": ["jianning", "lixiaomeng_cousin", "gaotiao_nvren"] },
       { "chapter": 56, "eventType": "other", "summary": "高挑女人目睹简宁被绑", "participants": ["gaotiao_nvren", "jianning"] }
     ], "wordCount": 8903 },
-    { "chapter": 57, "title": "第57章", "charactersPresent": ["yuemu", "jianning", "lixiaomeng_cousin", "heyu", "xunannan"], "keyEvents": [
-      { "chapter": 57, "eventType": "milestone", "summary": "岳母救简宁，黄鹤雨肏简宁时被岳母推开", "participants": ["yuemu", "jianning", "lixiaomeng_cousin"] }
+    { "chapter": 57, "title": "第57章", "charactersPresent": ["xunannan", "jianning", "lixiaomeng_cousin", "heyu", "xunannan"], "keyEvents": [
+      { "chapter": 57, "eventType": "milestone", "summary": "岳母救简宁，黄鹤雨肏简宁时被岳母推开", "participants": ["xunannan", "jianning", "lixiaomeng_cousin"] }
     ], "wordCount": 9272 },
-    { "chapter": 58, "title": "第58章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "yuemu", "heyu", "xunannan"], "keyEvents": [
+    { "chapter": 58, "title": "第58章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "xunannan", "heyu", "xunannan"], "keyEvents": [
       { "chapter": 58, "eventType": "other", "summary": "李有有在黄鹤雨楼下看了一夜，三人在监控中消失", "participants": ["liyouyou"] }
     ], "wordCount": 13179 },
     { "chapter": 59, "title": "第59章", "charactersPresent": ["liyouyou", "jianning"], "keyEvents": [
       { "chapter": 59, "eventType": "other", "summary": "画室场景：男生们画素描，简宁被迫当裸模", "participants": ["jianning"] }
     ], "wordCount": 20882 },
-    { "chapter": 60, "title": "第60章", "charactersPresent": ["liyouyou", "jianning", "yuemu", "heyu", "mishu"], "keyEvents": [
-      { "chapter": 60, "eventType": "milestone", "summary": "全书终：简宁恢复上学，国安查获硬盘，岳母小姨恢复平静", "participants": ["liyouyou", "jianning", "yuemu", "heyu"] },
+    { "chapter": 60, "title": "第60章", "charactersPresent": ["liyouyou", "jianning", "xunannan", "heyu", "mishu"], "keyEvents": [
+      { "chapter": 60, "eventType": "milestone", "summary": "全书终：简宁恢复上学，国安查获硬盘，岳母小姨恢复平静", "participants": ["liyouyou", "jianning", "xunannan", "heyu"] },
       { "chapter": 60, "eventType": "other", "summary": "神秘大叔到公司找李有有", "participants": ["liyouyou", "mishu"] }
     ], "wordCount": 10452 }
   ]

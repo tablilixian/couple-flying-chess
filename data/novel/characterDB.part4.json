@@ -13,32 +13,7 @@
       "appearCount": 1,
       "metadata": { "job": "外贸企业负责人", "relation": "方伟情人" }
     },
-    "yuemu": {
-      "id": "yuemu",
-      "name": "岳母",
-      "aliases": ["简宁母亲", "岳母大人", "妈", "姐姐"],
-      "role": "side",
-      "gender": "female",
-      "tags": ["简宁母亲", "何俪姐姐", "被调教", "渴望满足"],
-      "description": "简宁母亲，何俪的亲姐姐。老公不常在家，多年未满足性生活。被黄鹤雨调教，吃催情药后彻底沦陷。与丈夫黄中庭是夫妻。",
-      "firstAppearChapter": 44,
-      "lastAppearChapter": 60,
-      "appearCount": 14,
-      "metadata": { "husband": "黄中庭", "daughters": ["简宁"], "sister": "何俪" }
-    },
-    "huangyue": {
-      "id": "huangyue",
-      "name": "黄岳",
-      "aliases": ["简宁父亲", "岳父", "黄中庭"],
-      "role": "minor",
-      "gender": "male",
-      "tags": ["简宁父亲", "岳母丈夫", "常不在家"],
-      "description": "简宁父亲，岳母丈夫。常年不在家，导致岳母独守空房多年。",
-      "firstAppearChapter": 44,
-      "lastAppearChapter": 44,
-      "appearCount": 1,
-      "metadata": {}
-    },
+    "xunannan": { "lastAppearChapter": 40, "appearCount": 6 },
     "liyouyou": { "lastAppearChapter": 40, "appearCount": 40 },
     "jianning": { "lastAppearChapter": 40, "appearCount": 40 },
     "lixiaomeng_cousin": { "lastAppearChapter": 40, "appearCount": 40 },
@@ -103,18 +78,18 @@
       ]
     },
     {
-      "id": "lixiaomeng_cousin-yuemu-master_slave",
+      "id": "lixiaomeng_cousin-xunannan-master_slave",
       "from": "lixiaomeng_cousin",
-      "to": "yuemu",
+      "to": "xunannan",
       "type": "master_slave",
       "status": "ongoing",
       "intensity": 4,
       "startChapter": 44,
       "keyEvents": [
-        { "chapter": 44, "eventType": "sex", "summary": "何俪带黄鹤雨去岳母家，黄鹤雨在厨房插何俪", "participants": ["lixiaomeng_cousin", "heyu", "yuemu"] },
-        { "chapter": 45, "eventType": "sex", "summary": "黄鹤雨插岳母，何俪在旁亲吻姐姐", "participants": ["lixiaomeng_cousin", "yuemu", "heyu"] },
+        { "chapter": 44, "eventType": "sex", "summary": "何俪带黄鹤雨去岳母家，黄鹤雨在厨房插何俪", "participants": ["lixiaomeng_cousin", "heyu", "xunannan"] },
+        { "chapter": 45, "eventType": "sex", "summary": "黄鹤雨插岳母，何俪在旁亲吻姐姐", "participants": ["lixiaomeng_cousin", "xunannan", "heyu"] },
         { "chapter": 46, "eventType": "discover", "summary": "李有有潜入黄鹤雨新家，发现催情药等", "participants": ["liyouyou", "lixiaomeng_cousin"] },
-        { "chapter": 47, "eventType": "milestone", "summary": "岳母被下催情药，黄鹤雨深插岳母，岳母彻底沦陷", "participants": ["lixiaomeng_cousin", "yuemu"] }
+        { "chapter": 47, "eventType": "milestone", "summary": "岳母被下催情药，黄鹤雨深插岳母，岳母彻底沦陷", "participants": ["lixiaomeng_cousin", "xunannan"] }
       ],
       "notes": "岳母年长但多年未满足，被下药后彻底沦陷"
     },
@@ -176,8 +151,8 @@
     { "chapter": 25, "title": "第25章", "charactersPresent": ["liyouyou", "qinyubing", "lixiaomeng_cousin"], "keyEvents": [
       { "chapter": 25, "eventType": "other", "summary": "黄鹤雨视频自述调教J老师(秦玉冰)过程，濒临高潮法", "participants": ["lixiaomeng_cousin", "qinyubing"] }
     ], "wordCount": 7161 },
-    { "chapter": 26, "title": "第26章", "charactersPresent": ["liyouyou", "jianning", "yuemu", "lixiaomeng_cousin"], "keyEvents": [
-      { "chapter": 26, "eventType": "other", "summary": "夫妻看黄鹤雨视频「母来电」，简宁母亲电话意外介入", "participants": ["liyouyou", "jianning", "yuemu", "lixiaomeng_cousin"] }
+    { "chapter": 26, "title": "第26章", "charactersPresent": ["liyouyou", "jianning", "xunannan", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 26, "eventType": "other", "summary": "夫妻看黄鹤雨视频「母来电」，简宁母亲电话意外介入", "participants": ["liyouyou", "jianning", "xunannan", "lixiaomeng_cousin"] }
     ], "wordCount": 13258 },
     { "chapter": 27, "title": "第27章", "charactersPresent": ["liyouyou", "wukai", "liweiguo", "yufu", "fangwei"], "keyEvents": [
       { "chapter": 27, "eventType": "other", "summary": "融资危机：两家美资退出，方伟引荐钱佳颖", "participants": ["liyouyou", "wukai", "fangwei"] }
