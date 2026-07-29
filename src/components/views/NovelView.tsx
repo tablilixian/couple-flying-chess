@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, BookOpen, ChevronDown, Loader2, X } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ArrowLeft, BookOpen, ChevronDown, Loader2, X, User, HeartHandshake, Grid3X3, Info } from 'lucide-react';
 import { NOVELS, Novel } from '../../data/novels';
+import { CHARACTER_DB } from '../../data/novel/characterDB';
 
 interface NovelViewProps {
   onExit: () => void;
@@ -12,14 +13,10 @@ interface Chapter {
   paragraphs: string[];
 }
 
-// 把整篇 md 文本按「##第XX章」切分成章节
 function parseChapters(raw: string): Chapter[] {
-  // 统一换行
   const text = raw.replace(/\r\n/g, '\n');
-  // 提取首部元信息（标题/作者/标签），它们也以全角空格开头
   const lines = text.split('\n');
 
-  // 找到所有章节起始行
   const chapterStarts: { line: number; title: string }[] = [];
   const chapterRegex = /^##\s*第\s*\d+\s*章/;
   lines.forEach((line, i) => {
@@ -38,7 +35,6 @@ function parseChapters(raw: string): Chapter[] {
       const l = lines[j];
       const trimmed = l.trim();
       if (!trimmed) continue;
-      // 跳过仍然是 md 标题或元信息的行
       if (/^##/.test(trimmed)) continue;
       paragraphs.push(trimmed);
     }
@@ -47,91 +43,67 @@ function parseChapters(raw: string): Chapter[] {
   return chapters;
 }
 
+type Page = 'bookshelf' | 'detail' | 'reader';
+
 export function NovelView({ onExit }: NovelViewProps) {
+  const [page, setPage] = useState<Page>('bookshelf');
   const [selected, setSelected] = useState<Novel | null>(null);
   const [raw, setRaw] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCatalog, setShowCatalog] = useState(false);
-  const [activeChapter, setActiveChapter] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [curChapterIdx, setCurChapterIdx] = useState(0);
+  const [detailTab, setDetailTab] = useState<'intro' | 'characters' | 'chapters'>('intro');
 
-  // 加载小说内容
-  useEffect(() => {
-    if (!selected) return;
-    let cancelled = false;
+  const enterDetail = useCallback((novel: Novel) => {
+    setSelected(novel);
+    setPage('detail');
     setLoading(true);
     setError(null);
     setRaw('');
-    fetch(selected.src)
+    fetch(novel.src)
       .then(res => {
         if (!res.ok) throw new Error(`加载失败 (${res.status})`);
         return res.text();
       })
       .then(text => {
-        if (!cancelled) {
-          setRaw(text);
-          setLoading(false);
-          setActiveChapter(0);
-          // 滚动到顶部
-          requestAnimationFrame(() => {
-            contentRef.current?.scrollTo({ top: 0, behavior: 'auto' });
-          });
-        }
+        setRaw(text);
+        setLoading(false);
+        setCurChapterIdx(0);
       })
       .catch(e => {
-        if (!cancelled) {
-          setError(e?.message || '加载失败');
-          setLoading(false);
-        }
+        setError(e?.message || '加载失败');
+        setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [selected]);
+  }, []);
+
+  const enterReader = useCallback((chapterIdx?: number) => {
+    setPage('reader');
+    setCurChapterIdx(chapterIdx ?? 0);
+  }, []);
+
+  const backToDetail = useCallback(() => {
+    setPage('detail');
+  }, []);
+
+  const backToBookshelf = useCallback(() => {
+    setPage('bookshelf');
+    setSelected(null);
+    setRaw('');
+    setError(null);
+  }, []);
 
   const chapters = useMemo(() => (raw ? parseChapters(raw) : []), [raw]);
 
-  // 监听滚动，更新当前章节高亮
-  useEffect(() => {
-    if (!chapters.length) return;
-    const el = contentRef.current;
-    if (!el) return;
-
-    const onScroll = () => {
-      const scrollTop = el.scrollTop;
-      // 找到当前可视区顶部的章节
-      let current = 0;
-      for (let i = 0; i < sectionRefs.current.length; i++) {
-        const s = sectionRefs.current[i];
-        if (!s) continue;
-        // 章节顶部相对内容容器的偏移
-        const top = s.offsetTop - el.offsetTop;
-        if (top - 80 <= scrollTop) {
-          current = i;
-        } else {
-          break;
-        }
-      }
-      setActiveChapter(current);
-    };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, [chapters]);
-
-  const jumpTo = (i: number) => {
-    const s = sectionRefs.current[i];
-    const el = contentRef.current;
-    if (s && el) {
-      const top = s.offsetTop - el.offsetTop - 8;
-      el.scrollTo({ top, behavior: 'smooth' });
-    }
+  const jumpTo = useCallback((i: number) => {
+    setCurChapterIdx(i);
     setShowCatalog(false);
-  };
+  }, []);
 
-  // ===== 列表页 =====
-  if (!selected) {
+  const curChapter = chapters[curChapterIdx];
+
+  // ===== 书房列表页 =====
+  if (page === 'bookshelf') {
     return (
       <div className="h-screen w-screen overflow-hidden flex justify-center bg-black">
         <div className="fixed inset-0 z-0">
@@ -161,7 +133,7 @@ export function NovelView({ onExit }: NovelViewProps) {
               {NOVELS.map(n => (
                 <button
                   key={n.id}
-                  onClick={() => setSelected(n)}
+                  onClick={() => enterDetail(n)}
                   className="w-full text-left p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -188,22 +160,175 @@ export function NovelView({ onExit }: NovelViewProps) {
     );
   }
 
+  // ===== 书籍详情页 =====
+  if (page === 'detail' && selected) {
+    const tabs = [
+      { key: 'intro' as const, label: '简介', icon: <Info size={14} /> },
+      { key: 'characters' as const, label: '人物', icon: <User size={14} /> },
+      { key: 'chapters' as const, label: '目录', icon: <Grid3X3 size={14} /> },
+    ];
+
+    return (
+      <div className="h-screen w-screen overflow-hidden flex justify-center bg-[#1a1612]">
+        <div className="relative z-10 w-full h-full flex flex-col">
+          <header className="shrink-0 px-4 py-3 flex items-center gap-3 border-b border-white/[0.06] bg-[#1a1612]/95 backdrop-blur">
+            <button
+              onClick={backToBookshelf}
+              className="text-gray-400 hover:text-white transition-colors flex items-center gap-1 shrink-0"
+            >
+              <ArrowLeft size={18} />
+              <span className="text-xs">书架</span>
+            </button>
+            <div className="flex-1 min-w-0 text-center">
+              <div className="text-white text-sm font-medium truncate">{selected.title}</div>
+              <div className="text-gray-500 text-[10px]">{selected.author}</div>
+            </div>
+            <div className="w-10 shrink-0" />
+          </header>
+
+          {/* Tab 栏 */}
+          <div className="shrink-0 flex border-b border-white/[0.06] bg-[#1a1612]/80 backdrop-blur px-4">
+            {tabs.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setDetailTab(t.key)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-[1px] ${
+                  detailTab === t.key
+                    ? 'text-amber-400 border-amber-400'
+                    : 'text-gray-500 border-transparent hover:text-gray-300'
+                }`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {/* ===== 简介 Tab ===== */}
+            {detailTab === 'intro' && (
+              <div className="mx-auto max-w-3xl px-5 py-6 space-y-6">
+                <div>
+                  <h1 className="text-white text-xl font-bold leading-snug">{selected.title}</h1>
+                  <p className="text-gray-400 text-xs mt-1">作者：{selected.author}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-2.5">
+                    {selected.tags.map(t => (
+                      <span key={t} className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300/80 border border-amber-500/15">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <section>
+                  <h3 className="text-amber-400/80 text-sm font-medium mb-2">简介</h3>
+                  <p className="text-gray-300/80 text-[13px] leading-relaxed">{selected.description}</p>
+                </section>
+
+                {/* 快速入口卡片 */}
+                <div className="grid grid-cols-2 gap-3">
+                  {selected.characters && selected.characters.length > 0 && (
+                    <button
+                      onClick={() => setDetailTab('characters')}
+                      className="flex flex-col items-center gap-1.5 py-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-colors"
+                    >
+                      <User size={20} className="text-amber-400/70" />
+                      <span className="text-gray-300 text-xs">人物关系</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setDetailTab('chapters')}
+                    className="flex flex-col items-center gap-1.5 py-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-colors"
+                  >
+                    <Grid3X3 size={20} className="text-amber-400/70" />
+                    <span className="text-gray-300 text-xs">章节目录</span>
+                  </button>
+                </div>
+
+                {!loading && chapters.length > 0 && (
+                  <button
+                    onClick={() => enterReader(0)}
+                    className="w-full py-3 rounded-xl bg-amber-600/90 hover:bg-amber-600 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <BookOpen size={16} />
+                    开始阅读
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* ===== 人物 Tab ===== */}
+            {detailTab === 'characters' && (
+              <CharactersTab
+                novelId={selected.id}
+                basicCharacters={selected.characters}
+                basicRelations={selected.relations}
+              />
+            )}
+
+            {/* ===== 目录 Tab ===== */}
+            {detailTab === 'chapters' && (
+              <div className="mx-auto max-w-3xl px-5 py-6 space-y-4">
+                <h2 className="text-white text-base font-semibold flex items-center gap-2">
+                  <Grid3X3 size={16} className="text-amber-400/70" />
+                  章节目录
+                  {chapters.length > 0 && (
+                    <span className="text-gray-500 text-xs font-normal ml-1">共 {chapters.length} 章</span>
+                  )}
+                </h2>
+
+                {loading && (
+                  <div className="flex items-center justify-center py-12 text-gray-500">
+                    <Loader2 size={20} className="animate-spin mr-2" />
+                    <span className="text-xs">正在加载章节…</span>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="text-red-400/80 text-xs py-8 text-center">{error}</div>
+                )}
+
+                {!loading && !error && chapters.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {chapters.map((c, i) => (
+                      <button
+                        key={c.index}
+                        onClick={() => enterReader(i)}
+                        className="flex flex-col items-center justify-center px-1 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-amber-500/20 transition-colors text-center min-h-[56px]"
+                      >
+                        <span className="text-gray-500 text-[10px] leading-none mb-1">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <span className="text-gray-300 text-[11px] leading-tight line-clamp-2">
+                          {c.title.replace(/^第\d+章\s*/, '')}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ===== 阅读页 =====
   return (
     <div className="h-screen w-screen overflow-hidden flex justify-center bg-[#1a1612]">
       <div className="relative z-10 w-full h-full flex flex-col">
-        {/* 顶部栏 */}
         <header className="shrink-0 px-4 py-3 flex items-center gap-3 border-b border-white/[0.06] bg-[#1a1612]/95 backdrop-blur">
           <button
-            onClick={() => setSelected(null)}
+            onClick={backToDetail}
             className="text-gray-400 hover:text-white transition-colors flex items-center gap-1 shrink-0"
           >
             <ArrowLeft size={18} />
-            <span className="text-xs">书架</span>
+            <span className="text-xs">详情</span>
           </button>
           <div className="flex-1 min-w-0 text-center">
-            <div className="text-white text-sm font-medium truncate">{selected.title}</div>
-            <div className="text-gray-500 text-[10px]">{selected.author}</div>
+            <div className="text-white text-sm font-medium truncate">{selected?.title}</div>
+            <div className="text-gray-500 text-[10px]">{selected?.author}</div>
           </div>
           <button
             onClick={() => setShowCatalog(v => !v)}
@@ -214,7 +339,6 @@ export function NovelView({ onExit }: NovelViewProps) {
           </button>
         </header>
 
-        {/* 章节目录抽屉 */}
         {showCatalog && (
           <div className="absolute inset-0 z-20" onClick={() => setShowCatalog(false)}>
             <div className="absolute inset-0 bg-black/50" />
@@ -234,7 +358,7 @@ export function NovelView({ onExit }: NovelViewProps) {
                     key={c.index}
                     onClick={() => jumpTo(i)}
                     className={`w-full text-left px-4 py-2.5 text-xs transition-colors border-b border-white/[0.03] ${
-                      i === activeChapter
+                      i === curChapterIdx
                         ? 'text-amber-400 bg-amber-500/5'
                         : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
                     }`}
@@ -248,8 +372,7 @@ export function NovelView({ onExit }: NovelViewProps) {
           </div>
         )}
 
-        {/* 内容区 */}
-        <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {loading && (
             <div className="h-full flex flex-col items-center justify-center text-gray-500">
               <Loader2 size={28} className="animate-spin mb-3" />
@@ -260,80 +383,242 @@ export function NovelView({ onExit }: NovelViewProps) {
             <div className="h-full flex flex-col items-center justify-center text-red-400/80 px-6">
               <p className="text-sm mb-3">{error}</p>
               <button
-                onClick={() => setSelected(null)}
+                onClick={backToBookshelf}
                 className="text-xs px-3 py-1.5 rounded bg-white/[0.06] text-gray-300 hover:bg-white/[0.1]"
               >
                 返回书架
               </button>
             </div>
           )}
-          {!loading && !error && chapters.length > 0 && (
+          {!loading && !error && curChapter && (
             <article className="mx-auto max-w-3xl px-5 py-6">
-              {/* 当前章节快速跳转条 */}
-              <div className="flex items-center justify-center gap-3 mb-5 text-[11px] text-gray-500">
+              <div className="flex items-center justify-center gap-3 mb-6 text-[11px] text-gray-500">
                 <button
-                  onClick={() => jumpTo(Math.max(0, activeChapter - 1))}
-                  disabled={activeChapter === 0}
-                  className="px-2.5 py-1 rounded bg-white/[0.04] disabled:opacity-30 hover:bg-white/[0.08] transition-colors"
+                  onClick={() => jumpTo(curChapterIdx - 1)}
+                  disabled={curChapterIdx === 0}
+                  className="px-3 py-1.5 rounded bg-white/[0.04] disabled:opacity-30 hover:bg-white/[0.08] transition-colors"
                 >
                   上一章
                 </button>
                 <span className="text-amber-400/80">
-                  第 {activeChapter + 1} / {chapters.length} 章
+                  第 {curChapterIdx + 1} / {chapters.length} 章
                 </span>
                 <button
-                  onClick={() => jumpTo(Math.min(chapters.length - 1, activeChapter + 1))}
-                  disabled={activeChapter === chapters.length - 1}
-                  className="px-2.5 py-1 rounded bg-white/[0.04] disabled:opacity-30 hover:bg-white/[0.08] transition-colors"
+                  onClick={() => jumpTo(curChapterIdx + 1)}
+                  disabled={curChapterIdx === chapters.length - 1}
+                  className="px-3 py-1.5 rounded bg-white/[0.04] disabled:opacity-30 hover:bg-white/[0.08] transition-colors"
                 >
                   下一章
                 </button>
               </div>
 
-              {chapters.map((c, i) => (
-                <section
-                  key={c.index}
-                  ref={el => { sectionRefs.current[i] = el as HTMLDivElement | null; }}
-                  className="mb-10 scroll-mt-16"
-                >
-                  <h2 className="text-amber-400/90 text-base font-semibold tracking-wide mb-3 pb-2 border-b border-amber-500/15">
-                    {c.title}
-                  </h2>
-                  <div className="space-y-2">
-                    {c.paragraphs.map((p, pi) => (
-                      <p
-                        key={pi}
-                        className="text-gray-300/90 text-[13px] leading-[1.85] text-indent-[2em]"
-                      >
-                        {p}
-                      </p>
-                    ))}
-                  </div>
-                </section>
-              ))}
+              <section className="mb-10">
+                <h2 className="text-amber-400/90 text-base font-semibold tracking-wide mb-3 pb-2 border-b border-amber-500/15">
+                  {curChapter.title}
+                </h2>
+                <div className="space-y-2">
+                  {curChapter.paragraphs.map((p, pi) => (
+                    <p
+                      key={pi}
+                      className="text-gray-300/90 text-[13px] leading-[1.85] text-indent-[2em]"
+                    >
+                      {p}
+                    </p>
+                  ))}
+                </div>
+              </section>
 
-              {/* 底部章节导航 */}
               <div className="flex items-center justify-center gap-3 mt-8 mb-6 text-[11px] text-gray-500">
                 <button
-                  onClick={() => jumpTo(Math.max(0, activeChapter - 1))}
-                  disabled={activeChapter === 0}
+                  onClick={() => jumpTo(curChapterIdx - 1)}
+                  disabled={curChapterIdx === 0}
                   className="px-3 py-1.5 rounded bg-white/[0.04] disabled:opacity-30 hover:bg-white/[0.08] transition-colors"
                 >
                   上一章
                 </button>
                 <button
-                  onClick={() => jumpTo(Math.min(chapters.length - 1, activeChapter + 1))}
-                  disabled={activeChapter === chapters.length - 1}
+                  onClick={() => jumpTo(curChapterIdx + 1)}
+                  disabled={curChapterIdx === chapters.length - 1}
                   className="px-3 py-1.5 rounded bg-white/[0.04] disabled:opacity-30 hover:bg-white/[0.08] transition-colors"
                 >
                   下一章
                 </button>
               </div>
-              <div className="text-center text-gray-600 text-[11px] pb-8">— 全书完 —</div>
+
+              {curChapterIdx === chapters.length - 1 && (
+                <div className="text-center text-gray-600 text-[11px] pb-8">— 全书完 —</div>
+              )}
             </article>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ===== 人物 Tab 子组件 =====
+function CharactersTab({ novelId, basicCharacters, basicRelations }: {
+  novelId: string;
+  basicCharacters?: { name: string; role: string; description: string }[];
+  basicRelations?: { from: string; to: string; relation: string }[];
+}) {
+  const db = novelId === 'xiangyinqi' ? CHARACTER_DB : null;
+
+  // Use rich DB data if available
+  if (db) {
+    const chars = Object.values(db.characters);
+    const roleOrder: Record<string, number> = { protagonist: 0, wife: 1, antagonist: 2, side: 3, minor: 4, lover: 5 };
+    chars.sort((a, b) => (roleOrder[a.role] ?? 9) - (roleOrder[b.role] ?? 9));
+
+    return (
+      <div className="mx-auto max-w-3xl px-5 py-6 space-y-6">
+        <h2 className="text-white text-base font-semibold flex items-center gap-2">
+          <User size={16} className="text-amber-400/70" />
+          主要人物
+          <span className="text-gray-500 text-xs font-normal ml-1">共 {chars.length} 人</span>
+        </h2>
+
+        <div className="space-y-3">
+          {chars.map(c => (
+            <div key={c.id} className="bg-white/[0.03] rounded-xl px-4 py-3.5 border border-white/[0.06]">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-sm font-bold shrink-0">
+                  {c.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-medium">{c.name}</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-amber-400/60 text-[10px]">{c.role}</span>
+                    <span className="text-gray-600 text-[10px]">第{c.firstAppearChapter}-{c.lastAppearChapter}章</span>
+                    <span className="text-gray-600 text-[10px]">{c.appearCount}次出场</span>
+                  </div>
+                </div>
+                <div className="text-gray-600 text-[10px]">{c.gender === 'male' ? '♂' : '♀'}</div>
+              </div>
+              {c.aliases && c.aliases.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1.5">
+                  {c.aliases.map(a => (
+                    <span key={a} className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-gray-400 border border-white/[0.06]">
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {c.tags && c.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1.5">
+                  {c.tags.map(t => (
+                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/80 border border-amber-500/15">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="text-gray-300/80 text-[13px] leading-relaxed">{c.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {db.relationships.length > 0 && (
+          <>
+            <h2 className="text-white text-base font-semibold flex items-center gap-2 pt-2">
+              <HeartHandshake size={16} className="text-amber-400/70" />
+              人物关系
+              <span className="text-gray-500 text-xs font-normal ml-1">共 {db.relationships.length} 组</span>
+            </h2>
+            <div className="space-y-2">
+              {db.relationships.map(r => {
+                const from = db.characters[r.from]?.name || r.from;
+                const to = db.characters[r.to]?.name || r.to;
+                const typeLabels: Record<string, string> = {
+                  spouse: '夫妻', lover: '情人', affair: '出轨', master_slave: '主奴',
+                  friend: '朋友', colleague: '同事', family: '亲戚', enemy: '敌对',
+                  blackmailer: '胁迫', voyeur: '窥视', other: '其他',
+                };
+                return (
+                  <div key={r.id} className="bg-white/[0.02] rounded-lg px-4 py-3 border border-white/[0.05] text-xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-white font-medium">{from}</span>
+                      <span className="text-amber-400/50 text-[10px] px-2">{typeLabels[r.type] || r.type}</span>
+                      <span className="text-white font-medium">{to}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                      <span>强度: {'★'.repeat(r.intensity)}{'☆'.repeat(5 - r.intensity)}</span>
+                      <span>|</span>
+                      <span>第{r.startChapter}章开始</span>
+                      {r.endChapter && <><span>|</span><span>第{r.endChapter}章结束</span></>}
+                    </div>
+                    {r.keyEvents.length > 0 && (
+                      <details className="mt-1.5">
+                        <summary className="text-gray-500 text-[10px] cursor-pointer hover:text-gray-300">
+                          关键事件 ({r.keyEvents.length})
+                        </summary>
+                        <div className="mt-1 space-y-1">
+                          {r.keyEvents.slice(0, 5).map((e, i) => (
+                            <p key={i} className="text-gray-400 text-[10px] leading-relaxed">
+                              <span className="text-gray-500">第{e.chapter}章</span> {e.summary}
+                            </p>
+                          ))}
+                          {r.keyEvents.length > 5 && (
+                            <p className="text-gray-600 text-[10px]">…还有 {r.keyEvents.length - 5} 条事件</p>
+                          )}
+                        </div>
+                      </details>
+                    )}
+                    {r.notes && <p className="text-gray-600 text-[10px] mt-1">备注：{r.notes}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback: use basic novel data
+  return (
+    <div className="mx-auto max-w-3xl px-5 py-6 space-y-6">
+      <h2 className="text-white text-base font-semibold flex items-center gap-2">
+        <User size={16} className="text-amber-400/70" />
+        主要人物
+      </h2>
+      {basicCharacters && basicCharacters.length > 0 ? (
+        <div className="space-y-3">
+          {basicCharacters.map((c, i) => (
+            <div key={i} className="bg-white/[0.03] rounded-xl px-4 py-3.5 border border-white/[0.06]">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-sm font-bold shrink-0">
+                  {c.name.charAt(0)}
+                </div>
+                <div>
+                  <div className="text-white text-sm font-medium">{c.name}</div>
+                  <div className="text-amber-400/60 text-[10px]">{c.role}</div>
+                </div>
+              </div>
+              <p className="text-gray-300/80 text-[13px] leading-relaxed">{c.description}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 text-xs text-center py-8">暂无人物数据</p>
+      )}
+      {basicRelations && basicRelations.length > 0 && (
+        <>
+          <h2 className="text-white text-base font-semibold flex items-center gap-2 pt-2">
+            <HeartHandshake size={16} className="text-amber-400/70" />
+            人物关系
+          </h2>
+          <div className="space-y-2">
+            {basicRelations.map((r, i) => (
+              <div key={i} className="bg-white/[0.02] rounded-lg px-4 py-3 border border-white/[0.05] flex items-center justify-between text-xs">
+                <span className="text-white font-medium">{r.from}</span>
+                <span className="text-amber-400/50 text-[10px] px-2">{r.relation}</span>
+                <span className="text-white font-medium">{r.to}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

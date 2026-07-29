@@ -1,0 +1,225 @@
+{
+  "characters": {
+    "qianjiaying": {
+      "id": "qianjiaying",
+      "name": "钱佳颖",
+      "aliases": ["钱总", "钱姐", "女领导", "外贸企业负责人"],
+      "role": "side",
+      "gender": "female",
+      "tags": ["外贸企业领导", "风韵人妻", "方伟情人", "跳蛋遥控"],
+      "description": "方伟介绍的外贸企业女领导，风韵犹存。被方伟用跳蛋遥控，在饭店包厢主动露出下体。与方伟保持情人关系，利用工作关系为方伟提供便利。",
+      "firstAppearChapter": 28,
+      "lastAppearChapter": 28,
+      "appearCount": 1,
+      "metadata": { "job": "外贸企业负责人", "relation": "方伟情人" }
+    },
+    "yuemu": {
+      "id": "yuemu",
+      "name": "岳母",
+      "aliases": ["简宁母亲", "岳母大人", "妈", "姐姐"],
+      "role": "side",
+      "gender": "female",
+      "tags": ["简宁母亲", "何俪姐姐", "被调教", "渴望满足"],
+      "description": "简宁母亲，何俪的亲姐姐。老公不常在家，多年未满足性生活。被黄鹤雨调教，吃催情药后彻底沦陷。与丈夫黄中庭是夫妻。",
+      "firstAppearChapter": 44,
+      "lastAppearChapter": 60,
+      "appearCount": 14,
+      "metadata": { "husband": "黄中庭", "daughters": ["简宁"], "sister": "何俪" }
+    },
+    "huangyue": {
+      "id": "huangyue",
+      "name": "黄岳",
+      "aliases": ["简宁父亲", "岳父", "黄中庭"],
+      "role": "minor",
+      "gender": "male",
+      "tags": ["简宁父亲", "岳母丈夫", "常不在家"],
+      "description": "简宁父亲，岳母丈夫。常年不在家，导致岳母独守空房多年。",
+      "firstAppearChapter": 44,
+      "lastAppearChapter": 44,
+      "appearCount": 1,
+      "metadata": {}
+    },
+    "liyouyou": { "lastAppearChapter": 40, "appearCount": 40 },
+    "jianning": { "lastAppearChapter": 40, "appearCount": 40 },
+    "lixiaomeng_cousin": { "lastAppearChapter": 40, "appearCount": 40 },
+    "fangwei": { "lastAppearChapter": 40, "appearCount": 20 },
+    "qinyubing": { "lastAppearChapter": 40, "appearCount": 18 },
+    "chenwen": { "lastAppearChapter": 40, "appearCount": 8 },
+    "heyu": { "lastAppearChapter": 40, "appearCount": 18 },
+    "zhaodongdong": { "lastAppearChapter": 23, "appearCount": 5 },
+    "yufu": { "lastAppearChapter": 27, "appearCount": 7 },
+    "liweiguo": { "lastAppearChapter": 27, "appearCount": 2 },
+    "wukai": { "lastAppearChapter": 27, "appearCount": 7 },
+    "lixiaopeng": { "lastAppearChapter": 27, "appearCount": 8 }
+  },
+  "relationships": [
+    {
+      "id": "jianning-zhaodongdong-affair",
+      "from": "jianning",
+      "to": "zhaodongdong",
+      "type": "lover",
+      "status": "ended",
+      "intensity": 3,
+      "startChapter": 21,
+      "endChapter": 23,
+      "keyEvents": [
+        { "chapter": 21, "eventType": "sex", "summary": "李有有打电话叫赵冬冬上楼，让妻子与他发生关系", "participants": ["liyouyou", "jianning", "zhaodongdong"] },
+        { "chapter": 22, "eventType": "sex", "summary": "简宁主动引导赵冬冬，用紫真丝睡裙诱惑少年", "participants": ["jianning", "zhaodongdong"] },
+        { "chapter": 23, "eventType": "other", "summary": "赵冬冬事后离开，简宁餍足后撒娇让李有有抱睡", "participants": ["jianning", "liyouyou", "zhaodongdong"] }
+      ],
+      "notes": "李有有主动安排的一次性关系"
+    },
+    {
+      "id": "liyouyou-jianning-spouse",
+      "keyEvents": [
+        { "chapter": 19, "eventType": "other", "summary": "夫妻一起观看黄鹤雨视频，李有有赞叹妻子背影", "participants": ["liyouyou", "jianning"] },
+        { "chapter": 20, "eventType": "other", "summary": "继续看视频：黄鹤雨抱简宁火车便当式边走边肏，跳蛋塞屄", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin"] },
+        { "chapter": 21, "eventType": "sex", "summary": "李有有让妻子跪地亮臀，打电话叫赵冬冬上楼", "participants": ["liyouyou", "jianning", "zhaodongdong"] },
+        { "chapter": 23, "eventType": "milestone", "summary": "赵冬冬离开后，简宁撒娇让李有有抱着睡，夫妻感情升温", "participants": ["liyouyou", "jianning"] },
+        { "chapter": 26, "eventType": "other", "summary": "简宁问李有有是否怪她，夫妻一起看视频「母来电」", "participants": ["liyouyou", "jianning"] },
+        { "chapter": 30, "eventType": "other", "summary": "李有有反思：害怕黄鹤雨在简宁心中留下印记", "participants": ["liyouyou"] },
+        { "chapter": 31, "eventType": "other", "summary": "李有有买下黄鹤雨租的房子，简宁去何俪家", "participants": ["liyouyou", "jianning"] },
+        { "chapter": 32, "eventType": "other", "summary": "秦玉冰暗示简宁没穿内裤出门，李有有疑心", "participants": ["liyouyou", "qinyubing", "jianning"] },
+        { "chapter": 33, "eventType": "sex", "summary": "温泉：方伟舔简宁下体，简宁主动勾引方伟", "participants": ["liyouyou", "jianning", "fangwei", "qinyubing"] },
+        { "chapter": 34, "eventType": "sex", "summary": "简宁在温泉中主动撅屁股勾引方伟", "participants": ["jianning", "fangwei"] },
+        { "chapter": 35, "eventType": "sex", "summary": "方伟插入简宁，简宁连续高潮", "participants": ["jianning", "fangwei"] },
+        { "chapter": 36, "eventType": "other", "summary": "早上秦玉冰与李有有单独泡温泉聊天", "participants": ["liyouyou", "qinyubing"] },
+        { "chapter": 37, "eventType": "sex", "summary": "简宁在酒店被方伟/陈书文肏，李有有赶到", "participants": ["liyouyou", "jianning", "fangwei", "chenwen"] },
+        { "chapter": 38, "eventType": "sex", "summary": "李有有/秦玉冰/方伟一起肏简宁，群交", "participants": ["liyouyou", "jianning", "qinyubing", "fangwei"] },
+        { "chapter": 39, "eventType": "other", "summary": "李有有和秦玉冰对话，秦玉冰叫「姐夫」", "participants": ["liyouyou", "qinyubing"] },
+        { "chapter": 40, "eventType": "other", "summary": "秦玉冰带李有有去恒川岛见简宁", "participants": ["liyouyou", "qinyubing", "jianning"] }
+      ]
+    },
+    {
+      "id": "fangwei-qianjiaying-affair",
+      "from": "fangwei",
+      "to": "qianjiaying",
+      "type": "affair",
+      "status": "ongoing",
+      "intensity": 3,
+      "startChapter": 28,
+      "keyEvents": [
+        { "chapter": 28, "eventType": "sex", "summary": "饭店包厢：钱佳颖主动露下体，方伟用跳蛋遥控玩弄", "participants": ["fangwei", "qianjiaying", "liyouyou"] }
+      ]
+    },
+    {
+      "id": "lixiaomeng_cousin-yuemu-master_slave",
+      "from": "lixiaomeng_cousin",
+      "to": "yuemu",
+      "type": "master_slave",
+      "status": "ongoing",
+      "intensity": 4,
+      "startChapter": 44,
+      "keyEvents": [
+        { "chapter": 44, "eventType": "sex", "summary": "何俪带黄鹤雨去岳母家，黄鹤雨在厨房插何俪", "participants": ["lixiaomeng_cousin", "heyu", "yuemu"] },
+        { "chapter": 45, "eventType": "sex", "summary": "黄鹤雨插岳母，何俪在旁亲吻姐姐", "participants": ["lixiaomeng_cousin", "yuemu", "heyu"] },
+        { "chapter": 46, "eventType": "discover", "summary": "李有有潜入黄鹤雨新家，发现催情药等", "participants": ["liyouyou", "lixiaomeng_cousin"] },
+        { "chapter": 47, "eventType": "milestone", "summary": "岳母被下催情药，黄鹤雨深插岳母，岳母彻底沦陷", "participants": ["lixiaomeng_cousin", "yuemu"] }
+      ],
+      "notes": "岳母年长但多年未满足，被下药后彻底沦陷"
+    },
+    {
+      "id": "jianning-fangwei-master_slave",
+      "from": "jianning",
+      "to": "fangwei",
+      "type": "master_slave",
+      "status": "ongoing",
+      "intensity": 4,
+      "startChapter": 33,
+      "keyEvents": [
+        { "chapter": 33, "eventType": "sex", "summary": "温泉方伟蹲在水里舔简宁下体", "participants": ["jianning", "fangwei"] },
+        { "chapter": 34, "eventType": "sex", "summary": "简宁主动撅屁股勾引方伟", "participants": ["jianning", "fangwei"] },
+        { "chapter": 35, "eventType": "sex", "summary": "方伟插简宁，简宁高潮", "participants": ["jianning", "fangwei"] },
+        { "chapter": 37, "eventType": "sex", "summary": "方伟酒店内肏简宁", "participants": ["jianning", "fangwei", "chenwen"] },
+        { "chapter": 38, "eventType": "sex", "summary": "群交中方伟继续肏简宁", "participants": ["jianning", "fangwei", "liyouyou", "qinyubing"] },
+        { "chapter": 41, "eventType": "sex", "summary": "方伟逼简宁自我羞辱，骂自己是「婊子」", "participants": ["jianning", "fangwei"] }
+      ]
+    },
+    {
+      "id": "qinyubing-liyouyou-affair",
+      "from": "qinyubing",
+      "to": "liyouyou",
+      "type": "lover",
+      "status": "ongoing",
+      "intensity": 3,
+      "startChapter": 32,
+      "keyEvents": [
+        { "chapter": 32, "eventType": "sex", "summary": "秦玉冰帮李有有手淫，暗示简宁没穿内裤", "participants": ["qinyubing", "liyouyou"] },
+        { "chapter": 36, "eventType": "other", "summary": "秦玉冰和李有有单独泡温泉聊天", "participants": ["qinyubing", "liyouyou"] },
+        { "chapter": 38, "eventType": "sex", "summary": "秦玉冰和李有有一起肏简宁", "participants": ["qinyubing", "liyouyou", "jianning"] },
+        { "chapter": 39, "eventType": "other", "summary": "秦玉冰主动舔硬李有有阴茎", "participants": ["qinyubing", "liyouyou"] },
+        { "chapter": 40, "eventType": "other", "summary": "秦玉冰带李有有去恒川岛见简宁", "participants": ["qinyubing", "liyouyou"] }
+      ],
+      "notes": "秦玉冰主动撩拨李有有"
+    }
+  ],
+  "chapterSummaries": [
+    { "chapter": 19, "title": "第19章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "qinyubing"], "keyEvents": [
+      { "chapter": 19, "eventType": "other", "summary": "夫妻一起观看黄鹤雨视频，李有有赞叹妻子背影，妻子帮李有有口交", "participants": ["liyouyou", "jianning"] }
+    ], "wordCount": 7285 },
+    { "chapter": 20, "title": "第20章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 20, "eventType": "sex", "summary": "视频中黄鹤雨抱简宁火车便当式边走边肏，跳蛋塞在简宁屄里", "participants": ["jianning", "lixiaomeng_cousin"] },
+      { "chapter": 20, "eventType": "sex", "summary": "简宁被黄鹤雨要求在车外野战，潮吹喷水", "participants": ["jianning", "lixiaomeng_cousin"] }
+    ], "wordCount": 9168 },
+    { "chapter": 21, "title": "第21章", "charactersPresent": ["liyouyou", "jianning", "zhaodongdong"], "keyEvents": [
+      { "chapter": 21, "eventType": "sex", "summary": "李有有让妻子跪地亮臀，打电话叫赵冬冬上楼", "participants": ["liyouyou", "jianning", "zhaodongdong"] }
+    ], "wordCount": 6236 },
+    { "chapter": 22, "title": "第22章", "charactersPresent": ["liyouyou", "jianning", "zhaodongdong"], "keyEvents": [
+      { "chapter": 22, "eventType": "sex", "summary": "简宁主动引导赵冬冬，穿紫真丝睡裙诱惑少年做爱", "participants": ["jianning", "zhaodongdong"] }
+    ], "wordCount": 9770 },
+    { "chapter": 23, "title": "第23章", "charactersPresent": ["liyouyou", "jianning", "zhaodongdong"], "keyEvents": [
+      { "chapter": 23, "eventType": "other", "summary": "简宁餍足后撒娇让李有有抱着睡，李有有送走赵冬冬", "participants": ["liyouyou", "jianning", "zhaodongdong"] }
+    ], "wordCount": 7268 },
+    { "chapter": 24, "title": "第24章", "charactersPresent": ["liyouyou", "jianning", "heyu"], "keyEvents": [
+      { "chapter": 24, "eventType": "other", "summary": "李有有做梦：简宁和何俪并排趴在地板上被肏", "participants": ["liyouyou"] }
+    ], "wordCount": 9849 },
+    { "chapter": 25, "title": "第25章", "charactersPresent": ["liyouyou", "qinyubing", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 25, "eventType": "other", "summary": "黄鹤雨视频自述调教J老师(秦玉冰)过程，濒临高潮法", "participants": ["lixiaomeng_cousin", "qinyubing"] }
+    ], "wordCount": 7161 },
+    { "chapter": 26, "title": "第26章", "charactersPresent": ["liyouyou", "jianning", "yuemu", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 26, "eventType": "other", "summary": "夫妻看黄鹤雨视频「母来电」，简宁母亲电话意外介入", "participants": ["liyouyou", "jianning", "yuemu", "lixiaomeng_cousin"] }
+    ], "wordCount": 13258 },
+    { "chapter": 27, "title": "第27章", "charactersPresent": ["liyouyou", "wukai", "liweiguo", "yufu", "fangwei"], "keyEvents": [
+      { "chapter": 27, "eventType": "other", "summary": "融资危机：两家美资退出，方伟引荐钱佳颖", "participants": ["liyouyou", "wukai", "fangwei"] }
+    ], "wordCount": 6863 },
+    { "chapter": 28, "title": "第28章", "charactersPresent": ["liyouyou", "fangwei", "qianjiaying"], "keyEvents": [
+      { "chapter": 28, "eventType": "sex", "summary": "钱佳颖出场：饭店包厢主动露下体，方伟用跳蛋遥控玩弄", "participants": ["fangwei", "qianjiaying", "liyouyou"] }
+    ], "wordCount": 6602 },
+    { "chapter": 29, "title": "第29章", "charactersPresent": ["liyouyou", "jianning", "heyu", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 29, "eventType": "sex", "summary": "何俪被黄鹤雨塞跳蛋，给简宁打电话时被玩弄", "participants": ["heyu", "lixiaomeng_cousin", "jianning"] }
+    ], "wordCount": 8554 },
+    { "chapter": 30, "title": "第30章", "charactersPresent": ["liyouyou", "jianning"], "keyEvents": [
+      { "chapter": 30, "eventType": "other", "summary": "简宁想去安慰何俪，李有有反思黄鹤雨对简宁的影响", "participants": ["liyouyou", "jianning"] }
+    ], "wordCount": 7631 },
+    { "chapter": 31, "title": "第31章", "charactersPresent": ["liyouyou", "jianning", "heyu"], "keyEvents": [
+      { "chapter": 31, "eventType": "other", "summary": "李有有买了黄鹤雨租的房子，简宁去何俪家", "participants": ["liyouyou", "jianning", "heyu"] }
+    ], "wordCount": 6542 },
+    { "chapter": 32, "title": "第32章", "charactersPresent": ["liyouyou", "qinyubing", "jianning"], "keyEvents": [
+      { "chapter": 32, "eventType": "sex", "summary": "秦玉冰来访帮李有有手淫，暗示简宁没穿内裤出门", "participants": ["liyouyou", "qinyubing", "jianning"] }
+    ], "wordCount": 7248 },
+    { "chapter": 33, "title": "第33章", "charactersPresent": ["liyouyou", "jianning", "fangwei", "qinyubing"], "keyEvents": [
+      { "chapter": 33, "eventType": "sex", "summary": "温泉：方伟蹲在热水中舔简宁下体，简宁忘情", "participants": ["jianning", "fangwei", "qinyubing", "liyouyou"] }
+    ], "wordCount": 7188 },
+    { "chapter": 34, "title": "第34章", "charactersPresent": ["liyouyou", "jianning", "fangwei", "qinyubing"], "keyEvents": [
+      { "chapter": 34, "eventType": "sex", "summary": "简宁在温泉中主动撅屁股勾引方伟", "participants": ["jianning", "fangwei"] }
+    ], "wordCount": 6639 },
+    { "chapter": 35, "title": "第35章", "charactersPresent": ["liyouyou", "jianning", "fangwei"], "keyEvents": [
+      { "chapter": 35, "eventType": "sex", "summary": "方伟插入简宁，简宁被连续高潮", "participants": ["jianning", "fangwei"] }
+    ], "wordCount": 6886 },
+    { "chapter": 36, "title": "第36章", "charactersPresent": ["liyouyou", "qinyubing", "jianning", "fangwei"], "keyEvents": [
+      { "chapter": 36, "eventType": "other", "summary": "早上秦玉冰与李有有单独泡温泉聊天", "participants": ["liyouyou", "qinyubing"] }
+    ], "wordCount": 6019 },
+    { "chapter": 37, "title": "第37章", "charactersPresent": ["liyouyou", "jianning", "fangwei", "chenwen"], "keyEvents": [
+      { "chapter": 37, "eventType": "sex", "summary": "简宁在酒店房间被方伟/陈书文肏，李有有赶到", "participants": ["jianning", "fangwei", "chenwen", "liyouyou"] }
+    ], "wordCount": 6359 },
+    { "chapter": 38, "title": "第38章", "charactersPresent": ["liyouyou", "jianning", "fangwei", "qinyubing", "chenwen"], "keyEvents": [
+      { "chapter": 38, "eventType": "sex", "summary": "群交：李有有/秦玉冰/方伟一起肏简宁", "participants": ["liyouyou", "jianning", "qinyubing", "fangwei"] }
+    ], "wordCount": 7781 },
+    { "chapter": 39, "title": "第39章", "charactersPresent": ["liyouyou", "jianning", "qinyubing", "fangwei"], "keyEvents": [
+      { "chapter": 39, "eventType": "sex", "summary": "秦玉冰主动舔硬李有有和方伟阴茎，被方伟肏屁眼", "participants": ["qinyubing", "fangwei", "liyouyou"] }
+    ], "wordCount": 8067 },
+    { "chapter": 40, "title": "第40章", "charactersPresent": ["liyouyou", "qinyubing", "jianning"], "keyEvents": [
+      { "chapter": 40, "eventType": "other", "summary": "秦玉冰带李有有去恒川岛见简宁", "participants": ["liyouyou", "qinyubing", "jianning"] }
+    ], "wordCount": 5825 }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "characters": {
+    "liyouyou": { "lastAppearChapter": 18, "appearCount": 18 },
+    "jianning": { "lastAppearChapter": 18, "appearCount": 18 },
+    "wukai": { "lastAppearChapter": 15, "appearCount": 6 },
+    "heyu": { "lastAppearChapter": 18, "appearCount": 10 },
+    "lixiaomeng_cousin": { "lastAppearChapter": 18, "appearCount": 18 },
+    "yufu": { "lastAppearChapter": 15, "appearCount": 6 },
+    "lixiaopeng": { "lastAppearChapter": 15, "appearCount": 7 },
+    "qinyubing": { "lastAppearChapter": 18, "appearCount": 10 },
+    "fangwei": { "lastAppearChapter": 12, "appearCount": 4 },
+    "xunannan": { "lastAppearChapter": 10, "appearCount": 4 },
+    "fangqiong": { "lastAppearChapter": 11, "appearCount": 1 },
+    "zhouchen": { "lastAppearChapter": 12, "appearCount": 2 },
+    "zhaodongdong": { "lastAppearChapter": 16, "appearCount": 4 },
+    "zhangwenjun": { "lastAppearChapter": 18, "appearCount": 1 },
+    "liweiguo": { "lastAppearChapter": 15, "appearCount": 1 }
+  },
+  "relationships": [
+    { "id": "liyouyou-jianning-spouse", "keyEvents": [
+      { "chapter": 13, "eventType": "confess", "summary": "李有有向渔夫坦白妻子出轨，渔夫建议冷静、确认妻子心是否还在", "participants": ["liyouyou", "yufu"] },
+      { "chapter": 14, "eventType": "discover", "summary": "李有有通过入侵电脑/手机监控，全程围观黄鹤雨远程指导简宁自慰（镜子前、窗前露出、多次高潮）", "participants": ["liyouyou", "lixiaopeng", "jianning", "lixiaomeng_cousin"] },
+      { "chapter": 15, "eventType": "other", "summary": "视频电话：简宁草原采风归来在即，心情愉快；李有有处理融资危机（两家美资退出）", "participants": ["liyouyou", "jianning"] },
+      { "chapter": 16, "eventType": "discover", "summary": "赵冬冬在车库目击简宁与黄鹤雨楼梯间做爱，提供视频给李有有", "participants": ["liyouyou", "zhaodongdong", "jianning", "lixiaomeng_cousin"] },
+      { "chapter": 17, "eventType": "conflict", "summary": "李有有抓奸：车内发现黄鹤雨揉捏简宁肉臀、简宁口交。李有有暴打黄鹤雨，逼问身份底细，要求两条件：1)离开简宁 2)交出所有简宁相关资料。黄鹤雨带李有有去隔壁 1501 秘密基地", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning"] },
+      { "chapter": 18, "eventType": "discover", "summary": "黄鹤雨妈妈张文君出场；黄鹤雨套路简宁对比私处、强迫性爱、内射、多次高潮、潮吹；简宁承认「骚」、不报警", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning", "zhangwenjun"] }
+    ]},
+    { "id": "jianning-lixiaomeng_cousin-affair", "keyEvents": [
+      { "chapter": 14, "eventType": "sex", "summary": "黄鹤雨远程指导简宁自慰：镜子前、窗前露出、对着镜子/窗户分腿自慰、多次高潮潮吹", "participants": ["jianning", "lixiaomeng_cousin"] },
+      { "chapter": 15, "eventType": "other", "summary": "视频电话简宁草原喝酒撒谎（实为与方伟/陈书文同行），李有有识破撒谎", "participants": ["liyouyou", "jianning"] },
+      { "chapter": 17, "eventType": "discover", "summary": "李有有抓奸：车内发现黄鹤雨揉捏简宁肉臀、简宁口交；简宁事后承认误以为黄鹤雨是李有有找来的", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin"] },
+      { "chapter": 18, "eventType": "sex", "summary": "黄鹤雨家：套路简宁对比私处、强迫性爱、内射、多次高潮、潮吹；简宁承认「骚」、不报警", "participants": ["jianning", "lixiaomeng_cousin"] }
+    ]},
+    { "id": "liyouyou-yufu-friend", "keyEvents": [
+      { "chapter": 13, "eventType": "confess", "summary": "李有有向渔夫坦白妻子出轨，渔夫建议冷静、确认妻子心是否还在", "participants": ["liyouyou", "yufu"] },
+      { "chapter": 15, "eventType": "other", "summary": "渔夫告知方伟见简宁照片后火速回国，约明天半岛饭店见面", "participants": ["liyouyou", "yufu"] }
+    ]},
+    { "id": "liyouyou-lixiaopeng-colleague", "keyEvents": [
+      { "chapter": 11, "eventType": "milestone", "summary": "李小鹏成功入侵黄鹤雨手机/聊天记录，李有有掌握更多证据", "participants": ["liyouyou", "lixiaopeng", "lixiaomeng_cousin"] },
+      { "chapter": 15, "eventType": "other", "summary": "李有有找李小鹏确认黄鹤雨摄像头断连，李小鹏透露黄鹤雨搬家", "participants": ["liyouyou", "lixiaopeng"] }
+    ]},
+    { "id": "liyouyou-lixiaomeng_cousin-enemy", "keyEvents": [
+      { "chapter": 16, "eventType": "discover", "summary": "赵冬冬在车库目击简宁与黄鹤雨楼梯间做爱，提供视频给李有有", "participants": ["liyouyou", "zhaodongdong", "jianning", "lixiaomeng_cousin"] },
+      { "chapter": 17, "eventType": "conflict", "summary": "李有有抓奸：车内发现黄鹤雨揉捏简宁肉臀、简宁口交。李有有暴打黄鹤雨，逼问身份底细，要求两条件：1)离开简宁 2)交出所有简宁相关资料。黄鹤雨带李有有去隔壁 1501 秘密基地", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning"] },
+      { "chapter": 18, "eventType": "discover", "summary": "黄鹤雨妈妈张文君出场；黄鹤雨套路简宁对比私处、强迫性爱、内射、多次高潮、潮吹；简宁承认「骚」、不报警", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning", "zhangwenjun"] }
+    ]},
+    { "id": "lixiaomeng_cousin-qinyubing-master_slave", "keyEvents": [
+      { "chapter": 12, "eventType": "sex", "summary": "教室暴操秦玉冰：逼秦老师写「屄」字、读脏话、M腿展示、手指扣穴潮吹喷讲桌", "participants": ["lixiaomeng_cousin", "qinyubing"] },
+      { "chapter": 18, "eventType": "sex", "summary": "黄鹤雨PPT自述：车内/车外/家中多次调教秦玉冰（J老师），首次车内潮吹、后续多次高潮、内射。总结J老师骚穴特性：高潮前极紧、高潮后顺滑、极易连续高潮", "participants": ["lixiaomeng_cousin", "qinyubing"] }
+    ]},
+    { "id": "lixiaomeng_cousin-fangwei-friend", "keyEvents": [
+      { "chapter": 11, "eventType": "meet", "summary": "方伟带妻子方琼见李有有，饭局中方伟试探李有有对简宁态度", "participants": ["fangwei", "liyouyou", "fangqiong"] }
+    ]}
+  ],
+  "chapterSummaries": [
+    { "chapter": 13, "title": "第13章", "charactersPresent": ["liyouyou", "jianning", "yufu", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 13, "eventType": "confess", "summary": "李有有向渔夫坦白妻子出轨，渔夫建议冷静、确认妻子心是否还在", "participants": ["liyouyou", "yufu"] },
+      { "chapter": 13, "eventType": "discover", "summary": "李有有通过何俪4S店、就业指导中心查清黄鹤雨身份：大二管理系、住15楼2号", "participants": ["liyouyou", "heyu", "lixiaopeng", "lixiaomeng_cousin"] }
+    ], "wordCount": 8204 },
+    { "chapter": 14, "title": "第14章", "charactersPresent": ["liyouyou", "lixiaopeng", "jianning", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 14, "eventType": "discover", "summary": "李有有通过入侵电脑/手机监控，全程围观黄鹤雨远程指导简宁自慰（镜子前、窗前露出、多次高潮）", "participants": ["liyouyou", "lixiaopeng", "jianning", "lixiaomeng_cousin"] }
+    ], "wordCount": 8057 },
+    { "chapter": 15, "title": "第15章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "heyu", "wukai", "liweiguo"], "keyEvents": [
+      { "chapter": 15, "eventType": "other", "summary": "视频电话：简宁草原采风归来在即，心情愉快；李有有处理融资危机（两家美资退出）", "participants": ["liyouyou", "jianning"] },
+      { "chapter": 15, "eventType": "meet", "summary": "李卫国到访星空科技洽谈上市/投资，提议纳斯达克上市并透露美方老板想要核心技术，李有有拒绝共享技术", "participants": ["liyouyou", "liweiguo"] },
+      { "chapter": 15, "eventType": "other", "summary": "渔夫告知方伟见简宁照片后火速回国，约明天半岛饭店见面", "participants": ["liyouyou", "yufu"] }
+    ], "wordCount": 17061 },
+    { "chapter": 16, "title": "第16章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "zhaodongdong"], "keyEvents": [
+      { "chapter": 16, "eventType": "discover", "summary": "赵冬冬在车库目击简宁与黄鹤雨楼梯间做爱，提供视频给李有有", "participants": ["liyouyou", "zhaodongdong", "jianning", "lixiaomeng_cousin"] }
+    ], "wordCount": 7858 },
+    { "chapter": 17, "title": "第17章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin"], "keyEvents": [
+      { "chapter": 17, "eventType": "conflict", "summary": "李有有抓奸：车内发现黄鹤雨揉捏简宁肉臀、简宁口交。李有有暴打黄鹤雨，逼问身份底细，要求两条件：1)离开简宁 2)交出所有简宁相关资料。黄鹤雨带李有有去隔壁 1501 秘密基地（电脑、硬盘、铁柜子）", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning"] }
+    ], "wordCount": 15435 },
+    { "chapter": 18, "title": "第18章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "zhangwenjun"], "keyEvents": [
+      { "chapter": 18, "eventType": "discover", "summary": "黄鹤雨妈妈张文君出场；黄鹤雨套路简宁对比私处、强迫性爱、内射、多次高潮、潮吹；简宁承认「骚」、不报警", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning", "zhangwenjun"] },
+      { "chapter": 18, "eventType": "sex", "summary": "黄鹤雨PPT自述：调教J老师（秦玉冰）过程。车内/车外/家中多次调教，首次车内潮吹、后续多次高潮、内射。总结J老师骚穴特性：高潮前极紧、高潮后顺滑、极易连续高潮", "participants": ["lixiaomeng_cousin", "qinyubing"] }
+    ], "wordCount": 13986 }
+  ]
+}

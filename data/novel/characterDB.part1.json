@@ -1,0 +1,403 @@
+{
+  "characters": {
+    "liyouyou": {
+      "id": "liyouyou",
+      "name": "李有有",
+      "aliases": ["阿有", "老公", "丈夫", "有有", "绿奴", "老板", "李总"],
+      "role": "protagonist",
+      "gender": "male",
+      "tags": ["丈夫", "CEO", "绿奴", "公司老板", "事业有成"],
+      "description": "事业有成的家用机器人公司老板，与吴凯合伙创业。因无法让妻子高潮三年，内心产生淫妻念头，渴望看着妻子被其他男人征服。心理复杂：自卑、愧疚、窥淫欲交织。",
+      "firstAppearChapter": 1,
+      "lastAppearChapter": 6,
+      "appearCount": 6,
+      "metadata": { "age": "30岁左右", "height": "未提", "job": "公司老板/管理合伙人" }
+    },
+    "jianning": {
+      "id": "jianning",
+      "name": "简宁",
+      "aliases": ["老婆", "妻子", "宁姐", "简老师", "阿宁"],
+      "role": "wife",
+      "gender": "female",
+      "tags": ["妻子", "画家", "美院客座教授", "高雅", "内媚体质", "E罩杯", "170cm"],
+      "description": "业内小有名气的画家、美院客座教授。外表高雅端庄，实则身体极其敏感（内媚），快高潮时阴道收缩极强导致丈夫秒射，三年未尝高潮滋味。被楼下大学生黄鹤雨逐步调教沦陷。",
+      "firstAppearChapter": 1,
+      "lastAppearChapter": 6,
+      "appearCount": 6,
+      "metadata": { "age": "27岁左右", "height": "170cm", "job": "画家/客座教授", "measurements": "E罩杯/细腰/蜜桃臀" }
+    },
+    "wukai": {
+      "id": "wukai",
+      "name": "吴凯",
+      "aliases": ["老吴", "合伙人", "CTO", "技术总监"],
+      "role": "side",
+      "gender": "male",
+      "tags": ["合伙人", "技术总监", "理工男", "大学同学"],
+      "description": "李有有的大学同学，公司技术总监/合伙人。典型理工男，不善应酬，常拉着李有有出席交流会。两人斗嘴是日常乐趣。",
+      "firstAppearChapter": 1,
+      "lastAppearChapter": 6,
+      "appearCount": 3,
+      "metadata": { "job": "CTO/技术总监" }
+    },
+    "heyu": {
+      "id": "heyu",
+      "name": "何俪",
+      "aliases": ["小姨", "阿姨", "何总", "4S店老板"],
+      "role": "side",
+      "gender": "female",
+      "tags": ["妻子小姨", "4S店老板", "大美女", "品酒爱好者", "独居"],
+      "description": "简宁母亲的亲妹妹，只大简宁 8 岁，与简宁如姐妹般亲密。经营一家 4S 店，独自带女儿（花花），老公常年在国外。喜欢品酒品茶，常拉简宁陪喝。",
+      "firstAppearChapter": 1,
+      "lastAppearChapter": 6,
+      "appearCount": 4,
+      "metadata": { "age": "35岁左右", "job": "4S店老板", "family": "独生女花花，丈夫李锐常年在国外" }
+    },
+    "lixiaomeng": {
+      "id": "lixiaomeng",
+      "name": "李晓媛",
+      "aliases": ["楼下邻居", "楼下人妻", "李姐", "骚货"],
+      "role": "minor",
+      "gender": "female",
+      "tags": ["楼下邻居", "人妻", "偷情者", "随和美丽"],
+      "description": "住在楼下的美丽人妻，表面得体随和，实则在楼梯间与表弟偷情，被少年淫辱却极度享受。被李有有通过智能猫眼监控目睹全过程。",
+      "firstAppearChapter": 1,
+      "lastAppearChapter": 3,
+      "appearCount": 2,
+      "metadata": { "age": "30岁左右", "husband": "四十多岁商人" }
+    },
+    "lixiaomeng_cousin": {
+      "id": "lixiaomeng_cousin",
+      "name": "李晓媛表弟",
+      "aliases": ["少年", "表弟", "偷窥者", "跟踪狂", "黄鹤雨"],
+      "role": "antagonist",
+      "gender": "male",
+      "tags": ["大学生", "表弟", "偷拍狂", "调教高手", "巨根", "贩卖视频"],
+      "description": "李晓媛的表弟，18-19岁，外表腼腆胆小，实则淫辱表姐、偷拍简宁的跟踪狂。后证实即为黄鹤雨（大二学生，管理系，住15楼2号）。擅长心理操控与身体开发，录制视频贩卖牟利。",
+      "firstAppearChapter": 1,
+      "lastAppearChapter": 6,
+      "appearCount": 4,
+      "metadata": { "age": "21岁", "school": "本市某大学大二/管理系", "address": "15楼2号", "penis": "黝黑、粗大、龟头肉棱极粗、软态≈李有有硬态" }
+    },
+    "yufu": {
+      "id": "yufu",
+      "name": "渔夫",
+      "aliases": ["博主", "网友", "老哥", "深入"],
+      "role": "side",
+      "gender": "male",
+      "tags": ["推特博主", "换妻圈大佬", "淫妻导师", "绿帽癖"],
+      "description": "推特上「夫妻交友」博主，网名「渔夫」。老婆端庄贤淑实则床上极骚，通过「高潮边缘植入幻想」法成功开发妻子。成为李有有的「淫妻导师」，传授寻找单男/交换对象的套路。",
+      "firstAppearChapter": 2,
+      "lastAppearChapter": 6,
+      "appearCount": 3,
+      "metadata": { "wife": "大公司白领/端庄反差婊", "method": "高潮时植入别人操她的幻想" }
+    },
+    "lixiaopeng": {
+      "id": "lixiaopeng",
+      "name": "李小鹏",
+      "aliases": ["学弟", "黑客", "科研部负责人"],
+      "role": "side",
+      "gender": "male",
+      "tags": ["大学学弟", "公司固件开发负责人", "黑客高手", "观光客"],
+      "description": "李有有大学学弟，公司科研部固件开发负责人，最大爱好黑客技术。受李有有委托入侵黄鹤雨电脑与摄像头，提供技术支持。",
+      "firstAppearChapter": 4,
+      "lastAppearChapter": 6,
+      "appearCount": 3,
+      "metadata": { "job": "固件开发负责人/黑客" }
+    },
+    "lijue": {
+      "id": "lijue",
+      "name": "李珏",
+      "aliases": ["李老师", "语文老师", "大学语文老师", "大学老师"],
+      "role": "minor",
+      "gender": "female",
+      "tags": ["大学语文老师", "端庄知性", "被调教受害者", "越害羞越兴奋"],
+      "description": "李有有大学时的语文老师，平时清雅秀丽、见男生易脸红。被黄鹤雨在教室、家中多次调教录像，成为其「大学语文老师」系列视频主角。具有「越害羞越兴奋、一旦浪起来什么都顾不上」的特质。",
+      "firstAppearChapter": 5,
+      "lastAppearChapter": 6,
+      "appearCount": 2,
+      "metadata": { "subject": "语文/经管系大三", "feature": "无框眼镜/知性美/潮吹体质" }
+    },
+    "lipangzi": {
+      "id": "lipangzi",
+      "name": "李胖子",
+      "aliases": ["胖子", "黄鹤雨同伙"],
+      "role": "minor",
+      "gender": "male",
+      "tags": ["黄鹤雨同伙", "协助监视/拍摄"],
+      "description": "黄鹤雨的朋友/同伙，协助监视目标、拍摄素材。聊天记录中出现。",
+      "firstAppearChapter": 5,
+      "lastAppearChapter": 6,
+      "appearCount": 2,
+      "metadata": {}
+    },
+    "xuezhang": {
+      "id": "xuezhang",
+      "name": "校花",
+      "aliases": ["校花", "大学生", "有男友"],
+      "role": "minor",
+      "gender": "female",
+      "tags": ["黄鹤雨受害者", "有男友", "在校玩遍花样"],
+      "description": "黄鹤雨的受害者之一，有男友的大学生，被偷偷搞定，在校期间各种花样都玩过，毕业后偶尔还能约上一回。",
+      "firstAppearChapter": 5,
+      "lastAppearChapter": 6,
+      "appearCount": 1,
+      "metadata": {}
+    },
+    "renqilaoma": {
+      "id": "renqilaoma",
+      "name": "人妻辣妈",
+      "aliases": ["辣妈", "校花母亲"],
+      "role": "minor",
+      "gender": "female",
+      "tags": ["黄鹤雨受害者", "母女互动", "比女儿更骚"],
+      "description": "校花的母亲，比女儿更骚，母女之间还有互动，视频价格更贵。",
+      "firstAppearChapter": 5,
+      "lastAppearChapter": 6,
+      "appearCount": 1,
+      "metadata": {}
+    },
+    "liangli_renqi": {
+      "id": "liangli_renqi",
+      "name": "靓丽人妻",
+      "aliases": ["靓丽人妻", "大公司管理层", "风骚主动"],
+      "role": "minor",
+      "gender": "female",
+      "tags": ["黄鹤雨受害者", "绿帽老公", "当面被操"],
+      "description": "大公司管理层，风骚主动，老公有绿帽癖，黄鹤雨多次当着她老公面操她。李有有花 5000 元买了初级会员观看。",
+      "firstAppearChapter": 5,
+      "lastAppearChapter": 6,
+      "appearCount": 1,
+      "metadata": {}
+    }
+  },
+  "relationships": [
+    {
+      "id": "liyouyou-jianning-spouse",
+      "from": "liyouyou",
+      "to": "jianning",
+      "type": "spouse",
+      "status": "ongoing",
+      "intensity": 5,
+      "startChapter": 1,
+      "keyEvents": [
+        { "chapter": 1, "eventType": "milestone", "summary": "结婚三年，李有有无法让简宁高潮，产生淫妻念头", "participants": ["liyouyou", "jianning"] },
+        { "chapter": 1, "eventType": "confess", "summary": "李有有向简宁坦白想找「人形快乐工具」让她高潮，简宁愤怒拒绝并威胁阉割", "participants": ["liyouyou", "jianning"] },
+        { "chapter": 3, "eventType": "sex", "summary": "李有有在监控画面刺激下与简宁门后做爱，幻想门外少年操简宁，李有有秒射", "participants": ["liyouyou", "jianning"] },
+        { "chapter": 5, "eventType": "discover", "summary": "李有有通过摄像头目睹简宁在黄鹤雨家高潮后的淫靡模样，首次见到妻子高潮后的样子", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin"] },
+        { "chapter": 6, "eventType": "sex", "summary": "简宁在走廊全裸自慰、含自己乳头、高潮喷水，被黄鹤雨拍摄发视频给李有有看", "participants": ["jianning", "lixiaomeng_cousin"] }
+      ],
+      "notes": "核心矛盾：性无能 vs 渴望高潮；李有有内心既爱妻又想看妻被征服"
+    },
+    {
+      "id": "liyouyou-wukai-colleague",
+      "from": "liyouyou",
+      "to": "wukai",
+      "type": "colleague",
+      "status": "ongoing",
+      "intensity": 3,
+      "startChapter": 1,
+      "keyEvents": [
+        { "chapter": 1, "eventType": "meet", "summary": "大学同学合伙创业，吴凯任CTO，李有有任管理/开拓", "participants": ["liyouyou", "wukai"] },
+        { "chapter": 2, "eventType": "other", "summary": "吴凯拉李有有陪同出国技术交流会，李有有借机逃避家庭压力", "participants": ["liyouyou", "wukai"] }
+      ],
+      "notes": "合伙人/挚友，技术+管理互补"
+    },
+    {
+      "id": "jianning-heyu-family",
+      "from": "jianning",
+      "to": "heyu",
+      "type": "family",
+      "status": "ongoing",
+      "intensity": 4,
+      "startChapter": 1,
+      "keyEvents": [
+        { "chapter": 1, "eventType": "meet", "summary": "姨甥关系，实质如姐妹，何俪帮简宁买红色野马", "participants": ["jianning", "heyu"] },
+        { "chapter": 3, "eventType": "other", "summary": "简宁带黄鹤雨去何俪4S店安排暑期兼职", "participants": ["jianning", "heyu", "lixiaomeng_cousin"] },
+        { "chapter": 6, "eventType": "other", "summary": "何俪办公室见李有有，聊花花/车/黄鹤雨兼职", "participants": ["liyouyou", "heyu", "lixiaomeng_cousin"] }
+      ],
+      "notes": "何俪不知情地成了黄鹤雨接近简宁的跳板"
+    },
+    {
+      "id": "lixiaomeng-lixiaomeng_cousin-affair",
+      "from": "lixiaomeng",
+      "to": "lixiaomeng_cousin",
+      "type": "affair",
+      "status": "ongoing",
+      "intensity": 5,
+      "startChapter": 1,
+      "keyEvents": [
+        { "chapter": 1, "eventType": "sex", "summary": "楼梯间偷情，少年淫辱人妻（声控灯/打屁股/羞辱对白），李有有通过监控全程围观", "participants": ["lixiaomeng", "lixiaomeng_cousin", "liyouyou"] },
+        { "chapter": 3, "eventType": "reveal", "summary": "少年向李有有坦白偷拍简宁，展示车库视频，被李有有威胁删除视频", "participants": ["lixiaomeng_cousin", "liyouyou", "jianning"] }
+      ],
+      "notes": "表姐弟乱伦，少年极度变态（声控灯/羞辱/打屁股）"
+    },
+    {
+      "id": "jianning-lixiaomeng_cousin-affair",
+      "from": "jianning",
+      "to": "lixiaomeng_cousin",
+      "type": "affair",
+      "status": "ongoing",
+      "intensity": 5,
+      "startChapter": 3,
+      "keyEvents": [
+        { "chapter": 3, "eventType": "discover", "summary": "少年偷拍简宁与神秘男上车（实为黄鹤雨自己），被李有有发现", "participants": ["jianning", "lixiaomeng_cousin", "liyouyou"] },
+        { "chapter": 4, "eventType": "sex", "summary": "简宁带黄鹤雨去15楼2号房（黄鹤雨家）过夜，任由揉捏屁股，腿软走出", "participants": ["jianning", "lixiaomeng_cousin"] },
+        { "chapter": 5, "eventType": "sex", "summary": "简宁在黄鹤雨家高潮后穿衣离开，拒绝继续，显示仍在乎家庭", "participants": ["jianning", "lixiaomeng_cousin"] },
+        { "chapter": 6, "eventType": "sex", "summary": "简宁走廊全裸自慰、含乳头、高潮喷水，被黄鹤雨拍摄发视频", "participants": ["jianning", "lixiaomeng_cousin"] }
+      ],
+      "notes": "从被动偷拍→主动上门→走廊露出自慰，心理防线逐步崩塌"
+    },
+    {
+      "id": "liyouyou-yufu-friend",
+      "from": "liyouyou",
+      "to": "yufu",
+      "type": "friend",
+      "status": "ongoing",
+      "intensity": 3,
+      "startChapter": 2,
+      "keyEvents": [
+        { "chapter": 2, "eventType": "meet", "summary": "李有有在推特买会员加渔夫微信，请教换妻/找单男经验", "participants": ["liyouyou", "yufu"] },
+        { "chapter": 3, "eventType": "other", "summary": "渔夫发老婆骑乘视频，李有有按要求骂脏话，渔夫兴奋去操老婆", "participants": ["liyouyou", "yufu"] },
+        { "chapter": 5, "eventType": "confess", "summary": "李有有向渔夫坦白妻子出轨，渔夫建议先冷静、弄清妻子心是否还在", "participants": ["liyouyou", "yufu"] }
+      ],
+      "notes": "线上淫妻导师关系，渔夫不知李有有妻子即简宁"
+    },
+    {
+      "id": "liyouyou-lixiaopeng-colleague",
+      "from": "liyouyou",
+      "to": "lixiaopeng",
+      "type": "colleague",
+      "status": "ongoing",
+      "intensity": 3,
+      "startChapter": 4,
+      "keyEvents": [
+        { "chapter": 4, "eventType": "meet", "summary": "李有有找学弟李小鹏入侵黄鹤雨电脑/摄像头", "participants": ["liyouyou", "lixiaopeng"] },
+        { "chapter": 5, "eventType": "milestone", "summary": "李小鹏成功植入远程查看程序，留下电脑/摄像头浏览入口", "participants": ["liyouyou", "lixiaopeng", "lixiaomeng_cousin"] }
+      ],
+      "notes": "老板/学弟，黑客技术支持"
+    },
+    {
+      "id": "lixiaomeng_cousin-lijue-master_slave",
+      "from": "lixiaomeng_cousin",
+      "to": "lijue",
+      "type": "master_slave",
+      "status": "ended",
+      "intensity": 5,
+      "startChapter": 5,
+      "endChapter": 6,
+      "keyEvents": [
+        { "chapter": 5, "eventType": "sex", "summary": "教室调教：逼李珏在黑板写「屄」字、读脏话、M腿展示、手指扣穴潮吹喷讲桌", "participants": ["lixiaomeng_cousin", "lijue"] },
+        { "chapter": 6, "eventType": "sex", "summary": "私密课堂：李珏真空上课、被扶上讲桌分腿展示、求黄同学插入、被手指扣到高潮", "participants": ["lixiaomeng_cousin", "lijue"] }
+      ],
+      "notes": "黄鹤雨的「大学语文老师」系列受害者，经典调教案例"
+    },
+    {
+      "id": "lixiaomeng_cousin-xuezhang-master_slave",
+      "from": "lixiaomeng_cousin",
+      "to": "xuezhang",
+      "type": "master_slave",
+      "status": "ended",
+      "intensity": 4,
+      "startChapter": 5,
+      "keyEvents": [
+        { "chapter": 5, "eventType": "other", "summary": "黄鹤雨向李有有推销：校花有男友、在校玩遍花样、毕业后偶尔还能约", "participants": ["lixiaomeng_cousin", "xuezhang"] }
+      ],
+      "notes": "视频商品化受害者之一"
+    },
+    {
+      "id": "lixiaomeng_cousin-renqilaoma-master_slave",
+      "from": "lixiaomeng_cousin",
+      "to": "renqilaoma",
+      "type": "master_slave",
+      "status": "ended",
+      "intensity": 4,
+      "startChapter": 5,
+      "keyEvents": [
+        { "chapter": 5, "eventType": "other", "summary": "母女互动，比女儿更骚，母女一起看更刺激", "participants": ["lixiaomeng_cousin", "renqilaoma", "xuezhang"] }
+      ],
+      "notes": "母女双飞受害者"
+    },
+    {
+      "id": "lixiaomeng_cousin-liangli_renqi-master_slave",
+      "from": "lixiaomeng_cousin",
+      "to": "liangli_renqi",
+      "type": "master_slave",
+      "status": "ended",
+      "intensity": 4,
+      "startChapter": 5,
+      "keyEvents": [
+        { "chapter": 5, "eventType": "sex", "summary": "老公有绿帽癖，黄鹤雨当面操她，夫妻俩同时求插", "participants": ["lixiaomeng_cousin", "liangli_renqi"] }
+      ],
+      "notes": "李有有花5000元买初级会员观看"
+    },
+    {
+      "id": "lixiaomeng_cousin-lipangzi-friend",
+      "from": "lixiaomeng_cousin",
+      "to": "lipangzi",
+      "type": "friend",
+      "status": "ongoing",
+      "intensity": 2,
+      "startChapter": 5,
+      "keyEvents": [
+        { "chapter": 5, "eventType": "other", "summary": "聊天记录中协助监视目标、寻找机会", "participants": ["lixiaomeng_cousin", "lipangzi"] }
+      ],
+      "notes": "同伙/朋友"
+    },
+    {
+      "id": "liyouyou-lixiaomeng_cousin-enemy",
+      "from": "liyouyou",
+      "to": "lixiaomeng_cousin",
+      "type": "enemy",
+      "status": "ongoing",
+      "intensity": 5,
+      "startChapter": 1,
+      "keyEvents": [
+        { "chapter": 1, "eventType": "discover", "summary": "通过监控发现少年偷窥/偷拍简宁", "participants": ["liyouyou", "lixiaomeng_cousin"] },
+        { "chapter": 3, "eventType": "conflict", "summary": "李有有殴打少年，威胁删除偷拍视频，给500元「补偿/服从测试」", "participants": ["liyouyou", "lixiaomeng_cousin"] },
+        { "chapter": 4, "eventType": "discover", "summary": "李有有跟踪简宁发现其与少年（黄鹤雨）进15楼2号房", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning"] },
+        { "chapter": 5, "eventType": "discover", "summary": "通过李小鹏入侵摄像头/电脑，全程监视黄鹤雨调教简宁", "participants": ["liyouyou", "lixiaopeng", "lixiaomeng_cousin"] },
+        { "chapter": 6, "eventType": "reveal", "summary": "在推特发现黄鹤雨发布「美院绝色老师」预告（即简宁），愤怒加好友假装买视频套话", "participants": ["liyouyou", "lixiaomeng_cousin"] }
+      ],
+      "notes": "猫鼠游戏：李有有想控制/利用黄鹤雨，黄鹤雨在贩卖简宁视频"
+    }
+  ],
+  "chapterSummaries": [
+    { "chapter": 1, "title": "第01章", "charactersPresent": ["liyouyou", "jianning", "wukai", "heyu", "lixiaomeng", "lixiaomeng_cousin", "yufu"], "keyEvents": [
+      { "chapter": 1, "eventType": "milestone", "summary": "李有有自述：事业有成但无法让妻子高潮三年，产生淫妻念头", "participants": ["liyouyou", "jianning"] },
+      { "chapter": 1, "eventType": "discover", "summary": "半夜发现妻子不在床上，通过监控目睹楼下人妻李晓媛与表弟楼梯间偷情", "participants": ["liyouyou", "lixiaomeng", "lixiaomeng_cousin"] },
+      { "chapter": 1, "eventType": "confess", "summary": "李有有向简宁坦白想找「人形快乐工具」，简宁愤怒拒绝威胁阉割", "participants": ["liyouyou", "jianning"] },
+      { "chapter": 1, "eventType": "sex", "summary": "监控画面刺激下李有有与简宁门后做爱，李有有幻想门外少年操简宁而秒射", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin"] }
+    ], "wordCount": 5642 },
+    { "chapter": 2, "title": "第02章", "charactersPresent": ["liyouyou", "wukai", "jianning", "heyu", "yufu"], "keyEvents": [
+      { "chapter": 2, "eventType": "meet", "summary": "吴凯拉李有有陪同出国技术交流会", "participants": ["liyouyou", "wukai"] },
+      { "chapter": 2, "eventType": "meet", "summary": "李有有在推特找到「渔夫」博主，买会员加微信请教换妻/找单男经验", "participants": ["liyouyou", "yufu"] },
+      { "chapter": 2, "eventType": "other", "summary": "渔夫分享开发妻子心法：高潮边缘植入「被别人操」幻想", "participants": ["yufu"] },
+      { "chapter": 2, "eventType": "other", "summary": "回家见简宁练瑜伽，李有有压抑绮念去书房上网", "participants": ["liyouyou", "jianning"] }
+    ], "wordCount": 5785 },
+    { "chapter": 3, "title": "第03章", "charactersPresent": ["liyouyou", "yufu", "jianning", "lixiaomeng_cousin", "lixiaomeng"], "keyEvents": [
+      { "chapter": 3, "eventType": "other", "summary": "渔夫发老婆骑乘视频，李有有按要求骂脏话，渔夫兴奋去操老婆", "participants": ["liyouyou", "yufu"] },
+      { "chapter": 3, "eventType": "reveal", "summary": "梦中见简宁被人骑乘，醒来发现简宁眼圈红肿", "participants": ["liyouyou", "jianning"] },
+      { "chapter": 3, "eventType": "discover", "summary": "地下车库少年自称李晓媛表弟，偷拍简宁与男上车视频，李有有殴打威胁删除", "participants": ["liyouyou", "lixiaomeng_cousin", "jianning"] },
+      { "chapter": 3, "eventType": "discover", "summary": "少年展示第二段车库视频，李有有强迫删除所有偷拍视频，给500元服从测试", "participants": ["liyouyou", "lixiaomeng_cousin"] }
+    ], "wordCount": 5985 },
+    { "chapter": 4, "title": "第04章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "heyu", "lixiaopeng", "wukai"], "keyEvents": [
+      { "chapter": 4, "eventType": "discover", "summary": "李有有跟踪简宁：带黄鹤雨去何俪4S店安排兼职，后去大学附近小区15楼2号房过夜", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin", "heyu"] },
+      { "chapter": 4, "eventType": "meet", "summary": "李有有找学弟李小鹏入侵黄鹤雨电脑/摄像头", "participants": ["liyouyou", "lixiaopeng"] },
+      { "chapter": 4, "eventType": "other", "summary": "何俪办公室确认黄鹤雨名字「黄鹤雨」、住15楼2号、大二管理系", "participants": ["liyouyou", "heyu", "lixiaomeng_cousin"] },
+      { "chapter": 4, "eventType": "confess", "summary": "李有有向渔夫坦白妻子出轨，渔夫建议先冷静、弄清妻子心是否还在", "participants": ["liyouyou", "yufu"] }
+    ], "wordCount": 5698 },
+    { "chapter": 5, "title": "第05章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "lijue", "lipangzi", "liangli_renqi", "xuezhang", "renqilaoma", "yufu"], "keyEvents": [
+      { "chapter": 5, "eventType": "discover", "summary": "通过摄像头目睹简宁在黄鹤雨家高潮后淫靡模样，首次见妻子高潮后样子", "participants": ["liyouyou", "jianning", "lixiaomeng_cousin"] },
+      { "chapter": 5, "eventType": "sex", "summary": "简宁拒绝黄鹤雨继续、坚决穿衣离开，显示仍在乎家庭", "participants": ["jianning", "lixiaomeng_cousin"] },
+      { "chapter": 5, "eventType": "sex", "summary": "观看黄鹤雨「大学语文老师」系列：教室调教李珏写「屄」字、读脏话、M腿展示、手指扣穴潮吹喷讲桌", "participants": ["lixiaomeng_cousin", "lijue"] },
+      { "chapter": 5, "eventType": "sex", "summary": "观看「私密课堂」：李珏真空上课、被扶上讲桌分腿展示、求黄同学插入、被手指扣到高潮", "participants": ["lixiaomeng_cousin", "lijue"] },
+      { "chapter": 5, "eventType": "other", "summary": "黄鹤雨推销受害者视频：校花/人妻辣妈/靓丽人妻/大学语文老师，李有有买靓丽人妻初级会员", "participants": ["liyouyou", "lixiaomeng_cousin"] }
+    ], "wordCount": 5610 },
+    { "chapter": 6, "title": "第06章", "charactersPresent": ["liyouyou", "jianning", "lixiaomeng_cousin", "heyu", "lipangzi"], "keyEvents": [
+      { "chapter": 6, "eventType": "sex", "summary": "简宁走廊全裸自慰、含自己乳头、手指扣穴高潮喷水，被黄鹤雨拍摄发视频", "participants": ["jianning", "lixiaomeng_cousin"] },
+      { "chapter": 6, "eventType": "discover", "summary": "李有有在推特发现黄鹤雨发布「美院绝色老师」预告（配简宁下车照），愤怒加好友假装买视频套话", "participants": ["liyouyou", "lixiaomeng_cousin"] },
+      { "chapter": 6, "eventType": "confess", "summary": "黄鹤雨透露美院老师「还没调教完成，还得一个多月」，李有有出价2万要求第一时间联系", "participants": ["liyouyou", "lixiaomeng_cousin"] },
+      { "chapter": 6, "eventType": "meet", "summary": "李有有去何俪4S店提车，何俪办公室聊黄鹤雨兼职表现「挺憨厚」", "participants": ["liyouyou", "heyu", "lixiaomeng_cousin"] }
+    ], "wordCount": 7468 }
+  ]
+}
