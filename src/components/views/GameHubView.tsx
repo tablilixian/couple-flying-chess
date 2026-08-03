@@ -136,6 +136,26 @@ export function GameHubView({ mode, onNavigate }: GameHubViewProps) {
           </div>
         </button>
 
+        {/* Edging Session (couple mode only) */}
+        {mode === 'couple' && (
+          <button
+            onClick={() => onNavigate('edging-select')}
+            className="w-full bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12]
+                       border border-white/[0.08] rounded-2xl p-6 transition-all text-left group"
+            style={{ borderColor: `${accentColor}33` }}
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">🎛️</span>
+              <div className="flex-1">
+                <div className="text-white text-lg font-semibold">调教节奏</div>
+                <div className="text-gray-500 text-sm mt-0.5">节拍引导 · 寸止训练 · 沉浸指令</div>
+              </div>
+              <span className="text-xs font-semibold text-white px-2.5 py-1 rounded-full"
+                style={{ background: accentColor }}>NEW</span>
+            </div>
+          </button>
+        )}
+
         {/* Locked placeholders */}
         <div className="w-full bg-white/[0.02] border border-white/[0.05] rounded-2xl p-6 text-center opacity-40">
           <div className="flex items-center justify-center gap-3">

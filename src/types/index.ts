@@ -79,7 +79,7 @@ export interface TaskEventData {
 
 export type StepType = 'narration' | 'timer' | 'counter';
 export type ScriptMood = 'sweet' | 'romantic' | 'intense' | 'calm';
-export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending' | 'truth-dare-home' | 'truth-dare-game' | 'immersive-select' | 'immersive-game' | 'radio-player' | 'metronome';
+export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select' | 'script-intro' | 'script-game' | 'script-ending' | 'truth-dare-home' | 'truth-dare-game' | 'immersive-select' | 'immersive-game' | 'radio-player' | 'metronome' | 'edging-select' | 'edging-game';
 
 export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
 
@@ -230,4 +230,54 @@ export interface Scenario {
   estimatedMinutes: number;
   acts: ISAct[];
   definitions?: { term: string; meaning: string }[];
+}
+
+// ===== 调教节奏 (Edging Session) Types =====
+
+export type EdgingPhaseKind = 'slow' | 'build' | 'fast' | 'edge' | 'rest';
+
+export type EdgingLineKind = 'story' | 'command' | 'praise' | 'denial';
+
+export interface EdgingLine {
+  kind: EdgingLineKind;
+  text: string;        // 支持 {name} 称呼占位符
+  tts?: boolean;       // 是否语音读出（默认：story 不读，其余读）
+  pop?: string[];      // 需要大字弹出的关键词
+}
+
+export interface EdgingPhase {
+  kind: EdgingPhaseKind;
+  bpm: number;       // 0 = 静止（寸止/休息）
+  duration: number;  // 秒
+  text: string;      // 指令/刺激文字（兼容自定义流程）
+  title?: string;    // 阶段标题
+  script?: EdgingLine[]; // 阶段内按序投放的台词（有则优先于 text）
+}
+
+export interface EdgingFlow {
+  id: string;
+  name: string;
+  desc: string;
+  emoji: string;
+  phases: EdgingPhase[];
+}
+
+export interface EdgingSessionPhase {
+  kind: EdgingPhaseKind;
+  bpm: number;
+  duration: number;
+  text: string;
+  completed: boolean;
+}
+
+export interface EdgingSessionRecord {
+  id: string;
+  flowId: string;
+  flowName: string;
+  startedAt: number;
+  endedAt: number;
+  status: 'completed' | 'abandoned' | 'safeword';
+  totalSeconds: number;
+  pausedCount: number;
+  phases: EdgingSessionPhase[];
 }

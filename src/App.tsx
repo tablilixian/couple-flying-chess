@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ArrowLeft, Settings, History } from 'lucide-react';
-import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty, TDTheme, Scenario } from './types';
+import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty, TDTheme, Scenario, EdgingFlow } from './types';
 import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
 import { clearAudioCache } from './utils/ttsService';
 import { useGameState } from './hooks/useGameState';
@@ -28,6 +28,8 @@ import { ImmersiveGameView } from './components/views/ImmersiveGameView';
 import { RadioPlayerView } from './components/views/RadioPlayerView';
 import { MetronomeView } from './components/views/MetronomeView';
 import { NovelView } from './components/views/NovelView';
+import { EdgingSelectView } from './components/views/EdgingSelectView';
+import { EdgingGameView } from './components/views/EdgingGameView';
 
 const MODE_CONFIG: Record<GameMode, {
   title: string;
@@ -125,6 +127,7 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
   const [scenarioRoleAssignment, setScenarioRoleAssignment] = useState<[string, string]>(['', '']);
   const [scenarioStartAct, setScenarioStartAct] = useState(0);
+  const [selectedEdgingFlow, setSelectedEdgingFlow] = useState<EdgingFlow | null>(null);
 
   const config = MODE_CONFIG[mode];
 
@@ -284,6 +287,17 @@ function AppInner({ mode }: { mode: GameMode }) {
   const handleImmersiveEnd = () => {
     setSelectedScenario(null);
     setAppSubview('hub');
+  };
+
+  // ===== Edging Session =====
+  const handleEdgingStart = (flow: EdgingFlow) => {
+    setSelectedEdgingFlow(flow);
+    setAppSubview('edging-game');
+  };
+
+  const handleEdgingBack = () => {
+    setSelectedEdgingFlow(null);
+    setAppSubview('edging-select');
   };
 
   // ===== Render =====
@@ -455,6 +469,27 @@ function AppInner({ mode }: { mode: GameMode }) {
           />
         </div>
       </div>
+    );
+  }
+
+  // ===== Edging Session =====
+  if (appSubview === 'edging-select') {
+    return (
+      <EdgingSelectView
+        mode={mode}
+        onBack={() => setAppSubview('hub')}
+        onStart={handleEdgingStart}
+      />
+    );
+  }
+
+  if (appSubview === 'edging-game' && selectedEdgingFlow) {
+    return (
+      <EdgingGameView
+        mode={mode}
+        flow={selectedEdgingFlow}
+        onExit={handleEdgingBack}
+      />
     );
   }
 
