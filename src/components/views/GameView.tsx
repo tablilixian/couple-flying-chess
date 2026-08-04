@@ -20,7 +20,7 @@ interface GameViewProps {
   winnerId: number | null;
   onTaskTrigger: (data: TaskEventData) => void;
   onBack: () => void;
-  onStatusTile: (targetRole: 'male' | 'female') => StatusEffect | null;
+  onStatusTile: (targetRole: 'male' | 'female', activeThemeId: string) => StatusEffect | null;
   maleActionStatus: StatusEffect | null;
   maleConditionStatus: StatusEffect | null;
   femaleActionStatus: StatusEffect | null;
@@ -101,7 +101,7 @@ export function GameView({
             setDiceResult(null);
             setIsMoving(false);
           } else if (tileCheck === 'status') {
-            const newStatus = onStatusTile(activePlayer.role);
+            const newStatus = onStatusTile(players[currentTurn].role, players[currentTurn].themeId || '');
             if (newStatus) {
               setStatusNotification(newStatus);
               setTimeout(() => {
@@ -151,7 +151,6 @@ export function GameView({
     };
   }, [autoMode, isRolling, isMoving, diceResult, handleRoll, winnerId, taskActive, statusNotification]);
 
-  const activePlayer = players[currentTurn];
   const turnNumber = Math.floor(Math.max(...players.map(p => p.step)) / 4) + 1;
 
   return (

@@ -1,6 +1,25 @@
 import { type ReactNode } from 'react';
 import { Player } from '../types';
 
+export type TaskTag = 'M' | 'F' | 'both' | 'H' | 'R';
+
+const TASK_TAG_RE = /^\[(M|F|both|H|R)\]\s*/;
+
+export function parseTaskTags(task: string): { tags: TaskTag[]; text: string } {
+  const tags: TaskTag[] = [];
+  let text = task;
+  let match: RegExpMatchArray | null;
+  while ((match = text.match(TASK_TAG_RE)) !== null) {
+    tags.push(match[1] as TaskTag);
+    text = text.slice(match[0].length);
+  }
+  return { tags, text };
+}
+
+export function stripTaskTags(task: string): string {
+  return parseTaskTags(task).text;
+}
+
 const RECIPIENT_PATTERNS: [RegExp, (r: Player) => string][] = [
   [/睾丸\/阴唇/g, r => r.role === 'male' ? '睾丸' : '阴唇'],
   [/精液\/爱液/g, r => r.role === 'male' ? '精液' : '爱液'],
@@ -17,7 +36,7 @@ const EXECUTOR_PATTERNS: [RegExp, (e: Player) => string][] = [
 ];
 
 export function personalizeTask(task: string, executor: Player, recipient: Player): string {
-  let text = task.replace(/^\[(?:M|F|both)\]\s*/, '');
+  let text = stripTaskTags(task);
 
   for (const [pattern, resolve] of RECIPIENT_PATTERNS) {
     text = text.replace(pattern, resolve(recipient));
@@ -35,7 +54,7 @@ export function personalizeTask(task: string, executor: Player, recipient: Playe
   text = text.replace(/自己的/g, `${executor.name}自己的`);
   text = text.replace(/你的/g, `${executor.name}的`);
 
-  text = text.replace(/你/g, executor.name);
+  text = text.replace(/你(?!们)/g, executor.name);
 
   return text;
 }

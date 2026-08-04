@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Player, TaskEventData } from '../../types';
 import { Heart, Lock, HandshakeIcon } from 'lucide-react';
-import { renderColoredTaskText } from '../../utils/personalizeTask';
+import { renderColoredTaskText, stripTaskTags } from '../../utils/personalizeTask';
 
 interface TaskCardModalProps {
   isOpen: boolean;
@@ -56,7 +56,7 @@ export function TaskCardModal({ isOpen, taskData, players, onAccept, onReject, a
   const executorPlayer = players.find(p => p.id === taskData.executorPlayerId);
   const executorLabel = executorPlayer?.name || (taskData.executorPlayerId === 0 ? '男方' : '女方');
   const executorClassName = taskData.executorPlayerId === 0 ? 'text-[#0A84FF]' : 'text-[#FF375F]';
-  const displayTask = taskData.task.replace(/^\[(?:M|F|both)\]\s*/, '');
+  const displayTask = stripTaskTags(taskData.task);
   const coloredTask = renderColoredTaskText(displayTask, players);
 
   return (

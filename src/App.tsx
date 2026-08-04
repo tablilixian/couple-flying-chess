@@ -600,7 +600,7 @@ function AppInner({ mode }: { mode: GameMode }) {
       />
 
       <WinModal
-        isOpen={!!winnerId}
+        isOpen={winnerId !== null}
         winnerName={winnerId !== null ? state.players[winnerId].name : ''}
         onRestart={() => {
           resetGame();

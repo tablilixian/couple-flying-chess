@@ -61,6 +61,7 @@ export interface GameState {
   mode: GameMode;
   maleStatus: PlayerStatusSlots;
   femaleStatus: PlayerStatusSlots;
+  recentTasks: string[];
 }
 
 export interface TaskEventData {

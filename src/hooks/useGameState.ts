@@ -4,7 +4,7 @@ import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { generateSpiralPath, generateBoardMap, calculateNewPosition } from '../utils/gameLogic';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
 import { buildStatus, buildOpeningStatus, applyStatusToSlots } from '../utils/statusLogic';
-import { personalizeTask } from '../utils/personalizeTask';
+import { personalizeTask, parseTaskTags } from '../utils/personalizeTask';
 
 const STORAGE_KEYS: Record<GameMode, string> = {
   couple: 'couple-game-state',
@@ -15,6 +15,8 @@ const PLAYER_NAMES_KEYS: Record<GameMode, string> = {
   couple: 'couple-player-names',
   normal: 'normal-player-names'
 };
+
+const RECENT_TASKS_LIMIT = 10;
 
 const INITIAL_PLAYERS: Record<GameMode, Player[]> = {
   couple: [
@@ -170,7 +172,10 @@ function normalizeGameState(saved: unknown, mode: GameMode): GameState | null {
     isRolling: !!s.isRolling,
     mode,
     maleStatus: normalizeStatusSlots(s.maleStatus),
-    femaleStatus: normalizeStatusSlots(s.femaleStatus)
+    femaleStatus: normalizeStatusSlots(s.femaleStatus),
+    recentTasks: Array.isArray(s.recentTasks)
+      ? s.recentTasks.filter((x): x is string => typeof x === 'string')
+      : []
   };
 }
 
@@ -221,7 +226,8 @@ export function useGameState(mode: GameMode) {
       isRolling: false,
       mode,
       maleStatus: emptyStatusSlots(),
-      femaleStatus: emptyStatusSlots()
+      femaleStatus: emptyStatusSlots(),
+      recentTasks: []
     };
   });
 
@@ -377,7 +383,8 @@ export function useGameState(mode: GameMode) {
       view: 'game',
       turn: Math.random() < 0.5 ? 0 : 1,
       maleStatus: maleOpening ? applyStatusToSlots(prev.maleStatus, maleOpening) : prev.maleStatus,
-      femaleStatus: femaleOpening ? applyStatusToSlots(prev.femaleStatus, femaleOpening) : prev.femaleStatus
+      femaleStatus: femaleOpening ? applyStatusToSlots(prev.femaleStatus, femaleOpening) : prev.femaleStatus,
+      recentTasks: []
     }));
     return true;
   }, [state.players, state.themes]);
@@ -408,19 +415,55 @@ export function useGameState(mode: GameMode) {
     setState(prev => ({ ...prev, isRolling: rolling }));
   }, []);
 
+  const recordRecentTask = useCallback((taskText: string) => {
+    setState(prev => {
+      if (prev.recentTasks.includes(taskText)) return prev;
+      return { ...prev, recentTasks: [...prev.recentTasks, taskText].slice(-RECENT_TASKS_LIMIT) };
+    });
+  }, []);
+
   const checkTile = useCallback((landingStep: number): TaskEventData | 'win' | 'status' | null => {
     const activePlayer = state.players[state.turn];
     const opponent = state.players[state.turn === 0 ? 1 : 0];
 
-    const pickTaskForRole = (theme: Theme | undefined, executorRole: Player['role']): string => {
+    const pickTaskForRole = (
+      theme: Theme | undefined,
+      executorRole: Player['role'],
+      eventType: 'lucky' | 'trap' | 'collision',
+      recentTasks: string[]
+    ): string => {
       if (!theme || theme.tasks.length === 0) return '';
+
+      const roleFromTags = (tags: ReturnType<typeof parseTaskTags>['tags']): 'male' | 'female' | 'both' => {
+        if (tags.includes('M')) return 'male';
+        if (tags.includes('F')) return 'female';
+        return 'both';
+      };
+
       const eligible = theme.tasks.filter(t => {
-        if (t.startsWith('[M]')) return executorRole === 'male';
-        if (t.startsWith('[F]')) return executorRole === 'female';
+        const { tags } = parseTaskTags(t);
+        const roleTag = roleFromTags(tags);
+        if (roleTag === 'male' && executorRole !== 'male') return false;
+        if (roleTag === 'female' && executorRole !== 'female') return false;
+        if (eventType === 'trap' && tags.includes('R')) return false;
+        if (eventType === 'lucky' && tags.includes('H')) return false;
+        if (eventType === 'collision' && (tags.includes('R') || tags.includes('H'))) return false;
         return true;
       });
-      const pool = eligible.length > 0 ? eligible : theme.tasks;
-      return pool[Math.floor(Math.random() * pool.length)] || '';
+
+      let pool = eligible.length > 0 ? eligible : theme.tasks;
+
+      if (eventType === 'trap') {
+        const hard = pool.filter(t => parseTaskTags(t).tags.includes('H'));
+        if (hard.length > 0) pool = hard;
+      } else if (eventType === 'lucky') {
+        const reward = pool.filter(t => parseTaskTags(t).tags.includes('R'));
+        if (reward.length > 0) pool = reward;
+      }
+
+      const fresh = pool.filter(t => !recentTasks.includes(t));
+      const pickFrom = fresh.length > 0 ? fresh : pool;
+      return pickFrom[Math.floor(Math.random() * pickFrom.length)] || '';
     };
 
     if (landingStep === 48) {
@@ -429,6 +472,8 @@ export function useGameState(mode: GameMode) {
 
     if (landingStep !== 0 && landingStep === opponent.step) {
       const theme = state.themes.find(t => t.id === activePlayer.themeId);
+      const rawTask = pickTaskForRole(theme, opponent.role, 'collision', state.recentTasks);
+      if (rawTask) recordRecentTask(rawTask);
 
       return {
         type: 'collision',
@@ -438,7 +483,7 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'handshake',
         color: 'text-yellow-400',
-        task: personalizeTask(pickTaskForRole(theme, opponent.role), opponent, activePlayer),
+        task: personalizeTask(rawTask, opponent, activePlayer),
         taskSourceId: activePlayer.themeId || ''
       };
     }
@@ -447,6 +492,8 @@ export function useGameState(mode: GameMode) {
 
     if (tileType === 'lucky') {
       const theme = state.themes.find(t => t.id === activePlayer.themeId);
+      const rawTask = pickTaskForRole(theme, opponent.role, 'lucky', state.recentTasks);
+      if (rawTask) recordRecentTask(rawTask);
 
       return {
         type: 'lucky',
@@ -456,13 +503,15 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'favorite',
         color: 'text-[#FF375F]',
-        task: personalizeTask(pickTaskForRole(theme, opponent.role), opponent, activePlayer),
+        task: personalizeTask(rawTask, opponent, activePlayer),
         taskSourceId: activePlayer.themeId || ''
       };
     }
 
     if (tileType === 'trap') {
       const theme = state.themes.find(t => t.id === opponent.themeId);
+      const rawTask = pickTaskForRole(theme, activePlayer.role, 'trap', state.recentTasks);
+      if (rawTask) recordRecentTask(rawTask);
 
       return {
         type: 'trap',
@@ -472,7 +521,7 @@ export function useGameState(mode: GameMode) {
         subtitle: `任务来自「${theme?.name || ''}」`,
         icon: 'lock',
         color: 'text-[#BF5AF2]',
-        task: personalizeTask(pickTaskForRole(theme, activePlayer.role), activePlayer, opponent),
+        task: personalizeTask(rawTask, activePlayer, opponent),
         taskSourceId: opponent.themeId || ''
       };
     }
@@ -482,7 +531,7 @@ export function useGameState(mode: GameMode) {
     }
 
     return null;
-  }, [state.players, state.turn, state.themes, state.boardMap]);
+  }, [state.players, state.turn, state.themes, state.boardMap, state.recentTasks, recordRecentTask]);
 
   const resolveTask = useCallback((task: TaskEventData, outcome: 'accept' | 'reject') => {
     setState(prev => {
@@ -520,7 +569,8 @@ export function useGameState(mode: GameMode) {
       pathCoords: generateSpiralPath(),
       isRolling: false,
       maleStatus: emptyStatusSlots(),
-      femaleStatus: emptyStatusSlots()
+      femaleStatus: emptyStatusSlots(),
+      recentTasks: []
     }));
   }, []);
 
