@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ArrowLeft, BookOpen, ChevronDown, Loader2, X, User, HeartHandshake, Grid3X3, Info } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { ArrowLeft, BookOpen, ChevronDown, Loader2, X, User, HeartHandshake, Grid3X3, Info, RotateCcw } from 'lucide-react';
 import { NOVELS, Novel } from '../../data/novels';
 import { CHARACTER_DB } from '../../data/novel/characterDB';
 
@@ -13,6 +13,37 @@ interface Chapter {
   paragraphs: string[];
 }
 
+interface ChapterMeta {
+  title: string;
+}
+
+/** 请求超时：弱网下宁可报错让用户重试，也不要无限转圈 */
+async function fetchWithTimeout(url: string, timeout = 12000): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`加载失败 (${res.status})`);
+    return res;
+  } catch (e) {
+    if ((e as Error)?.name === 'AbortError') throw new Error('加载超时，请检查网络后重试');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchText(url: string, timeout = 12000): Promise<string> {
+  const res = await fetchWithTimeout(url, timeout);
+  return res.text();
+}
+
+async function fetchJson<T>(url: string, timeout = 12000): Promise<T> {
+  const res = await fetchWithTimeout(url, timeout);
+  return (await res.json()) as T;
+}
+
+/** 整本 md 的回退解析（分章文件缺失时才会用到） */
 function parseChapters(raw: string): Chapter[] {
   const text = raw.replace(/\r\n/g, '\n');
   const lines = text.split('\n');
@@ -48,39 +79,113 @@ type Page = 'bookshelf' | 'detail' | 'reader';
 export function NovelView({ onExit }: NovelViewProps) {
   const [page, setPage] = useState<Page>('bookshelf');
   const [selected, setSelected] = useState<Novel | null>(null);
-  const [raw, setRaw] = useState<string>('');
+  /** 章节目录元数据（来自 index.json，2~3KB，秒开） */
+  const [chapterList, setChapterList] = useState<ChapterMeta[]>([]);
+  /** 分章模式下的目录前缀；为 null 表示回退到整本 md 模式 */
+  const [chapterBase, setChapterBase] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chapterLoading, setChapterLoading] = useState(false);
+  const [chapterError, setChapterError] = useState<string | null>(null);
   const [showCatalog, setShowCatalog] = useState(false);
   const [curChapterIdx, setCurChapterIdx] = useState(0);
   const [detailTab, setDetailTab] = useState<'intro' | 'characters' | 'chapters'>('intro');
 
-  const enterDetail = useCallback((novel: Novel) => {
-    setSelected(novel);
-    setPage('detail');
+  /** 已加载的章节正文：序号 -> 段落 */
+  const cacheRef = useRef<Map<number, string[]>>(new Map());
+  /** 用来丢弃「快速翻页」时过期请求的回包 */
+  const reqTokenRef = useRef(0);
+
+  const resetBook = useCallback(() => {
+    cacheRef.current.clear();
+    reqTokenRef.current += 1;
+    setChapterList([]);
+    setChapterBase(null);
+    setChapterLoading(false);
+    setChapterError(null);
+    setCurChapterIdx(0);
+    setDetailTab('intro');
+  }, []);
+
+  /** 回退方案：分章文件缺失时整本下载（老行为，慢但能用） */
+  const loadFullBook = useCallback(async (novel: Novel) => {
+    const text = await fetchText(novel.src, 30000);
+    const parsed = parseChapters(text);
+    if (!parsed.length) throw new Error('这本小说还没有章节内容');
+    cacheRef.current.clear();
+    parsed.forEach((c, i) => cacheRef.current.set(i, c.paragraphs));
+    setChapterList(parsed.map(c => ({ title: c.title })));
+    setChapterBase(null);
+  }, []);
+
+  /** 拉目录（index.json），失败则回退整本 md */
+  const loadCatalog = useCallback(async (novel: Novel) => {
     setLoading(true);
     setError(null);
-    setRaw('');
-    fetch(novel.src)
-      .then(res => {
-        if (!res.ok) throw new Error(`加载失败 (${res.status})`);
-        return res.text();
-      })
-      .then(text => {
-        setRaw(text);
-        setLoading(false);
-        setCurChapterIdx(0);
-      })
-      .catch(e => {
-        setError(e?.message || '加载失败');
-        setLoading(false);
-      });
-  }, []);
+
+    const base = `${import.meta.env.BASE_URL}novels/${novel.id}/`;
+    try {
+      const idx = await fetchJson<{ chapters?: ChapterMeta[] }>(`${base}index.json`, 10000);
+      if (!idx?.chapters?.length) throw new Error('empty-index');
+      setChapterList(idx.chapters.map(c => ({ title: c.title })));
+      setChapterBase(base);
+    } catch {
+      // index.json 不存在（老数据 / 未执行拆分脚本）→ 退回整本 md
+      try {
+        await loadFullBook(novel);
+      } catch (e) {
+        setError((e as Error)?.message || '加载失败');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [loadFullBook]);
+
+  const enterDetail = useCallback(async (novel: Novel) => {
+    resetBook();
+    setSelected(novel);
+    setPage('detail');
+    await loadCatalog(novel);
+  }, [loadCatalog, resetBook]);
+
+  /** 目录/正文加载失败后的重试：不切 Tab、不退出当前页 */
+  const retryCatalog = useCallback(() => {
+    if (selected) void loadCatalog(selected);
+  }, [loadCatalog, selected]);
+
+  /** 打开某一章：只按需拉这一章的正文 */
+  const openChapter = useCallback(async (idx: number) => {
+    if (idx < 0) return;
+    setShowCatalog(false);
+    setCurChapterIdx(idx);
+    reqTokenRef.current += 1;
+    const token = reqTokenRef.current;
+
+    if (cacheRef.current.has(idx)) {
+      setChapterLoading(false);
+      setChapterError(null);
+      return;
+    }
+    if (!chapterBase) return; // 整本模式：内容已全部在缓存里
+
+    setChapterLoading(true);
+    setChapterError(null);
+    try {
+      const data = await fetchJson<{ paragraphs?: string[] }>(
+        `${chapterBase}ch/${String(idx + 1).padStart(2, '0')}.json`
+      );
+      cacheRef.current.set(idx, data.paragraphs || []);
+    } catch (e) {
+      if (token === reqTokenRef.current) setChapterError((e as Error)?.message || '本章加载失败');
+    } finally {
+      if (token === reqTokenRef.current) setChapterLoading(false);
+    }
+  }, [chapterBase]);
 
   const enterReader = useCallback((chapterIdx?: number) => {
     setPage('reader');
-    setCurChapterIdx(chapterIdx ?? 0);
-  }, []);
+    void openChapter(chapterIdx ?? 0);
+  }, [openChapter]);
 
   const backToDetail = useCallback(() => {
     setPage('detail');
@@ -89,18 +194,15 @@ export function NovelView({ onExit }: NovelViewProps) {
   const backToBookshelf = useCallback(() => {
     setPage('bookshelf');
     setSelected(null);
-    setRaw('');
     setError(null);
-  }, []);
+    resetBook();
+  }, [resetBook]);
 
-  const chapters = useMemo(() => (raw ? parseChapters(raw) : []), [raw]);
+  const jumpTo = openChapter;
 
-  const jumpTo = useCallback((i: number) => {
-    setCurChapterIdx(i);
-    setShowCatalog(false);
-  }, []);
-
-  const curChapter = chapters[curChapterIdx];
+  const chapters = chapterList;
+  const curParagraphs = cacheRef.current.get(curChapterIdx);
+  const curTitle = chapters[curChapterIdx]?.title;
 
   // ===== 书房列表页 =====
   if (page === 'bookshelf') {
@@ -280,19 +382,32 @@ export function NovelView({ onExit }: NovelViewProps) {
                 {loading && (
                   <div className="flex items-center justify-center py-12 text-gray-500">
                     <Loader2 size={20} className="animate-spin mr-2" />
-                    <span className="text-xs">正在加载章节…</span>
+                    <span className="text-xs">正在加载目录…</span>
                   </div>
                 )}
 
                 {error && (
-                  <div className="text-red-400/80 text-xs py-8 text-center">{error}</div>
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <div className="text-red-400/80 text-xs text-center">{error}</div>
+                    <button
+                      onClick={retryCatalog}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded bg-white/[0.06] text-gray-300 hover:bg-white/[0.1] transition-colors"
+                    >
+                      <RotateCcw size={13} />
+                      重试
+                    </button>
+                  </div>
+                )}
+
+                {!loading && !error && chapters.length === 0 && (
+                  <p className="text-gray-500 text-xs text-center py-10">暂无章节内容</p>
                 )}
 
                 {!loading && !error && chapters.length > 0 && (
                   <div className="grid grid-cols-3 gap-2">
                     {chapters.map((c, i) => (
                       <button
-                        key={c.index}
+                        key={i}
                         onClick={() => enterReader(i)}
                         className="flex flex-col items-center justify-center px-1 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-amber-500/20 transition-colors text-center min-h-[56px]"
                       >
@@ -300,7 +415,7 @@ export function NovelView({ onExit }: NovelViewProps) {
                           {String(i + 1).padStart(2, '0')}
                         </span>
                         <span className="text-gray-300 text-[11px] leading-tight line-clamp-2">
-                          {c.title.replace(/^第\d+章\s*/, '')}
+                          {c.title.replace(/^第\s*\d+\s*章\s*/, '').trim() || c.title}
                         </span>
                       </button>
                     ))}
@@ -332,7 +447,8 @@ export function NovelView({ onExit }: NovelViewProps) {
           </div>
           <button
             onClick={() => setShowCatalog(v => !v)}
-            className="text-gray-400 hover:text-white transition-colors flex items-center gap-1 shrink-0"
+            disabled={chapters.length === 0}
+            className="text-gray-400 hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1 shrink-0"
           >
             <span className="text-xs">目录</span>
             <ChevronDown size={16} />
@@ -355,7 +471,7 @@ export function NovelView({ onExit }: NovelViewProps) {
               <div className="py-1">
                 {chapters.map((c, i) => (
                   <button
-                    key={c.index}
+                    key={i}
                     onClick={() => jumpTo(i)}
                     className={`w-full text-left px-4 py-2.5 text-xs transition-colors border-b border-white/[0.03] ${
                       i === curChapterIdx
@@ -373,24 +489,44 @@ export function NovelView({ onExit }: NovelViewProps) {
         )}
 
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {loading && (
+          {chapterLoading && (
             <div className="h-full flex flex-col items-center justify-center text-gray-500">
               <Loader2 size={28} className="animate-spin mb-3" />
-              <p className="text-xs">正在加载小说内容…</p>
+              <p className="text-xs">正在加载本章…</p>
             </div>
           )}
-          {error && (
+          {!chapterLoading && chapterError && (
             <div className="h-full flex flex-col items-center justify-center text-red-400/80 px-6">
-              <p className="text-sm mb-3">{error}</p>
+              <p className="text-sm mb-3 text-center">{chapterError}</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => void openChapter(curChapterIdx)}
+                  className="text-xs px-3 py-1.5 rounded bg-white/[0.06] text-gray-300 hover:bg-white/[0.1] flex items-center gap-1.5"
+                >
+                  <RotateCcw size={13} />
+                  重试
+                </button>
+                <button
+                  onClick={backToDetail}
+                  className="text-xs px-3 py-1.5 rounded bg-white/[0.06] text-gray-300 hover:bg-white/[0.1]"
+                >
+                  返回详情
+                </button>
+              </div>
+            </div>
+          )}
+          {!chapterLoading && !chapterError && !curParagraphs && (
+            <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3">
+              <p className="text-xs">没有可显示的内容</p>
               <button
-                onClick={backToBookshelf}
+                onClick={backToDetail}
                 className="text-xs px-3 py-1.5 rounded bg-white/[0.06] text-gray-300 hover:bg-white/[0.1]"
               >
-                返回书架
+                返回详情
               </button>
             </div>
           )}
-          {!loading && !error && curChapter && (
+          {!chapterLoading && !chapterError && curParagraphs && (
             <article className="mx-auto max-w-3xl px-5 py-6">
               <div className="flex items-center justify-center gap-3 mb-6 text-[11px] text-gray-500">
                 <button
@@ -414,10 +550,10 @@ export function NovelView({ onExit }: NovelViewProps) {
 
               <section className="mb-10">
                 <h2 className="text-amber-400/90 text-base font-semibold tracking-wide mb-3 pb-2 border-b border-amber-500/15">
-                  {curChapter.title}
+                  {curTitle}
                 </h2>
                 <div className="space-y-2">
-                  {curChapter.paragraphs.map((p, pi) => (
+                  {curParagraphs.map((p, pi) => (
                     <p
                       key={pi}
                       className="text-gray-300/90 text-[13px] leading-[1.85] text-indent-[2em]"

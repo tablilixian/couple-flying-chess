@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "predev": "node scripts/split-novel.mjs",
     "build": "vite build",
+    "prebuild": "node scripts/split-novel.mjs",
+    "novels:split": "node scripts/split-novel.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
