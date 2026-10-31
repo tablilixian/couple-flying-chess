@@ -275,7 +275,9 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
           <div className="w-16 h-0.5 bg-pink-500/50 mx-auto mb-6" />
           <h2 className="text-white text-2xl font-bold mb-3">{currentAct.title}</h2>
           {currentAct.desc && (
-            <p className="text-gray-400 text-sm leading-relaxed">{currentAct.desc}</p>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              {replacePlaceholders(currentAct.desc, 'both', names)}
+            </p>
           )}
           <div className="text-gray-600 text-xs mt-6">
             {currentAct.steps.length} 个步骤 · 约 {Math.ceil(scenario.estimatedMinutes / scenario.acts.length)} 分钟

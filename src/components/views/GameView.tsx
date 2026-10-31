@@ -57,6 +57,25 @@ export function GameView({
   const [isMoving, setIsMoving] = useState(false);
   const [statusNotification, setStatusNotification] = useState<StatusEffect | null>(null);
 
+  /** 走格动画链路上的定时器全部登记在这里，离开棋盘时统一清掉，
+   *  否则中途返回大厅后仍会继续 onMove / onCheckTile / onEndTurn，甚至在别的页面弹任务卡 */
+  const timersRef = useRef<number[]>([]);
+  const later = useCallback((fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timersRef.current = timersRef.current.filter(t => t !== id);
+      fn();
+    }, ms);
+    timersRef.current.push(id);
+    return id;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(id => clearTimeout(id));
+      timersRef.current = [];
+    };
+  }, []);
+
   const handleRoll = useCallback(() => {
     if (isRolling || isMoving || diceResult) return;
 
@@ -67,11 +86,11 @@ export function GameView({
       navigator.vibrate(20);
     }
 
-    setTimeout(() => {
+    later(() => {
       setDiceResult(result);
       onSetRolling(false);
     }, 1000);
-  }, [isRolling, isMoving, diceResult, onSetRolling]);
+  }, [isRolling, isMoving, diceResult, onSetRolling, later]);
 
   const handleRollComplete = useCallback(() => {
     if (diceResult) {
@@ -89,11 +108,11 @@ export function GameView({
         stepIndex += 1;
 
         if (stepIndex < trajectory.length) {
-          setTimeout(stepOnce, moveDelayMs);
+          later(stepOnce, moveDelayMs);
           return;
         }
 
-        setTimeout(() => {
+        later(() => {
           const tileCheck = onCheckTile(landingStep);
 
           if (tileCheck === 'win') {
@@ -104,7 +123,7 @@ export function GameView({
             const newStatus = onStatusTile(players[currentTurn].role, players[currentTurn].themeId || '');
             if (newStatus) {
               setStatusNotification(newStatus);
-              setTimeout(() => {
+              later(() => {
                 setStatusNotification(null);
                 onEndTurn();
               }, 2200);
@@ -125,9 +144,9 @@ export function GameView({
         }, moveDelayMs);
       };
 
-      setTimeout(stepOnce, moveDelayMs);
+      later(stepOnce, moveDelayMs);
     }
-  }, [diceResult, players, currentTurn, onMove, onCheckTile, onWin, onTaskTrigger, onEndTurn, onStatusTile]);
+  }, [later, diceResult, players, currentTurn, onMove, onCheckTile, onWin, onTaskTrigger, onEndTurn, onStatusTile]);
 
   const autoRollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

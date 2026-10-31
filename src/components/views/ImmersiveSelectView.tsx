@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Scenario, GameMode } from '../../types';
 import { ALL_SCENARIOS } from '../../data/scenarios';
 
@@ -15,19 +15,29 @@ function loadPlayerNames(mode: GameMode): [string, string] {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length === 2) return [parsed[0], parsed[1]];
     }
-  } catch {}
+  } catch { /* 本地数据损坏时退回默认称呼 */ }
   return mode === 'couple' ? ['男方', '女方'] : ['玩家 A', '玩家 B'];
+}
+
+/** 剧本数据里的 {actor}/{partner}/{0}/{1} 占位符，在列表页也要替换，否则直接露出花括号 */
+function fillNames(text: string | undefined, names: [string, string]): string {
+  if (!text) return '';
+  return text
+    .split('{actor}').join(names[0])
+    .split('{partner}').join(names[1])
+    .split('{0}').join(names[0])
+    .split('{1}').join(names[1]);
 }
 
 export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectViewProps) {
   const [selected, setSelected] = useState<Scenario | null>(null);
   const [roleAssignment, setRoleAssignment] = useState<[string, string]>(['', '']);
   const [startActIdx, setStartActIdx] = useState(0);
+  const names = useMemo(() => loadPlayerNames(mode), [mode]);
 
   const handleSelect = (s: Scenario) => {
-    const savedNames = loadPlayerNames(mode);
     setSelected(s);
-    setRoleAssignment(savedNames);
+    setRoleAssignment(names);
     setStartActIdx(0);
   };
 
@@ -59,7 +69,7 @@ export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectVi
           <div className="w-full max-w-sm p-6 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-center shrink-0">
             <span className="text-5xl mb-4 block">{selected.emoji}</span>
             <h3 className="text-white text-xl font-bold">{selected.title}</h3>
-            <p className="text-gray-500 text-sm mt-2 leading-relaxed">{selected.desc}</p>
+            <p className="text-gray-500 text-sm mt-2 leading-relaxed">{fillNames(selected.desc, names)}</p>
             <div className="flex gap-3 justify-center mt-4 text-xs text-gray-500">
               <span>⏱ {selected.estimatedMinutes}min</span>
               <span>🎭 {selected.roles.length}人</span>
@@ -88,7 +98,7 @@ export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectVi
                 <span className="text-2xl">{selected.roleEmojis[i]}</span>
                 <span className="text-white font-medium flex-1">{role}</span>
                 <div className="flex gap-1">
-                  {loadPlayerNames(mode).map((name, j) => (
+                  {names.map((name, j) => (
                     <button
                       key={j}
                       onClick={() => {
@@ -126,7 +136,7 @@ export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectVi
                     }`}
                   >
                     <div className="font-semibold">{act.title}</div>
-                    <div className="text-xs opacity-60 mt-0.5">{act.steps.length} 步 · {act.desc}</div>
+                    <div className="text-xs opacity-60 mt-0.5">{act.steps.length} 步 · {fillNames(act.desc, names)}</div>
                   </button>
                 ))}
               </div>
@@ -190,7 +200,7 @@ export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectVi
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-white font-semibold text-base">{s.title}</h3>
-              <p className="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{s.desc}</p>
+              <p className="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{fillNames(s.desc, names)}</p>
               <div className="flex gap-3 mt-2 text-xs text-gray-500">
                 <span>⏱ {s.estimatedMinutes}min</span>
                 <span>🎭 {s.roles.join(' / ')}</span>
