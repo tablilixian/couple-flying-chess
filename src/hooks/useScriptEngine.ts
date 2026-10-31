@@ -71,8 +71,10 @@ export function useScriptEngine(script: Script | null) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    clearTimeout(autoRef.current);
-    autoRef.current = null;
+    if (autoRef.current !== null) {
+      clearTimeout(autoRef.current);
+      autoRef.current = null;
+    }
     stopSpeaking();
   }, []);
 

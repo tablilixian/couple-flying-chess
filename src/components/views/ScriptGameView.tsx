@@ -1,4 +1,4 @@
-import { Script, ScriptStep, ScriptMood, StepLogEntry } from '../../types';
+import { Script, ScriptMood, StepLogEntry } from '../../types';
 import { useScriptEngine } from '../../hooks/useScriptEngine';
 import { useEffect, useRef, useCallback } from 'react';
 

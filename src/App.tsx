@@ -102,8 +102,7 @@ function AppInner({ mode }: { mode: GameMode }) {
     checkTile,
     resolveTask,
     resetGame,
-    applyStatusTile,
-    performActionStatus
+    applyStatusTile
   } = useGameState(mode);
 
   const [appSubview, setAppSubview] = useState<AppSubview>('hub');
@@ -597,6 +596,7 @@ function AppInner({ mode }: { mode: GameMode }) {
       <HistoryModal
         isOpen={isHistoryModalOpen}
         onClose={handleCloseHistory}
+        mode={mode}
       />
 
       <WinModal

@@ -1,4 +1,4 @@
-import { StatusEffect, StatusSlot, StatusTarget, PlayerStatusSlots, Theme } from '../types';
+import { StatusEffect, StatusSlot, PlayerStatusSlots, Theme } from '../types';
 import {
   parseStatusString,
   pickStatusForTarget,
@@ -16,7 +16,7 @@ function generateStatusId(): string {
 function pickPoolForSlot(
   theme: Theme | undefined,
   slot: StatusSlot,
-  target: 'male' | 'female'
+  _target: 'male' | 'female'
 ): string[] {
   const themePool =
     slot === 'action'

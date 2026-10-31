@@ -13,7 +13,7 @@ function moodBg() {
   return 'radial-gradient(ellipse at 30% 30%, #FF375F20 0%, transparent 60%), radial-gradient(ellipse at 70% 70%, #BF5AF215 0%, transparent 50%)';
 }
 
-export function EndingView({ script, stepLog, onReplay, onBackToHub, onBackToSelect }: EndingViewProps) {
+export function EndingView({ script, stepLog, onBackToHub, onBackToSelect }: EndingViewProps) {
   const timerCount = stepLog.filter(s => s.type === 'timer').length;
   const counterCount = stepLog.filter(s => s.type === 'counter').length;
   const totalDuration = script.duration;

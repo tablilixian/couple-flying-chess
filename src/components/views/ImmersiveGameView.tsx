@@ -18,13 +18,16 @@ function escapeRegex(str: string): string {
 }
 
 function replacePlaceholders(text: string, actor: ISActor, names: [string, string]): string {
-  const actorIdx = actor === 'both' ? -1 : actor;
-  const partnerIdx = actor === 0 ? 1 : actor === 1 ? 0 : -1;
-  return text
-    .replaceAll('{actor}', actorIdx >= 0 ? names[actorIdx] : '你们')
-    .replaceAll('{partner}', partnerIdx >= 0 ? names[partnerIdx] : '对方')
-    .replaceAll('{0}', names[0])
-    .replaceAll('{1}', names[1]);
+  const actorName = actor === 'both' ? '你们' : names[actor === 0 ? 0 : 1];
+  const partnerName = actor === 'both' ? '对方' : names[actor === 0 ? 1 : 0];
+  const pairs: [string, string][] = [
+    ['{actor}', actorName],
+    ['{partner}', partnerName],
+    ['{0}', names[0]],
+    ['{1}', names[1]],
+  ];
+  // 不用 String.replaceAll：ES2021 API，老 WebView（iOS<13.4、旧版微信 X5）会直接抛 TypeError
+  return pairs.reduce((acc, [token, value]) => acc.split(token).join(value), text);
 }
 
 function highlightNames(text: string, names: [string, string]): ReactNode[] {

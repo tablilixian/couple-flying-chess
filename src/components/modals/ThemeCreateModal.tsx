@@ -25,7 +25,7 @@ const MODE_BTN_COLORS: Record<GameMode, string> = {
   normal: 'bg-gradient-to-r from-blue-500 to-cyan-500'
 };
 
-export function ThemeCreateModal({ isOpen, onClose, onCreate, mode }: ThemeCreateModalProps) {
+export function ThemeCreateModal({ isOpen, onClose, onCreate, mode, existingNames = [] }: ThemeCreateModalProps) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [audience, setAudience] = useState<Theme['audience']>('common');

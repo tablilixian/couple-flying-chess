@@ -5,7 +5,7 @@ import {
   startNewSession, addEntryToCurrentSession, finalizeCurrentSession,
   discardCurrentSession, getCurrentSession,
 } from '../../utils/gameSession';
-import { ArrowLeft, Heart, Sparkles, AlertTriangle, RotateCcw, XCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Heart, Sparkles, AlertTriangle } from 'lucide-react';
 
 interface TruthDareGameViewProps {
   mode: GameMode;

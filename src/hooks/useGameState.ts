@@ -264,34 +264,28 @@ export function useGameState(mode: GameMode) {
     const name = input.name.trim();
     const desc = (input.desc || '').trim();
     if (!name) return null;
+    if (state.themes.some(t => t.name === name)) return null;
 
-    let createdId: string | null = null;
-    setState(prev => {
-      if (prev.themes.some(t => t.name === name)) {
-        return prev;
-      }
-      const existingIds = new Set(prev.themes.map(t => t.id));
-      const id = createThemeId(existingIds);
-      createdId = id;
+    // id 必须在 setState 之前生成，否则调用方拿到的永远是 null
+    const id = createThemeId(new Set(state.themes.map(t => t.id)));
 
-      return {
-        ...prev,
-        themes: [
-          ...prev.themes,
-          {
-            id,
-            name,
-            desc,
-            mode: prev.mode,
-            audience: input.audience,
-            tasks: []
-          }
-        ]
-      };
-    });
+    setState(prev => ({
+      ...prev,
+      themes: [
+        ...prev.themes,
+        {
+          id,
+          name,
+          desc,
+          mode: prev.mode,
+          audience: input.audience,
+          tasks: []
+        }
+      ]
+    }));
 
-    return createdId;
-  }, []);
+    return id;
+  }, [state.themes]);
 
   const updateThemeMeta = useCallback((themeId: string, patch: Partial<Pick<Theme, 'name' | 'desc' | 'audience'>>) => {
     setState(prev => ({
