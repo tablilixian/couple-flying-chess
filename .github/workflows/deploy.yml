@@ -29,10 +29,25 @@ jobs:
           version: 9
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      # ===== 质量闸门：任何一项不过都不允许部署 =====
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Unit tests
+        run: pnpm run test
 
       - name: Build
         run: pnpm run build
+        env:
+          # 准入口令从 GitHub Secrets 注入，不进仓库
+          VITE_APP_COUPLE_PWD: ${{ secrets.VITE_APP_COUPLE_PWD }}
+          VITE_APP_NORMAL_PWD: ${{ secrets.VITE_APP_NORMAL_PWD }}
+          VITE_APP_NOVEL_CODE: ${{ secrets.VITE_APP_NOVEL_CODE }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
