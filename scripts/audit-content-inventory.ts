@@ -135,7 +135,7 @@ line(
   `合计：情侣 ${couplePacks.length} 包 / ${sum(couplePacks, 'total')} 题    普通 ${normalPacks.length} 包 / ${sum(normalPacks, 'total')} 题    总计 ${couplePacks.length + normalPacks.length} 包 / ${sum(couplePacks, 'total') + sum(normalPacks, 'total')} 题`,
 );
 line(
-  `提问型 [Q]：${sum(couplePacks, 'Q') + sum(normalPacks, 'Q')} 条    温和档 [R]：${sum(couplePacks, 'R') + sum(normalPacks, 'R')} 条    硬核档 [H]：${sum(couplePacks, 'H') + sum(normalPacks, 'H')} 条`,
+  `提问型 [Q]：${sum(couplePacks, 'Q') + sum(normalPacks, 'Q')} 条    奖励向 [R]：${sum(couplePacks, 'R') + sum(normalPacks, 'R')} 条    惩罚向 [H]：${sum(couplePacks, 'H') + sum(normalPacks, 'H')} 条`,
 );
 const dupPacks = [...couplePacks, ...normalPacks].filter(r => r.total !== r.unique);
 line(

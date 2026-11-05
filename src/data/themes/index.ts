@@ -20,6 +20,18 @@ import coupleLooseTongue from './coupleLooseTongue';
 import coupleChangedHands from './coupleChangedHands';
 import coupleSwappedNight from './coupleSwappedNight';
 import coupleSeductiveWife from './coupleSeductiveWife';
+import coupleFirstFeelings from './coupleFirstFeelings';
+import coupleSlowWarmth from './coupleSlowWarmth';
+import coupleHiddenHeart from './coupleHiddenHeart';
+import coupleFlameProbe from './coupleFlameProbe';
+import coupleFlameDaily from './coupleFlameDaily';
+import coupleDesireAbyss from './coupleDesireAbyss';
+import coupleRoleCast from './coupleRoleCast';
+import coupleRoleLost from './coupleRoleLost';
+import coupleKinkList from './coupleKinkList';
+import coupleKinkBeyond from './coupleKinkBeyond';
+import coupleBondFirst from './coupleBondFirst';
+import coupleBondDeep from './coupleBondDeep';
 import normalTruthDare from './normalTruthDare';
 import normalFunChallenges from './normalFunChallenges';
 import normalPerformance from './normalPerformance';
@@ -46,7 +58,19 @@ const RAW_COUPLE_THEMES: Omit<Theme, 'mode'>[] = [
   coupleLooseTongue,
   coupleChangedHands,
   coupleSwappedNight,
-  coupleSeductiveWife
+  coupleSeductiveWife,
+  coupleFirstFeelings,
+  coupleSlowWarmth,
+  coupleHiddenHeart,
+  coupleFlameProbe,
+  coupleFlameDaily,
+  coupleDesireAbyss,
+  coupleRoleCast,
+  coupleRoleLost,
+  coupleKinkList,
+  coupleKinkBeyond,
+  coupleBondFirst,
+  coupleBondDeep
 ];
 
 const RAW_NORMAL_THEMES: Omit<Theme, 'mode'>[] = [

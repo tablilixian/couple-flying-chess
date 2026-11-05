@@ -4,19 +4,24 @@ import { pickTaskForRole, EVENT_KINDS } from '../utils/taskPicker';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
 
 /**
- * 「提问型任务」这一维度，以及由它带来的三个新主题包。
+ * 「提问型任务」这一维度，以及由它带来的转换包。
  *
  * 背景：飞行棋原本 489 条任务全是「要做的事」，
  * 三种棋盘事件（幸运时刻 / 意外陷阱 / 亲密追尾）抽的是同一个池子。
  * 这里用 `[Q]` 标签引入「要回答的问题」，让事件之间真正产生区别。
  *
+ * 转换包分两类：
+ * - **场景包** 9 个：一个 TD 主题 = 一个包，包内是该幻想的推进梯度
+ * - **烈度包** 12 个：一个 TD 主题按烈度档拆开，一包一档（补齐 TD 库里从未进过包的 5 个幻想）
+ *
  * 三条硬约束，任何一条被破坏都必须红：
- * 1. **老主题包行为不变** —— 没有 `[Q]` 就没有提问型，老包一字不改
- * 2. **普通模式不受影响** —— 新包只属于情侣模式
+ * 1. **手写包行为不变** —— 没有 `[Q]` 就没有提问型，手写包一字不改
+ * 2. **普通模式不受影响** —— 转换包只属于情侣模式
  * 3. **转换没有代词残留** —— 题面里不能出现「老公/老婆/男生/女生」这类第三人称
  */
 
-const NEW_PACK_IDS = [
+/** 场景包：一个 TD 主题 = 一个包 */
+const SCENE_PACK_IDS = [
   'public-eyes',
   'living-room',
   'deep-confession',
@@ -28,9 +33,30 @@ const NEW_PACK_IDS = [
   'seductive-wife'
 ];
 
+/** 烈度包：同一个幻想按烈度档拆开，包内不混档 */
+const TIER_PACK_IDS = [
+  'first-feelings',
+  'slow-warmth',
+  'hidden-heart',
+  'flame-probe',
+  'flame-daily',
+  'desire-abyss',
+  'role-cast',
+  'role-lost',
+  'kink-list',
+  'kink-beyond',
+  'bond-first',
+  'bond-deep'
+];
+
+const CONVERTED_PACK_IDS = [...SCENE_PACK_IDS, ...TIER_PACK_IDS];
+
 const coupleThemes = COUPLE_DEFAULT_THEMES;
-const newPacks = coupleThemes.filter(t => NEW_PACK_IDS.includes(t.id));
-const legacyPacks = coupleThemes.filter(t => !NEW_PACK_IDS.includes(t.id));
+const scenePacks = coupleThemes.filter(t => SCENE_PACK_IDS.includes(t.id));
+const tierPacks = coupleThemes.filter(t => TIER_PACK_IDS.includes(t.id));
+const convertedPacks = coupleThemes.filter(t => CONVERTED_PACK_IDS.includes(t.id));
+/** 手写包 —— 一条 [Q] 都没有，行为必须与改造前完全一致 */
+const legacyPacks = coupleThemes.filter(t => !CONVERTED_PACK_IDS.includes(t.id));
 
 /** 可复现的伪随机（mulberry32），让抽题测试是确定性的 */
 function seeded(seed: number): () => number {
@@ -103,8 +129,8 @@ describe('任务标签 · [Q] 提问型', () => {
 // 老包零回归
 // ─────────────────────────────────────────────────────────────
 
-describe('老主题包 · 行为不变', () => {
-  it('11 个老包一条提问型都没有', () => {
+describe('手写包 · 行为不变', () => {
+  it('11 个手写包一条提问型都没有', () => {
     expect(legacyPacks).toHaveLength(11);
     for (const theme of legacyPacks) {
       const asks = theme.tasks.filter(t => taskKindOf(t) === 'ask');
@@ -112,7 +138,7 @@ describe('老主题包 · 行为不变', () => {
     }
   });
 
-  it('老包在三种事件下抽出的都还是动作型', () => {
+  it('手写包在三种事件下抽出的都还是动作型', () => {
     for (const theme of legacyPacks) {
       for (const event of ['lucky', 'trap', 'collision'] as const) {
         for (const role of ['male', 'female'] as const) {
@@ -130,7 +156,7 @@ describe('老主题包 · 行为不变', () => {
 // ─────────────────────────────────────────────────────────────
 
 describe('事件分流 · 题型由系统随机决定', () => {
-  const pack = newPacks[0];
+  const pack = convertedPacks[0];
 
   it('幸运时刻只出动作型', () => {
     expect(EVENT_KINDS.lucky).toEqual(['act']);
@@ -165,7 +191,7 @@ describe('事件分流 · 题型由系统随机决定', () => {
   });
 
   it('最近抽过的会被避开，池子耗尽后回退', () => {
-    const theme = newPacks[0];
+    const theme = convertedPacks[0];
     const first = pickTaskForRole(theme, 'male', 'trap', [], seeded(11));
     expect(first).not.toBe('');
     const second = pickTaskForRole(theme, 'male', 'trap', [first], seeded(11));
@@ -178,39 +204,51 @@ describe('事件分流 · 题型由系统随机决定', () => {
 // 新主题包的数据质量
 // ─────────────────────────────────────────────────────────────
 
-describe('新主题包 · 数据完整性', () => {
-  it('九个包都已注册，且都属于情侣模式', () => {
-    expect(newPacks).toHaveLength(9);
-    for (const t of newPacks) {
+describe('转换包 · 数据完整性', () => {
+  it('21 个转换包都已注册，且都属于情侣模式', () => {
+    expect(scenePacks).toHaveLength(9);
+    expect(tierPacks).toHaveLength(12);
+    expect(convertedPacks).toHaveLength(21);
+    for (const t of convertedPacks) {
       expect(t.mode).toBe('couple');
     }
   });
 
-  it('普通模式拿不到这九个包', () => {
+  it('普通模式拿不到任何转换包', () => {
     const normalIds = NORMAL_DEFAULT_THEMES.map(t => t.id);
-    for (const id of NEW_PACK_IDS) expect(normalIds).not.toContain(id);
+    for (const id of CONVERTED_PACK_IDS) expect(normalIds).not.toContain(id);
   });
 
   it('角色极不平衡的包用 audience 钉给合适的一方', () => {
     // 「风情妻子」有 129 条 [F]、只有 12 条 [M] —— 只能给男方选、交给女方执行
-    const wife = newPacks.find(t => t.id === 'seductive-wife')!;
+    const wife = convertedPacks.find(t => t.id === 'seductive-wife')!;
     expect(wife.audience).toBe('male');
     expect(rolePoolSize(wife, 'female')).toBeGreaterThanOrEqual(37);
     // 其余包男女都能选
-    for (const t of newPacks.filter(x => x.id !== 'seductive-wife')) {
+    for (const t of convertedPacks.filter(x => x.id !== 'seductive-wife')) {
       expect(t.audience).toBe('common');
     }
   });
 
-  it('每个包的实际执行方池够打两局不重复（≥37）', () => {
-    for (const t of newPacks) {
+  it('场景包够打两局不重复（≥37）；烈度包至少够打一局（≥28）', () => {
+    for (const t of scenePacks) {
       expect(t.tasks.length, t.name).toBeGreaterThanOrEqual(74);
       expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(37);
     }
+    // 烈度包一包只收一个烈度档，题量天然比场景包小：
+    // 单方一局要抽 18~19 个题，所以 28 是「一局不重复」的下限
+    for (const t of tierPacks) {
+      expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(28);
+    }
+  });
+
+  it('达不到「两局不重复」的烈度包就是已知的那几个（内容变了要同步）', () => {
+    const thin = tierPacks.filter(t => executorPool(t) < 37).map(t => t.name).sort();
+    expect(thin).toEqual(['戏中失控', '束缚试探', '细水长流', '隐秘心事']);
   });
 
   it('每个包动作型与提问型都有，两种题型都玩得到', () => {
-    for (const t of newPacks) {
+    for (const t of convertedPacks) {
       const acts = t.tasks.filter(x => taskKindOf(x) === 'act');
       const asks = t.tasks.filter(x => taskKindOf(x) === 'ask');
       expect(acts.length, t.name).toBeGreaterThan(0);
@@ -220,7 +258,7 @@ describe('新主题包 · 数据完整性', () => {
 
   it('题面没有转换残留：第三人称代词 / 占位符', () => {
     const bad = /老公|老婆|妻子|丈夫|男生|女生|@@KEEP|\$1|__KEEP__/;
-    for (const t of newPacks) {
+    for (const t of convertedPacks) {
       for (const task of t.tasks) {
         const body = stripTaskTags(task);
         expect(bad.test(body), `${t.name}: ${body}`).toBe(false);
@@ -228,9 +266,9 @@ describe('新主题包 · 数据完整性', () => {
     }
   });
 
-  it('九个包之间没有重复文案', () => {
+  it('转换包之间没有重复文案', () => {
     const seen = new Map<string, string>();
-    for (const t of newPacks) {
+    for (const t of convertedPacks) {
       for (const task of t.tasks) {
         const body = stripTaskTags(task);
         expect(seen.has(body), `重复：${body}`).toBe(false);
@@ -240,14 +278,14 @@ describe('新主题包 · 数据完整性', () => {
   });
 
   it('每个包都有状态池（行动 + 条件）', () => {
-    for (const t of newPacks) {
+    for (const t of convertedPacks) {
       expect((t.actionStates || []).length, t.name).toBeGreaterThan(0);
       expect((t.conditionStates || []).length, t.name).toBeGreaterThan(0);
     }
   });
 
   it('状态池文案同样没有第三人称残留', () => {
-    for (const t of newPacks) {
+    for (const t of convertedPacks) {
       for (const s of [...(t.actionStates || []), ...(t.conditionStates || [])]) {
         expect(/老公|老婆|妻子|丈夫|男生|女生/.test(stripTaskTags(s)), s).toBe(false);
       }
@@ -260,13 +298,13 @@ describe('新主题包 · 数据完整性', () => {
 // ─────────────────────────────────────────────────────────────
 
 describe('事件 × 烈度 · 格子分流由题型承担，不由烈度标签承担', () => {
-  const pack = newPacks[0];
+  const pack = convertedPacks[0];
 
   it('转换包不标 [R]/[H]：烈度由包决定，不由标签调节', () => {
     // [R]/[H] 的原始语义是「奖励向 / 惩罚向」（来自手写包「奖惩卡池」）。
     // TD 的 difficulty 是「推进程度」不是「正反极性」，映射过去会把难度
     // 梯度误当成温和/极端塞进包 —— 既稀释包，又把格子池打歪。
-    for (const t of newPacks) {
+    for (const t of convertedPacks) {
       for (const task of t.tasks) {
         const tags = parseTaskTags(task).tags;
         expect(tags.includes('R'), `${t.name}: ${task}`).toBe(false);

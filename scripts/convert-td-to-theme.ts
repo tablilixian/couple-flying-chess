@@ -16,186 +16,9 @@
  */
 import { writeFileSync } from 'node:fs';
 import { COUPLE_QUESTIONS } from '../src/data/truthDare';
-import { TDQuestion, TDTheme } from '../src/types';
+import { TDQuestion } from '../src/types';
 
-// ─────────────────────────── 目标主题包 ───────────────────────────
-
-interface PackSpec {
-  id: string;
-  name: string;
-  desc: string;
-  tdTheme: TDTheme;
-  /**
-   * 谁可以选这个包。
-   *
-   * 飞行棋里 **包的执行方永远是对方**：
-   *   男方选 → 女方执行（所以包要够 `[F]`/`[both]`）
-   *   女方选 → 男方执行（所以包要够 `[M]`/`[both]`）
-   *
-   * 因此角色极不平衡的库要用 audience 把它钉给合适的一方：
-   * `slutwife` 有 129 条 `[F]`、只有 12 条 `[M]`，正好只给男方选。
-   */
-  audience: 'common' | 'male' | 'female';
-  actionStates: string[];
-  conditionStates: string[];
-}
-
-const PACKS: PackSpec[] = [
-  {
-    id: 'public-eyes',
-    name: '众目之下',
-    desc: '公共场合的暴露与窥视',
-    tdTheme: 'exposure',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，把手放在对方大腿外侧停 3 秒',
-      '[F] 每次掷骰前，把外套拉链往下拉一点点又拉回去',
-      '[both] 每次掷骰前，互相看一眼然后同时移开视线'
-    ],
-    conditionStates: [
-      '[M] 整局保持「在公共场合」的设定，不许说破',
-      '[F] 必须一直有身体接触，不许松开',
-      '[both] 两人扮演互不相识的陌生人，直到本局结束'
-    ]
-  },
-  {
-    id: 'living-room',
-    name: '客厅禁区',
-    desc: '客厅沙发 · 日常里的越界',
-    tdTheme: 'home',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，把对方按在沙发靠背上亲一下',
-      '[F] 每次掷骰前，跨坐到对方腿上再下来',
-      '[both] 每次掷骰前，十指相扣放在茶几上 5 秒'
-    ],
-    conditionStates: [
-      '[M] 全程用「我们家」称呼对方',
-      '[F] 必须保持「在客厅看电视」的设定',
-      '[both] 不许离开沙发范围'
-    ]
-  },
-  {
-    id: 'deep-confession',
-    name: '深夜坦白',
-    desc: '深层对话 · 灵魂拷问',
-    tdTheme: 'confession',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，说出一句一直没敢说的心里话',
-      '[F] 每次掷骰前，讲一件对方不知道的小事',
-      '[both] 每次掷骰前，额头抵着额头安静 5 秒'
-    ],
-    conditionStates: [
-      '[M] 本局不许开玩笑，认真回答每一题',
-      '[F] 必须如实回答，不许敷衍',
-      '[both] 所有问题都要正面回答，不许用「随便」搪塞'
-    ]
-  },
-  {
-    id: 'beyond-the-line',
-    name: '底线之后',
-    desc: '大胆突破 · 解锁没试过的',
-    tdTheme: 'taboo',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，说出一个你们都没试过但都好奇的事',
-      '[F] 每次掷骰前，用最轻的声音说一句你的底线',
-      '[both] 每次掷骰前，十指相扣同时问一句「敢不敢」'
-    ],
-    conditionStates: [
-      '[M] 今晚任何底线都可以重新商量',
-      '[F] 谁先说不敢，这一局就听谁的',
-      '[both] 答应对方的任何要求都不能反悔'
-    ]
-  },
-  {
-    id: 'three-way',
-    name: '三人世界',
-    desc: '旁观与被旁观 · 共享凝视',
-    tdTheme: 'third',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，描述一次「如果第三个人在场会怎样」',
-      '[F] 每次掷骰前，讲一个你们聊过的第三人话题',
-      '[both] 每次掷骰前，同时说出对方最能接受的那个「第三个人」'
-    ],
-    conditionStates: [
-      '[M] 今晚可以随时假设第三个人在场',
-      '[F] 谈论第三个人时不许表现出排斥',
-      '[both] 任何关于第三人的话题都要正面回答'
-    ]
-  },
-  {
-    id: 'loose-tongue',
-    name: '口无遮拦',
-    desc: '言语挑逗 · 粗口刺激',
-    tdTheme: 'dirtytalk',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，用最直接的词夸对方一次',
-      '[F] 每次掷骰前，说一句让对方脸红的台词',
-      '[both] 每次掷骰前，比一次谁先绷不住'
-    ],
-    conditionStates: [
-      '[M] 今晚说脏话不许收敛',
-      '[F] 不许用手或别的东西代替说话',
-      '[both] 嘴上的话必须和动作同步'
-    ]
-  },
-  {
-    id: 'changed-hands',
-    name: '易主之夜',
-    desc: '被夺走与看着被夺走',
-    tdTheme: 'cuckold',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，讲一次「看着对方属于别人」的想象',
-      '[F] 每次掷骰前，演一次「不再属于你」的样子',
-      '[both] 每次掷骰前，换一个位置扮演主导方'
-    ],
-    conditionStates: [
-      '[M] 今晚允许对方「不把你当回事」',
-      '[F] 必须真的把对方当成「别人的」',
-      '[both] 交换主导权后不许笑场'
-    ]
-  },
-  {
-    id: 'swapped-night',
-    name: '互换之夜',
-    desc: '伴侣共享 · 换偶幻想',
-    tdTheme: 'swing',
-    audience: 'common',
-    actionStates: [
-      '[M] 每次掷骰前，说一个你想「让出去」的特权',
-      '[F] 每次掷骰前，说一个你想「独占」的时刻',
-      '[both] 每次掷骰前，一起数三个你们都能接受的原则'
-    ],
-    conditionStates: [
-      '[M] 今晚不能表现出占有欲',
-      '[F] 你提出的底线对方必须尊重',
-      '[both] 任何决定都由两人共同做出'
-    ]
-  },
-  {
-    id: 'seductive-wife',
-    name: '风情妻子',
-    desc: '风情万种 · 属于对方的妻子',
-    tdTheme: 'slutwife',
-    // 129 条 [F] / 12 条 [M] —— 只给男方选，交给女方执行
-    audience: 'male',
-    actionStates: [
-      '[M] 每次掷骰前，用一句话形容对方今天有多迷人',
-      '[F] 每次掷骰前，诱惑对方一次（用声音或姿态）',
-      '[both] 每次掷骰前，互相比一句「换我也会选你」'
-    ],
-    conditionStates: [
-      '[M] 今晚由对方掌握节奏，你只负责配合',
-      '[F] 保持「属于对方」的姿态，不许主动收回',
-      '[both] 今晚所有的主导权都交给对方'
-    ]
-  }
-];
+import { PACKS, type PackSpec } from './td-pack-specs';
 
 // ─────────────────────────── 人称归一化 ───────────────────────────
 
@@ -287,6 +110,26 @@ const OVERRIDES = new Map<string, string>([
   [
     '让你妻子给你戴上一顶"绿帽子"（可以是实物或指代），然后她赞美你',
     '让对方给你戴上一顶"绿帽子"（可以是实物或指代），然后对方赞美你'
+  ],
+
+  // ── 拆成烈度包后新暴露的读不通句子 ──
+  // 「他」和「老公」各自会被替换成「对方」，两个「对方」撞在一起就成了病句
+  [
+    '他让你喊他大鸡巴老公，你喊的时候是什么心理？兴奋还是羞耻？',
+    '对方让你喊对方大鸡巴时，你喊的时候是什么心理？兴奋还是羞耻？'
+  ],
+  [
+    '你想让我叫你爸爸/主人还是老公/老婆？',
+    '你想让我叫你爸爸/主人，还是用平时的称呼？'
+  ],
+  [
+    '你最想让我穿上什么制服然后操我/被我操？',
+    '你最想让我穿上什么制服，然后操对方，或者反过来让对方操？'
+  ],
+  // 引号里的「他/她」不会被归一化，情侣包里没有第三人，留着就是歧义
+  [
+    '给对方点外卖，备注里写暗语"多放辣，辣到他/她受不了为止"暗示今晚火热',
+    '给对方点外卖，备注里写暗语"多放辣，辣到对方受不了为止"暗示今晚火热'
   ]
 ]);
 
@@ -391,8 +234,20 @@ function toTask(q: TDQuestion): string {
 
 // ─────────────────────────── 生成 ───────────────────────────
 
+/**
+ * 跨包去重：同一条题面不能同时出现在两个包里。
+ *
+ * TD 原库里有跨主题的重复（例如「你最大胆的一次性经历是什么？」既在 taboo 又在 spicy），
+ * 拆包后就会变成两个包里各有一份，玩起来像撞题。
+ *
+ * PACKS 的顺序即优先级：前面的包先占位，后面的包遇到同文就让位。
+ */
+const usedBodies = new Set<string>();
+
 function buildPack(spec: PackSpec) {
-  const questions = COUPLE_QUESTIONS.filter(q => q.theme === spec.tdTheme);
+  const questions = COUPLE_QUESTIONS.filter(
+    q => q.theme === spec.tdTheme && (!spec.tiers || spec.tiers.includes(q.difficulty))
+  );
   // TD 原库自身有重复文案（同一句出现两次）；转换后同文更是没有意义，直接去重
   const seen = new Set<string>();
   const items: { task: string; raw: string }[] = [];
@@ -401,7 +256,9 @@ function buildPack(spec: PackSpec) {
     const task = toTask(q);
     const body = bodyOf(task);
     if (seen.has(body)) { dropped.push(body); continue; }
+    if (usedBodies.has(body)) { dropped.push(`[跨包重复] ${body}`); continue; }
     seen.add(body);
+    usedBodies.add(body);
     items.push({ task, raw: q.text });
   }
   return { spec, questions, items, tasks: items.map(i => i.task), dropped };
@@ -425,6 +282,10 @@ function toSource(pack: ReturnType<typeof buildPack>): string {
   lines.push('// 本包是「场景包」：包内题目的烈度是这个场景的推进梯度（入门 → 极限），');
   lines.push('// 不是混入的温和题，所以整体保留；格子分流由「动作型 / 提问型」承担，');
   lines.push('// 不使用 [R]/[H]（那两个标签的语义是奖励向 / 惩罚向，来自「奖惩卡池」）。');
+  if (spec.tierNote) {
+    lines.push('//');
+    lines.push(`// ${spec.tierNote}`);
+  }
   lines.push('//');
   lines.push('');
   lines.push(`const ${spec.id.replace(/-([a-z])/g, (_, c) => c.toUpperCase())}: Omit<Theme, 'mode'> = {`);
@@ -473,7 +334,8 @@ function report(pack: ReturnType<typeof buildPack>) {
     if (/他/.test(raw) && /她/.test(raw)) issues.push('双人人称');
     if ((body.match(/对方/g) || []).length >= 3) issues.push('多次指代');
     if (/男生|女生/.test(body)) issues.push('残留性别词');
-    if (/[他她](?!们)/.test(body)) issues.push('残留他她');
+    // 「他妈」是脏话不是指代，别当残留他她
+    if (/[他她](?!们|妈)/.test(body)) issues.push('残留他她');
     if (/老婆|老公|妻子|丈夫/.test(body)) issues.push('残留伴侣称谓');
     if (/@@|\$1|__KEEP/.test(body)) issues.push('占位符残留');
     if (issues.length > 0) {

@@ -151,28 +151,35 @@ console.log(`三格同池：${sameCount} / ${COUPLE_DEFAULT_THEMES.length} 个�
 
 console.log('\n== 执行方池全集（一局内该方可能被抽到的全部题目）==');
 console.log('   低于 37 = 单方一局抽 18~19 个题时，玩两局必然重样');
-console.log(pad('包名', 14), pad('男方', 8), pad('女方', 8), '够两局不重复');
+console.log('   执行方由 audience 决定：包的执行方永远是对方');
+console.log('     audience=male   → 只有男方能选 → 女方执行');
+console.log('     audience=female → 只有女方能选 → 男方执行');
+console.log('     audience=common → 两边都能选 → 取较小的一侧');
+console.log(pad('包名', 14), pad('执行方', 8), pad('执行方池', 9), '够两局不重复');
 console.log('-'.repeat(60));
 
 const shortPacks: string[] = [];
 for (const pack of COUPLE_DEFAULT_THEMES) {
   const tasks = pack.tasks;
-  const unions: Record<'male' | 'female', Set<string>> = { male: new Set(), female: new Set() };
+  const executorRoles: ('male' | 'female')[] =
+    pack.audience === 'male' ? ['female'] : pack.audience === 'female' ? ['male'] : ['male', 'female'];
 
-  for (const role of ['male', 'female'] as const) {
+  const unionFor = (role: 'male' | 'female'): number => {
+    const set = new Set<string>();
     for (const event of EVENTS) {
       for (const pool of poolsOfCell(tasks, event, role)) {
-        for (const t of pool) unions[role].add(t);
+        for (const t of pool) set.add(t);
       }
     }
-  }
+    return set.size;
+  };
 
-  const m = unions.male.size;
-  const f = unions.female.size;
-  const min = Math.min(m, f);
-  const ok = min >= 37;
-  if (!ok) shortPacks.push(`${pack.name} ${min}`);
-  console.log(pad(pack.name, 14), pad(String(m), 8), pad(String(f), 8), ok ? '够' : '不够');
+  const sizes = executorRoles.map(unionFor);
+  const pool = Math.min(...sizes);
+  const ok = pool >= 37;
+  if (!ok) shortPacks.push(`${pack.name} ${pool}`);
+  const roleLabel = executorRoles.length === 1 ? (executorRoles[0] === 'male' ? '男方' : '女方') : '双方';
+  console.log(pad(pack.name, 14), pad(roleLabel, 8), pad(String(pool), 9), ok ? '够' : '不够');
 }
 console.log('-'.repeat(60));
 console.log(`不够两局不重复的包：${shortPacks.length} 个 → ${shortPacks.join('、')}`);
