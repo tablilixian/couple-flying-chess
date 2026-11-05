@@ -13,8 +13,8 @@ const COVER_GRADIENTS: Record<string, string> = {
 };
 
 const MODE_LABEL: Record<string, string> = {
-  couple: '💕 情侣剧场',
-  normal: '👨‍👩‍👧‍👦 亲子剧场',
+  couple: '剧本库',
+  normal: '剧本库',
 };
 
 export function ScriptSelectView({ mode, onSelect, onBack }: ScriptSelectViewProps) {

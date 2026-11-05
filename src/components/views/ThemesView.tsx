@@ -14,8 +14,8 @@ const audienceLabel: Record<Theme['audience'], string> = {
 };
 
 const MODE_STYLES: Record<GameMode, { label: string; createBg: string }> = {
-  couple: { label: '💕 情侣题库', createBg: 'bg-pink-500' },
-  normal: { label: '🎲 普通题库', createBg: 'bg-blue-500' }
+  couple: { label: '我的题库', createBg: 'bg-pink-500' },
+  normal: { label: '我的题库', createBg: 'bg-blue-500' }
 };
 
 export function ThemesView({ themes, mode, onCreateTheme, onEditTheme }: ThemesViewProps) {

@@ -50,8 +50,8 @@ const MODE_CONFIG: Record<GameMode, {
   navActiveClass: string;
 }> = {
   couple: {
-    title: '情侣飞行棋',
-    subtitle: "Couple's Game",
+    title: '飞行棋',
+    subtitle: 'Flying Chess',
     accentColor: '#FF375F',
     accentBg: 'bg-pink-500',
     accentText: 'text-pink-400',
@@ -60,8 +60,8 @@ const MODE_CONFIG: Record<GameMode, {
     navActiveClass: 'text-pink-400'
   },
   normal: {
-    title: '普通飞行棋',
-    subtitle: 'Party Game',
+    title: '飞行棋',
+    subtitle: 'Flying Chess',
     accentColor: '#0A84FF',
     accentBg: 'bg-blue-500',
     accentText: 'text-blue-400',
@@ -703,7 +703,7 @@ function AppInner({ mode }: { mode: GameMode }) {
         <div className="bg-gray-900 rounded-2xl p-6 w-[320px] border border-gray-700 shadow-xl">
           <h3 className="text-white text-lg font-semibold mb-1">访问设置</h3>
           <p className={`text-sm mb-4 ${config.accentText}`}>
-            {mode === 'couple' ? '💕 情侣模式' : '🎲 普通模式'} · 4 位数字，仅保存在本机
+            4 位数字，仅保存在本机浏览器
           </p>
           <div className="text-xs text-gray-500 mb-1.5">进入口令</div>
           <input

@@ -15,11 +15,6 @@ const audienceOptions: Array<{ value: Theme['audience']; label: string }> = [
   { value: 'female', label: '仅限女方' }
 ];
 
-const MODE_LABELS: Record<GameMode, string> = {
-  couple: '💕 情侣模式',
-  normal: '🎲 普通模式'
-};
-
 const MODE_BTN_COLORS: Record<GameMode, string> = {
   couple: 'bg-gradient-to-r from-pink-500 to-rose-500',
   normal: 'bg-gradient-to-r from-blue-500 to-cyan-500'
@@ -62,7 +57,7 @@ export function ThemeCreateModal({ isOpen, onClose, onCreate, mode, existingName
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-white">新建主题</h3>
           <div className={`text-xs ${mode === 'couple' ? 'text-pink-400' : 'text-blue-400'}`}>
-            {MODE_LABELS[mode]}
+            仅对本人生效
           </div>
         </div>
 

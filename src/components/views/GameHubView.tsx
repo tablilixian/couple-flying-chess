@@ -24,7 +24,7 @@ export function GameHubView({ mode, onNavigate }: GameHubViewProps) {
         <div className="text-center">
           <div className="text-sm font-semibold tracking-widest mb-1"
             style={{ color: accentColor }}>
-            {mode === 'couple' ? '💕 情侣模式' : '🎲 普通模式'}
+            飞行棋
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">游戏中心</h1>
           <p className="text-sm text-gray-500 mt-2">选择一种方式，开启今晚的二人时光</p>

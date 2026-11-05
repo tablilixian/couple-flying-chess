@@ -21,8 +21,6 @@ export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
   const [selectedSession, setSelectedSession] = useState<GameSession | null>(null);
   const [pending, setPending] = useState<GameSession | null>(null);
 
-  const modeLabel = mode === 'couple' ? '情侣' : '普通';
-
   useEffect(() => {
     if (isOpen) {
       const sessions = loadSessions().filter(s => s.mode === mode);
@@ -104,7 +102,7 @@ export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
               </button>
             )}
             <h2 className="text-lg font-bold text-white">
-              {view === 'list' ? `${modeLabel}模式 · 游戏历史` : '局详情'}
+              {view === 'list' ? '游戏历史' : '局详情'}
             </h2>
           </div>
           <div className="flex items-center gap-2">

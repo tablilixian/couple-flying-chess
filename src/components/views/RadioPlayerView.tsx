@@ -328,7 +328,7 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
           <div className="text-center">
             <div className="text-4xl mb-3">📻</div>
             <div className="text-gray-400 text-sm mb-1">
-              {mode === 'normal' ? '普通模式广播剧即将上线' : '暂无内容'}
+              {mode === 'normal' ? '广播剧即将上线' : '暂无内容'}
             </div>
             <div className="text-gray-600 text-xs">敬请期待</div>
           </div>

@@ -20,23 +20,29 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe('准入口令配置 · 源码不再内置固定口令', () => {
-  it('没有部署期配置、也没有本地口令时，需要首次设置', async () => {
-    const { needsInitialSetup, getEffectivePassword, getEffectiveNovelCode } = await import('../config/access');
-    expect(needsInitialSetup()).toBe(true);
-    expect(getEffectivePassword('couple')).toBeNull();
-    expect(getEffectivePassword('normal')).toBeNull();
-    expect(getEffectiveNovelCode()).toBeNull();
+// ─────────────────────────────────────────────────────────────
+// 准入口令：一码一门。
+// 核心约束：**网页上不得出现任何模式名 / 空间名**，
+// 知道「还有情侣模式」这件事本身就是秘密。
+// ─────────────────────────────────────────────────────────────
+
+describe('准入口令 · 一码一门', () => {
+  it('未配置时回退到内置默认口令（开箱即用）', async () => {
+    const { getEffectivePassword, getEffectiveNovelCode } = await import('../config/access');
+    expect(getEffectivePassword('couple')).toBe('1314');
+    expect(getEffectivePassword('normal')).toBe('1234');
+    expect(getEffectiveNovelCode()).toBe('9527');
   });
 
-  it('部署期配置生效，可直接进入对应模式', async () => {
+  it('部署期配置生效，可直接进入对应空间', async () => {
     vi.stubEnv('VITE_APP_COUPLE_PWD', '8642');
     vi.stubEnv('VITE_APP_NORMAL_PWD', '9753');
-    const { getEffectivePassword, needsInitialSetup } = await import('../config/access');
+    vi.stubEnv('VITE_APP_NOVEL_CODE', '5858');
+    const { getEffectivePassword, getEffectiveNovelCode } = await import('../config/access');
 
     expect(getEffectivePassword('couple')).toBe('8642');
     expect(getEffectivePassword('normal')).toBe('9753');
-    expect(needsInitialSetup()).toBe(false);
+    expect(getEffectiveNovelCode()).toBe('5858');
   });
 
   it('用户本机自定义的口令优先于部署期配置', async () => {
@@ -48,10 +54,10 @@ describe('准入口令配置 · 源码不再内置固定口令', () => {
     expect(getEffectivePassword('couple')).toBe('1234');
   });
 
-  it('配置项少于 4 位视为无效，不做半截口令', async () => {
+  it('配置项少于 4 位视为无效，回退默认口令', async () => {
     vi.stubEnv('VITE_APP_COUPLE_PWD', '12');
     const { getEffectivePassword } = await import('../config/access');
-    expect(getEffectivePassword('couple')).toBeNull();
+    expect(getEffectivePassword('couple')).toBe('1314');
   });
 
   it('书房暗号遵循同样的优先级规则', async () => {
@@ -64,7 +70,28 @@ describe('准入口令配置 · 源码不再内置固定口令', () => {
     expect(getEffectiveNovelCode()).toBe('1122');
   });
 
-  it('未设置过口令时 getStoredPassword 返回 null 而不是源码默认值', async () => {
+  it('matchAccessCode：哪个口令对应哪个空间', async () => {
+    const { matchAccessCode } = await import('../config/access');
+    expect(matchAccessCode('1314')).toBe('couple');
+    expect(matchAccessCode('1234')).toBe('normal');
+    expect(matchAccessCode('9527')).toBe('novel');
+  });
+
+  it('matchAccessCode：口令错误返回 null，不泄露任何分支信息', async () => {
+    const { matchAccessCode } = await import('../config/access');
+    expect(matchAccessCode('0000')).toBeNull();
+    expect(matchAccessCode('131')).toBeNull();
+    expect(matchAccessCode('')).toBeNull();
+  });
+
+  it('本地改过口令后，matchAccessCode 跟着走', async () => {
+    const { matchAccessCode, setStoredPassword } = await import('../config/access');
+    setStoredPassword('couple', '5678');
+    expect(matchAccessCode('5678')).toBe('couple');
+    expect(matchAccessCode('1314')).toBeNull();
+  });
+
+  it('未设置过口令时 getStoredPassword 返回 null（而不是默认值）', async () => {
     const { getStoredPassword } = await import('../config/access');
     expect(getStoredPassword('couple')).toBeNull();
     expect(getStoredPassword('normal')).toBeNull();

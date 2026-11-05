@@ -183,9 +183,7 @@ export function ImmersiveSelectView({ mode, onStart, onBack }: ImmersiveSelectVi
           <div className="flex flex-col items-center justify-center h-full text-center">
             <span className="text-4xl mb-4 opacity-30">🎭</span>
             <p className="text-gray-600 text-sm">
-              {mode === 'normal'
-                ? '当前模式暂无剧本，请切换到情侣模式体验完整内容'
-                : '暂无可用剧本'}
+              暂无可用剧本
             </p>
           </div>
         ) : scenarios.map(s => (
