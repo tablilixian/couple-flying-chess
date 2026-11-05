@@ -11,6 +11,9 @@ import coupleRewardPunish from './coupleRewardPunish';
 import coupleDominator from './coupleDominator';
 import coupleQueen from './coupleQueen';
 import coupleContractLovers from './coupleContractLovers';
+import couplePublicEyes from './couplePublicEyes';
+import coupleLivingRoom from './coupleLivingRoom';
+import coupleDeepConfession from './coupleDeepConfession';
 import normalTruthDare from './normalTruthDare';
 import normalFunChallenges from './normalFunChallenges';
 import normalPerformance from './normalPerformance';
@@ -28,7 +31,10 @@ const RAW_COUPLE_THEMES: Omit<Theme, 'mode'>[] = [
   coupleRewardPunish,
   coupleDominator,
   coupleQueen,
-  coupleContractLovers
+  coupleContractLovers,
+  couplePublicEyes,
+  coupleLivingRoom,
+  coupleDeepConfession
 ];
 
 const RAW_NORMAL_THEMES: Omit<Theme, 'mode'>[] = [

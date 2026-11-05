@@ -1,0 +1,251 @@
+import { describe, it, expect } from 'vitest';
+import { parseTaskTags, taskKindOf, stripTaskTags } from '../utils/personalizeTask';
+import { pickTaskForRole, EVENT_KINDS } from '../utils/taskPicker';
+import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
+
+/**
+ * 「提问型任务」这一维度，以及由它带来的三个新主题包。
+ *
+ * 背景：飞行棋原本 489 条任务全是「要做的事」，
+ * 三种棋盘事件（幸运时刻 / 意外陷阱 / 亲密追尾）抽的是同一个池子。
+ * 这里用 `[Q]` 标签引入「要回答的问题」，让事件之间真正产生区别。
+ *
+ * 三条硬约束，任何一条被破坏都必须红：
+ * 1. **老主题包行为不变** —— 没有 `[Q]` 就没有提问型，老包一字不改
+ * 2. **普通模式不受影响** —— 新包只属于情侣模式
+ * 3. **转换没有代词残留** —— 题面里不能出现「老公/老婆/男生/女生」这类第三人称
+ */
+
+const NEW_PACK_IDS = ['public-eyes', 'living-room', 'deep-confession'];
+
+const coupleThemes = COUPLE_DEFAULT_THEMES;
+const newPacks = coupleThemes.filter(t => NEW_PACK_IDS.includes(t.id));
+const legacyPacks = coupleThemes.filter(t => !NEW_PACK_IDS.includes(t.id));
+
+/** 可复现的伪随机（mulberry32），让抽题测试是确定性的 */
+function seeded(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function rolePoolSize(theme: { tasks: string[] }, role: 'male' | 'female'): number {
+  let n = 0;
+  for (const t of theme.tasks) {
+    const { tags } = parseTaskTags(t);
+    if (tags.includes('M')) { if (role === 'male') n++; }
+    else if (tags.includes('F')) { if (role === 'female') n++; }
+    else n++;
+  }
+  return n;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 标签机制
+// ─────────────────────────────────────────────────────────────
+
+describe('任务标签 · [Q] 提问型', () => {
+  it('解析 [Q]，且能与其他标签叠加', () => {
+    expect(parseTaskTags('[Q] 问一句').tags).toEqual(['Q']);
+    expect(parseTaskTags('[M][Q] 问一句').tags).toEqual(['M', 'Q']);
+    expect(parseTaskTags('[both][Q][H] 问一句').tags).toEqual(['both', 'Q', 'H']);
+    expect(stripTaskTags('[M][Q] 问一句')).toBe('问一句');
+  });
+
+  it('没有 [Q] 的一律视为动作型（向后兼容）', () => {
+    expect(taskKindOf('[M] 做一件事')).toBe('act');
+    expect(taskKindOf('[both][H] 做一件事')).toBe('act');
+    expect(taskKindOf('[M][Q] 问一个问题')).toBe('ask');
+  });
+
+  it('[Q] 不会影响执行方判定', () => {
+    // roleFromTags 只认 M/F/both，其余标签被忽略
+    expect(parseTaskTags('[M][Q] x').tags.includes('M')).toBe(true);
+    expect(parseTaskTags('[Q][F] x').tags.includes('F')).toBe(true);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 老包零回归
+// ─────────────────────────────────────────────────────────────
+
+describe('老主题包 · 行为不变', () => {
+  it('11 个老包一条提问型都没有', () => {
+    expect(legacyPacks).toHaveLength(11);
+    for (const theme of legacyPacks) {
+      const asks = theme.tasks.filter(t => taskKindOf(t) === 'ask');
+      expect(asks, `${theme.name} 不该有提问型`).toHaveLength(0);
+    }
+  });
+
+  it('老包在三种事件下抽出的都还是动作型', () => {
+    for (const theme of legacyPacks) {
+      for (const event of ['lucky', 'trap', 'collision'] as const) {
+        for (const role of ['male', 'female'] as const) {
+          const task = pickTaskForRole(theme, role, event, [], seeded(7));
+          expect(task, `${theme.name}/${event}`).not.toBe('');
+          expect(taskKindOf(task), `${theme.name}/${event}`).toBe('act');
+        }
+      }
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 事件分流
+// ─────────────────────────────────────────────────────────────
+
+describe('事件分流 · 题型由系统随机决定', () => {
+  const pack = newPacks[0];
+
+  it('幸运时刻只出动作型', () => {
+    expect(EVENT_KINDS.lucky).toEqual(['act']);
+    for (let i = 0; i < 200; i++) {
+      const task = pickTaskForRole(pack, 'female', 'lucky', [], seeded(i));
+      expect(taskKindOf(task)).toBe('act');
+    }
+  });
+
+  it('意外陷阱两类都会抽到，且由系统决定', () => {
+    expect(EVENT_KINDS.trap).toEqual(['act', 'ask']);
+    const kinds = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      kinds.add(taskKindOf(pickTaskForRole(pack, 'female', 'trap', [], seeded(i))));
+    }
+    expect(kinds).toEqual(new Set(['act', 'ask']));
+  });
+
+  it('亲密追尾两类都会抽到', () => {
+    const kinds = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      kinds.add(taskKindOf(pickTaskForRole(pack, 'male', 'collision', [], seeded(i))));
+    }
+    expect(kinds).toEqual(new Set(['act', 'ask']));
+  });
+
+  it('主题里没有某种题型时自动退到存在的题型，不会抽空', () => {
+    for (const theme of legacyPacks) {
+      const task = pickTaskForRole(theme, 'male', 'trap', [], seeded(3));
+      expect(task).not.toBe('');
+    }
+  });
+
+  it('最近抽过的会被避开，池子耗尽后回退', () => {
+    const theme = newPacks[0];
+    const first = pickTaskForRole(theme, 'male', 'trap', [], seeded(11));
+    expect(first).not.toBe('');
+    const second = pickTaskForRole(theme, 'male', 'trap', [first], seeded(11));
+    expect(second).not.toBe('');
+    expect(second).not.toBe(first);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 新主题包的数据质量
+// ─────────────────────────────────────────────────────────────
+
+describe('新主题包 · 数据完整性', () => {
+  it('三个包都已注册，且属于情侣模式', () => {
+    expect(newPacks).toHaveLength(3);
+    for (const t of newPacks) {
+      expect(t.mode).toBe('couple');
+      expect(t.audience).toBe('common');
+    }
+  });
+
+  it('普通模式拿不到这三个包', () => {
+    const normalIds = NORMAL_DEFAULT_THEMES.map(t => t.id);
+    for (const id of NEW_PACK_IDS) expect(normalIds).not.toContain(id);
+  });
+
+  it('每个包题量够打两局（≥74），且男女执行池都不薄', () => {
+    for (const t of newPacks) {
+      expect(t.tasks.length, t.name).toBeGreaterThanOrEqual(74);
+      expect(rolePoolSize(t, 'male'), t.name).toBeGreaterThanOrEqual(74);
+      expect(rolePoolSize(t, 'female'), t.name).toBeGreaterThanOrEqual(74);
+    }
+  });
+
+  it('每个包动作型与提问型都有，两种题型都玩得到', () => {
+    for (const t of newPacks) {
+      const acts = t.tasks.filter(x => taskKindOf(x) === 'act');
+      const asks = t.tasks.filter(x => taskKindOf(x) === 'ask');
+      expect(acts.length, t.name).toBeGreaterThan(0);
+      expect(asks.length, t.name).toBeGreaterThan(0);
+    }
+  });
+
+  it('题面没有转换残留：第三人称代词 / 占位符', () => {
+    const bad = /老公|老婆|妻子|丈夫|男生|女生|@@KEEP|\$1|__KEEP__/;
+    for (const t of newPacks) {
+      for (const task of t.tasks) {
+        const body = stripTaskTags(task);
+        expect(bad.test(body), `${t.name}: ${body}`).toBe(false);
+      }
+    }
+  });
+
+  it('三个包之间没有重复文案', () => {
+    const seen = new Map<string, string>();
+    for (const t of newPacks) {
+      for (const task of t.tasks) {
+        const body = stripTaskTags(task);
+        expect(seen.has(body), `重复：${body}`).toBe(false);
+        seen.set(body, t.name);
+      }
+    }
+  });
+
+  it('每个包都有状态池（行动 + 条件）', () => {
+    for (const t of newPacks) {
+      expect((t.actionStates || []).length, t.name).toBeGreaterThan(0);
+      expect((t.conditionStates || []).length, t.name).toBeGreaterThan(0);
+    }
+  });
+
+  it('状态池文案同样没有第三人称残留', () => {
+    for (const t of newPacks) {
+      for (const s of [...(t.actionStates || []), ...(t.conditionStates || [])]) {
+        expect(/老公|老婆|妻子|丈夫|男生|女生/.test(stripTaskTags(s)), s).toBe(false);
+      }
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 事件与烈度的交叉
+// ─────────────────────────────────────────────────────────────
+
+describe('事件 × 烈度 · 三个事件抽到的内容真正不同', () => {
+  const pack = newPacks[0];
+
+  it('幸运时刻不会抽到 [H] 硬核档', () => {
+    for (let i = 0; i < 200; i++) {
+      const task = pickTaskForRole(pack, 'female', 'lucky', [], seeded(i));
+      expect(parseTaskTags(task).tags.includes('H'), task).toBe(false);
+    }
+  });
+
+  it('意外陷阱优先抽 [H] 硬核档', () => {
+    let hard = 0;
+    for (let i = 0; i < 200; i++) {
+      const task = pickTaskForRole(pack, 'male', 'trap', [], seeded(i));
+      if (parseTaskTags(task).tags.includes('H')) hard++;
+    }
+    expect(hard).toBeGreaterThan(150);
+  });
+
+  it('亲密追尾既不抽 [H] 也不抽 [R]', () => {
+    for (let i = 0; i < 200; i++) {
+      const task = pickTaskForRole(pack, 'female', 'collision', [], seeded(i));
+      const tags = parseTaskTags(task).tags;
+      expect(tags.includes('H'), task).toBe(false);
+      expect(tags.includes('R'), task).toBe(false);
+    }
+  });
+});

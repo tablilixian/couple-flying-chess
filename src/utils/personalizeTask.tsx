@@ -1,9 +1,23 @@
 import { type ReactNode } from 'react';
 import { Player } from '../types';
 
-export type TaskTag = 'M' | 'F' | 'both' | 'H' | 'R';
+export type TaskTag = 'M' | 'F' | 'both' | 'H' | 'R' | 'Q';
 
-const TASK_TAG_RE = /^\[(M|F|both|H|R)\]\s*/;
+const TASK_TAG_RE = /^\[(M|F|both|H|R|Q)\]\s*/;
+
+/**
+ * 题型：
+ * - `act`：要执行的一个动作（祈使句）
+ * - `ask`：要回答对方的一个问题（疑问句）
+ *
+ * 用 `[Q]` 标签标记提问型。**没有 `[Q]` 的历史内容一律视为 `act`**，
+ * 因此老主题包的行为完全不变。
+ */
+export type TaskKind = 'act' | 'ask';
+
+export function taskKindOf(task: string): TaskKind {
+  return parseTaskTags(task).tags.includes('Q') ? 'ask' : 'act';
+}
 
 export function parseTaskTags(task: string): { tags: TaskTag[]; text: string } {
   const tags: TaskTag[] = [];

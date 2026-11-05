@@ -10,9 +10,11 @@ import {
 import { generateSpiralPath, generateBoardMap, calculateNewPosition } from '../utils/gameLogic';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
 import { buildStatus, buildOpeningStatus, applyStatusToSlots } from '../utils/statusLogic';
-import { personalizeTask, parseTaskTags } from '../utils/personalizeTask';
+import { personalizeTask, taskKindOf } from '../utils/personalizeTask';
+import { pickTaskForRole as pickTask } from '../utils/taskPicker';
 
 const RECENT_TASKS_LIMIT = 10;
+
 
 const INITIAL_PLAYERS: Record<GameMode, Player[]> = {
   couple: [
@@ -607,63 +609,26 @@ export function useGameState(mode: GameMode) {
     const activePlayer = state.players[state.turn];
     const opponent = state.players[state.turn === 0 ? 1 : 0];
 
-    const pickTaskForRole = (
-      theme: Theme | undefined,
-      executorRole: Player['role'],
-      eventType: 'lucky' | 'trap' | 'collision',
-      recentTasks: string[]
-    ): string => {
-      if (!theme || theme.tasks.length === 0) return '';
-
-      const roleFromTags = (tags: ReturnType<typeof parseTaskTags>['tags']): 'male' | 'female' | 'both' => {
-        if (tags.includes('M')) return 'male';
-        if (tags.includes('F')) return 'female';
-        return 'both';
-      };
-
-      const eligible = theme.tasks.filter(t => {
-        const { tags } = parseTaskTags(t);
-        const roleTag = roleFromTags(tags);
-        if (roleTag === 'male' && executorRole !== 'male') return false;
-        if (roleTag === 'female' && executorRole !== 'female') return false;
-        if (eventType === 'trap' && tags.includes('R')) return false;
-        if (eventType === 'lucky' && tags.includes('H')) return false;
-        if (eventType === 'collision' && (tags.includes('R') || tags.includes('H'))) return false;
-        return true;
-      });
-
-      let pool = eligible.length > 0 ? eligible : theme.tasks;
-
-      if (eventType === 'trap') {
-        const hard = pool.filter(t => parseTaskTags(t).tags.includes('H'));
-        if (hard.length > 0) pool = hard;
-      } else if (eventType === 'lucky') {
-        const reward = pool.filter(t => parseTaskTags(t).tags.includes('R'));
-        if (reward.length > 0) pool = reward;
-      }
-
-      const fresh = pool.filter(t => !recentTasks.includes(t));
-      const pickFrom = fresh.length > 0 ? fresh : pool;
-      return pickFrom[Math.floor(Math.random() * pickFrom.length)] || '';
-    };
-
     if (landingStep === 48) {
       return 'win';
     }
 
     if (landingStep !== 0 && landingStep === opponent.step) {
       const theme = state.themes.find(t => t.id === activePlayer.themeId);
-      const rawTask = pickTaskForRole(theme, opponent.role, 'collision', state.recentTasks);
+      const rawTask = pickTask(theme, opponent.role, 'collision', state.recentTasks);
       if (rawTask) recordRecentTask(rawTask);
+      const isAsk = rawTask ? taskKindOf(rawTask) === 'ask' : false;
 
       return {
         type: 'collision',
         initiatorPlayerId: activePlayer.id,
         executorPlayerId: opponent.id,
-        title: '亲密追尾',
-        subtitle: `任务来自「${theme?.name || ''}」`,
-        icon: 'handshake',
-        color: 'text-yellow-400',
+        title: isAsk ? '亲密追问' : '亲密追尾',
+        subtitle: isAsk
+          ? `对方问你一个问题 · 来自「${theme?.name || ''}」`
+          : `任务来自「${theme?.name || ''}」`,
+        icon: isAsk ? 'message-circle' : 'handshake',
+        color: isAsk ? 'text-[#5E5CE6]' : 'text-yellow-400',
         task: personalizeTask(rawTask, opponent, activePlayer),
         taskSourceId: activePlayer.themeId || ''
       };
@@ -673,17 +638,20 @@ export function useGameState(mode: GameMode) {
 
     if (tileType === 'lucky') {
       const theme = state.themes.find(t => t.id === activePlayer.themeId);
-      const rawTask = pickTaskForRole(theme, opponent.role, 'lucky', state.recentTasks);
+      const rawTask = pickTask(theme, opponent.role, 'lucky', state.recentTasks);
       if (rawTask) recordRecentTask(rawTask);
+      const isAsk = rawTask ? taskKindOf(rawTask) === 'ask' : false;
 
       return {
         type: 'lucky',
         initiatorPlayerId: activePlayer.id,
         executorPlayerId: opponent.id,
-        title: '幸运时刻',
-        subtitle: `任务来自「${theme?.name || ''}」`,
-        icon: 'favorite',
-        color: 'text-[#FF375F]',
+        title: isAsk ? '甜蜜拷问' : '幸运时刻',
+        subtitle: isAsk
+          ? `对方问你一个问题 · 来自「${theme?.name || ''}」`
+          : `任务来自「${theme?.name || ''}」`,
+        icon: isAsk ? 'message-circle' : 'favorite',
+        color: isAsk ? 'text-[#5E5CE6]' : 'text-[#FF375F]',
         task: personalizeTask(rawTask, opponent, activePlayer),
         taskSourceId: activePlayer.themeId || ''
       };
@@ -691,17 +659,20 @@ export function useGameState(mode: GameMode) {
 
     if (tileType === 'trap') {
       const theme = state.themes.find(t => t.id === opponent.themeId);
-      const rawTask = pickTaskForRole(theme, activePlayer.role, 'trap', state.recentTasks);
+      const rawTask = pickTask(theme, activePlayer.role, 'trap', state.recentTasks);
       if (rawTask) recordRecentTask(rawTask);
+      const isAsk = rawTask ? taskKindOf(rawTask) === 'ask' : false;
 
       return {
         type: 'trap',
         initiatorPlayerId: activePlayer.id,
         executorPlayerId: activePlayer.id,
-        title: '意外陷阱',
-        subtitle: `任务来自「${theme?.name || ''}」`,
-        icon: 'lock',
-        color: 'text-[#BF5AF2]',
+        title: isAsk ? '亲密拷问' : '意外陷阱',
+        subtitle: isAsk
+          ? `对方问你一个问题 · 来自「${theme?.name || ''}」`
+          : `任务来自「${theme?.name || ''}」`,
+        icon: isAsk ? 'message-circle' : 'lock',
+        color: isAsk ? 'text-[#5E5CE6]' : 'text-[#BF5AF2]',
         task: personalizeTask(rawTask, activePlayer, opponent),
         taskSourceId: opponent.themeId || ''
       };

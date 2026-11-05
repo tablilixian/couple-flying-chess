@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Player, TaskEventData } from '../../types';
-import { Heart, Lock, HandshakeIcon } from 'lucide-react';
+import { Heart, Lock, HandshakeIcon, MessageCircle } from 'lucide-react';
 import { renderColoredTaskText, stripTaskTags } from '../../utils/personalizeTask';
 
 interface TaskCardModalProps {
@@ -15,7 +15,8 @@ interface TaskCardModalProps {
 const iconMap: Record<string, React.ReactNode> = {
   favorite: <Heart size={40} fill="currentColor" />,
   lock: <Lock size={40} />,
-  handshake: <HandshakeIcon size={40} />
+  handshake: <HandshakeIcon size={40} />,
+  'message-circle': <MessageCircle size={40} />
 };
 
 export function TaskCardModal({ isOpen, taskData, players, onAccept, onReject, autoMode }: TaskCardModalProps) {
