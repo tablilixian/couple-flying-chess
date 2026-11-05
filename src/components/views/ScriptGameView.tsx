@@ -30,13 +30,31 @@ export function ScriptGameView({ script, onEnd, onBack }: ScriptGameViewProps) {
   const engine = useScriptEngine(script);
   const skipLockRef = useRef(false);
   const metroRef = useRef<HTMLDivElement>(null);
+  const timersRef = useRef<number[]>([]);
+
+  /** 登记一次性定时器，卸载时统一清理 */
+  const later = useCallback((fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timersRef.current = timersRef.current.filter(t => t !== id);
+      fn();
+    }, ms);
+    timersRef.current.push(id);
+    return id;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(id => clearTimeout(id));
+      timersRef.current = [];
+    };
+  }, []);
 
   const handleAdvance = useCallback(() => {
     if (skipLockRef.current) return;
     skipLockRef.current = true;
     engine.advanceStep();
-    setTimeout(() => { skipLockRef.current = false; }, 300);
-  }, [engine]);
+    later(() => { skipLockRef.current = false; }, 300);
+  }, [engine, later]);
 
   useEffect(() => {
     engine.reset();
@@ -288,7 +306,7 @@ export function ScriptGameView({ script, onEnd, onBack }: ScriptGameViewProps) {
                       onClick={() => {
                         if (metroRef.current) {
                           metroRef.current.style.transform = 'scaleX(2.5)';
-                          setTimeout(() => { if (metroRef.current) metroRef.current.style.transform = ''; }, 100);
+                          later(() => { if (metroRef.current) metroRef.current.style.transform = ''; }, 100);
                         }
                         engine.handleCounterTap();
                       }}

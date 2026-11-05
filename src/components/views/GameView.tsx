@@ -4,7 +4,7 @@ import { GameBoard } from '../GameBoard';
 import { Dice } from '../Dice';
 import { StatusPanel } from '../StatusPanel';
 import { rollDice, getTrajectory } from '../../utils/gameLogic';
-import { User, UserRound, ArrowLeft, Infinity, Play, Square } from 'lucide-react';
+import { User, UserRound, ArrowLeft, Infinity as InfinityIcon, Play, Square } from 'lucide-react';
 
 interface GameViewProps {
   players: Player[];
@@ -280,7 +280,7 @@ export function GameView({
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <div className="relative bg-[#1C1C1E] border border-[#30D158]/30 rounded-2xl p-6 max-w-sm w-full flex flex-col items-center shadow-2xl">
               <div className="w-14 h-14 rounded-full bg-[#30D158]/20 flex items-center justify-center mb-4">
-                <Infinity className="text-[#30D158]" size={28} />
+                <InfinityIcon className="text-[#30D158]" size={28} />
               </div>
               <h3 className="text-lg font-bold text-white mb-1">状态变化</h3>
               <p className="text-xs text-gray-400 mb-4 text-center">

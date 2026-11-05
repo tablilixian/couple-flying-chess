@@ -73,7 +73,7 @@ export function ScriptSelectView({ mode, onSelect, onBack }: ScriptSelectViewPro
               <div className="flex gap-3 mt-2 text-xs text-gray-500">
                 <span>⏱ {script.duration}min</span>
                 <span>🎭 2人</span>
-                <span>🏆 {script.endings}结局</span>
+                <span>{script.endingIcon} {script.endingTitle}</span>
               </div>
             </div>
           </button>

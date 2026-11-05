@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, ChevronRight, ChevronLeft, Download, Trash2, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Download, Trash2, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { GameMode } from '../../types';
 import {
   GameSession, SessionSummary,
-  loadSessions, clearAllSessions, downloadSessionsAsJson, sessionToSummary
+  loadSessions, loadPendingSession, discardPendingSession, clearAllSessions,
+  downloadSessionsAsJson, sessionToSummary
 } from '../../utils/gameSession';
 
 interface HistoryModalProps {
@@ -18,6 +19,7 @@ export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
   const [view, setView] = useState<View>('list');
   const [summaries, setSummaries] = useState<SessionSummary[]>([]);
   const [selectedSession, setSelectedSession] = useState<GameSession | null>(null);
+  const [pending, setPending] = useState<GameSession | null>(null);
 
   const modeLabel = mode === 'couple' ? '情侣' : '普通';
 
@@ -25,6 +27,8 @@ export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
     if (isOpen) {
       const sessions = loadSessions().filter(s => s.mode === mode);
       setSummaries(sessions.map(sessionToSummary));
+      const pendingSession = loadPendingSession();
+      setPending(pendingSession && pendingSession.mode === mode ? pendingSession : null);
       setView('list');
       setSelectedSession(null);
     }
@@ -45,6 +49,12 @@ export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
       setSelectedSession(session);
       setView('detail');
     }
+  };
+
+  const handleDiscardPending = () => {
+    if (!window.confirm('确定要丢弃这局未完成的记录吗？')) return;
+    discardPendingSession();
+    setPending(null);
   };
 
   const formatDate = (ts: number) => {
@@ -141,15 +151,42 @@ export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
   );
 
   function renderSessionList() {
+    const pendingBanner = pending ? (
+      <div className="bg-[#FF9F0A]/10 border border-[#FF9F0A]/30 rounded-xl p-3 mb-3">
+        <div className="flex items-start gap-2">
+          <AlertTriangle size={14} className="text-[#FF9F0A] mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-[#FF9F0A] mb-1">有一局未完成的记录</div>
+            <div className="text-[11px] text-gray-400 leading-relaxed">
+              {formatDate(pending.startTime)} · {pending.players[0]?.name} vs {pending.players[1]?.name}
+              ，共 {pending.entries.length} 条任务，未计入历史局数。
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleDiscardPending}
+          className="mt-2 ml-6 text-[11px] text-gray-400 hover:text-red-400 transition-colors"
+        >
+          丢弃这局记录
+        </button>
+      </div>
+    ) : null;
+
     if (summaries.length === 0) {
       return (
-        <div className="text-center text-gray-500 text-sm py-10">
-          暂无游戏记录
-        </div>
+        <>
+          {pendingBanner}
+          <div className="text-center text-gray-500 text-sm py-10">
+            暂无游戏记录
+          </div>
+        </>
       );
     }
 
-    return summaries.map(s => {
+    return (
+      <>
+        {pendingBanner}
+        {summaries.map(s => {
       const completionRate = s.totalTasks > 0 ? Math.round((s.completed / s.totalTasks) * 100) : 0;
 
       return (
@@ -190,7 +227,9 @@ export function HistoryModal({ isOpen, onClose, mode }: HistoryModalProps) {
           </div>
         </div>
       );
-    });
+        })}
+      </>
+    );
   }
 
   function renderSessionDetail() {

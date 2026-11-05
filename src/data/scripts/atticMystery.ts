@@ -9,7 +9,6 @@ export const atticMystery: Script = {
   tags: ['🏚️ 悬疑', '👨‍👩‍👧‍👦 亲子', '🔍 解谜'],
   duration: 20,
   difficulty: 1,
-  endings: 1,
   characters: [
     {
       role: 'male',

@@ -1,8 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, type ReactNode } from 'react';
 import { ArrowLeft, Settings, History } from 'lucide-react';
 import { GameMode, TaskEventData, AppSubview, Script, StepLogEntry, TDDifficulty, TDTheme, Scenario, EdgingFlow } from './types';
-import { VerificationGate, getStoredPassword, setStoredPassword } from './components/VerificationGate';
+import { VerificationGate } from './components/VerificationGate';
+import { StorageErrorToast } from './components/StorageErrorToast';
+import {
+  getStoredPassword,
+  setStoredPassword,
+  getStoredNovelCode,
+  setStoredNovelCode,
+} from './config/access';
 import { clearAudioCache } from './utils/ttsService';
+import { clearAllLocalData } from './utils/storageKeys';
 import { useGameState } from './hooks/useGameState';
 import { startNewSession, addEntryToCurrentSession, finalizeCurrentSession, TaskHistoryEntry } from './utils/gameSession';
 import { HomeView } from './components/views/HomeView';
@@ -68,20 +76,27 @@ function App() {
   const [mode, setMode] = useState<GameMode>('couple');
   const [novelMode, setNovelMode] = useState(false);
 
+  let content: ReactNode;
   if (novelMode) {
-    return <NovelView onExit={() => { setNovelMode(false); setVerified(false); }} />;
-  }
-
-  if (!verified) {
-    return (
+    content = <NovelView onExit={() => { setNovelMode(false); setVerified(false); }} />;
+  } else if (!verified) {
+    content = (
       <VerificationGate
         onVerified={(m) => { setMode(m); setVerified(true); }}
         onEnterNovel={() => setNovelMode(true)}
       />
     );
+  } else {
+    content = <AppInner mode={mode} key={mode} />;
   }
 
-  return <AppInner mode={mode} key={mode} />;
+  return (
+    <>
+      {content}
+      {/* 存储读写失败提示：任何页面都能收到 */}
+      <StorageErrorToast />
+    </>
+  );
 }
 
 function AppInner({ mode }: { mode: GameMode }) {
@@ -118,6 +133,7 @@ function AppInner({ mode }: { mode: GameMode }) {
   const [aiImportThemeId, setAiImportThemeId] = useState<string | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+  const [novelCodeInput, setNovelCodeInput] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [autoMode, setAutoMode] = useState(false);
   const [tdNames, setTdNames] = useState<[string, string]>(['', '']);
@@ -232,10 +248,17 @@ function AppInner({ mode }: { mode: GameMode }) {
   };
 
   const handleSavePassword = () => {
-    if (passwordInput.length < 4) return;
-    setStoredPassword(mode, passwordInput);
+    // 口令与书房暗号都是 4 位数字，任意一项有效即可保存
+    const hasPassword = passwordInput.length === 4;
+    const hasNovelCode = novelCodeInput.length === 4;
+    if (!hasPassword && !hasNovelCode) return;
+
+    if (hasPassword) setStoredPassword(mode, passwordInput);
+    if (hasNovelCode) setStoredNovelCode(novelCodeInput);
+
     setIsPasswordModalOpen(false);
     setPasswordInput('');
+    setNovelCodeInput('');
   };
 
   // ===== Hub -> Script Flow =====
@@ -527,7 +550,8 @@ function AppInner({ mode }: { mode: GameMode }) {
           <div className="flex flex-col items-end gap-2 mt-1">
             <button
               onClick={() => {
-                setPasswordInput(getStoredPassword(mode));
+                setPasswordInput(getStoredPassword(mode) ?? '');
+                setNovelCodeInput(getStoredNovelCode() ?? '');
                 setIsPasswordModalOpen(true);
               }}
               className="text-gray-400 hover:text-white transition-colors"
@@ -677,10 +701,11 @@ function AppInner({ mode }: { mode: GameMode }) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div className="bg-gray-900 rounded-2xl p-6 w-[320px] border border-gray-700 shadow-xl">
-          <h3 className="text-white text-lg font-semibold mb-1">修改密码</h3>
+          <h3 className="text-white text-lg font-semibold mb-1">访问设置</h3>
           <p className={`text-sm mb-4 ${config.accentText}`}>
-            {mode === 'couple' ? '💕 情侣模式' : '🎲 普通模式'} · 请输入新的4位数字密码
+            {mode === 'couple' ? '💕 情侣模式' : '🎲 普通模式'} · 4 位数字，仅保存在本机
           </p>
+          <div className="text-xs text-gray-500 mb-1.5">进入口令</div>
           <input
             type="password"
             inputMode="numeric"
@@ -691,16 +716,31 @@ function AppInner({ mode }: { mode: GameMode }) {
             className="w-full bg-gray-800 text-white text-center text-2xl tracking-[0.5em] py-3 rounded-lg border border-gray-600 focus:border-pink-400 focus:outline-none mb-4"
             placeholder="●●●●"
           />
+          <div className="text-xs text-gray-500 mb-1.5">书房暗号（可选）</div>
+          <input
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={4}
+            value={novelCodeInput}
+            onChange={e => setNovelCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="w-full bg-gray-800 text-white text-center text-2xl tracking-[0.5em] py-3 rounded-lg border border-gray-600 focus:border-pink-400 focus:outline-none mb-4"
+            placeholder="●●●●"
+          />
           <div className="flex gap-3">
             <button
-              onClick={() => { setIsPasswordModalOpen(false); setPasswordInput(''); }}
+              onClick={() => {
+                setIsPasswordModalOpen(false);
+                setPasswordInput('');
+                setNovelCodeInput('');
+              }}
               className="flex-1 py-2.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
             >
               取消
             </button>
             <button
               onClick={handleSavePassword}
-              disabled={passwordInput.length < 4}
+              disabled={passwordInput.length < 4 && novelCodeInput.length < 4}
               className={`flex-1 py-2.5 rounded-lg text-white hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${config.accentBg}`}
             >
               保存
@@ -712,14 +752,7 @@ function AppInner({ mode }: { mode: GameMode }) {
               onClick={async () => {
                 if (window.confirm('确定要清除所有本地数据吗？\n包括所有主题包、任务卡、游戏进度、密码设置和缓存的语音。\n\n此操作不可撤销！')) {
                   await clearAudioCache();
-                  localStorage.removeItem('couple-game-state');
-                  localStorage.removeItem('normal-game-state');
-                  localStorage.removeItem('couple-password');
-                  localStorage.removeItem('normal-password');
-                  localStorage.removeItem('couple-player-names');
-                  localStorage.removeItem('normal-player-names');
-                  localStorage.removeItem('game-sessions');
-                  localStorage.removeItem('pending-session');
+                  clearAllLocalData();
                   window.location.reload();
                 }
               }}

@@ -1,20 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { GameMode, GameState, Player, TaskEventData, Theme, StatusEffect, PlayerStatusSlots } from '../types';
-import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import { loadFromStorage, saveToStorage, removeFromStorage } from '../utils/localStorage';
+import {
+  THEME_KEYS,
+  SESSION_KEYS,
+  LEGACY_STATE_KEYS,
+  PLAYER_NAMES_KEYS,
+} from '../utils/storageKeys';
 import { generateSpiralPath, generateBoardMap, calculateNewPosition } from '../utils/gameLogic';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
 import { buildStatus, buildOpeningStatus, applyStatusToSlots } from '../utils/statusLogic';
 import { personalizeTask, parseTaskTags } from '../utils/personalizeTask';
-
-const STORAGE_KEYS: Record<GameMode, string> = {
-  couple: 'couple-game-state',
-  normal: 'normal-game-state'
-};
-
-const PLAYER_NAMES_KEYS: Record<GameMode, string> = {
-  couple: 'couple-player-names',
-  normal: 'normal-player-names'
-};
 
 const RECENT_TASKS_LIMIT = 10;
 
@@ -102,11 +98,49 @@ function normalizeOneTheme(raw: unknown, mode: GameMode): Theme {
       : undefined,
     conditionStates: Array.isArray(conditionStatesValue)
       ? conditionStatesValue.map(x => (typeof x === 'string' ? x.trim() : '')).filter(x => x.length > 0)
+      : undefined,
+    baseTasks: Array.isArray(record.baseTasks)
+      ? record.baseTasks.map(x => (typeof x === 'string' ? x.trim() : '')).filter(x => x.length > 0)
       : undefined
   } satisfies Theme;
 }
 
-function normalizeThemes(input: unknown, mode: GameMode): Theme[] {
+/**
+ * 内置主题任务列表的三方合并。
+ *
+ * @param codeBaseline 当前代码版本的任务列表
+ * @param userBase     用户上次看到的那版代码任务列表（存储里的 baseTasks）
+ * @param userTasks    用户当前保存的任务列表
+ *
+ * 只有三方才能区分「用户删掉的」和「代码新增的」：
+ *  - 用户保留的 = userBase ∩ userTasks
+ *  - 代码新增的 = codeBaseline - userBase   → 随版本更新下发
+ *  - 用户新增的 = userTasks - userBase      → 保留
+ *  - 用户删除的 = userBase - userTasks      → 不复活
+ */
+export function mergeThemeTasks(
+  codeBaseline: string[],
+  userBase: string[],
+  userTasks: string[]
+): string[] {
+  const userBaseSet = new Set(userBase);
+  const userTasksSet = new Set(userTasks);
+
+  const kept = userBase.filter(t => userTasksSet.has(t));
+  const codeAdded = codeBaseline.filter(t => !userBaseSet.has(t));
+  const userAdded = userTasks.filter(t => !userBaseSet.has(t));
+
+  const merged: string[] = [];
+  const seen = new Set<string>();
+  for (const t of [...kept, ...codeAdded, ...userAdded]) {
+    if (seen.has(t)) continue;
+    seen.add(t);
+    merged.push(t);
+  }
+  return merged;
+}
+
+export function normalizeThemes(input: unknown, mode: GameMode): Theme[] {
   const incoming = Array.isArray(input) ? input : [];
   const defaultThemes = mode === 'couple' ? COUPLE_DEFAULT_THEMES : NORMAL_DEFAULT_THEMES;
 
@@ -118,16 +152,56 @@ function normalizeThemes(input: unknown, mode: GameMode): Theme[] {
   const result: Theme[] = [];
   const seenIds = new Set<string>();
 
+  const cleanTasks = (v: unknown): string[] | null =>
+    Array.isArray(v)
+      ? v.map(x => (typeof x === 'string' ? x.trim() : '')).filter((x): x is string => x.length > 0)
+      : null;
+
   for (const t of incoming) {
     const record = isRecord(t) ? t : {};
     const id = typeof record.id === 'string' ? record.id : '';
     if (!id || seenIds.has(id)) continue;
 
     if (defaultIds.has(id)) {
-      result.push(normalizeOneTheme(
-        defaultThemes.find(dt => dt.id === id)!,
+      // 内置主题：以代码为基线三方合并，保留用户的改动
+      const dt = defaultThemes.find(x => x.id === id)!;
+      const storedTasks = cleanTasks(record.tasks);
+      const storedBase = cleanTasks(record.baseTasks);
+
+      let tasks: string[];
+      if (storedTasks === null) {
+        // 用户从未碰过这个主题 → 直接用代码版本
+        tasks = dt.tasks;
+      } else if (storedBase === null) {
+        // 迁移路径：老版本没有基线快照，先原样保留用户列表，
+        // 本次读档后 baseTasks 会被写成当前代码基线，之后即可正常合并
+        tasks = storedTasks;
+      } else {
+        tasks = mergeThemeTasks(dt.tasks, storedBase, storedTasks);
+      }
+
+      const merged = normalizeOneTheme(
+        {
+          ...record,
+          // 用户可见字段以存储为准（改名 / 描述 / 适用范围），缺字段时回落代码版本
+          id: dt.id,
+          name: typeof record.name === 'string' ? record.name : dt.name,
+          desc: typeof record.desc === 'string' ? record.desc : dt.desc,
+          audience:
+            record.audience === 'common' || record.audience === 'male' || record.audience === 'female'
+              ? record.audience
+              : dt.audience,
+          mode: dt.mode,
+          // 状态池不可由用户编辑，始终取代码版本
+          actionStates: dt.actionStates,
+          conditionStates: dt.conditionStates,
+          // 基线快照推进到当前代码版本，供下次读档做差量合并
+          baseTasks: dt.tasks,
+          tasks,
+        },
         mode
-      ));
+      );
+      result.push(merged);
     } else {
       result.push(normalizeOneTheme(t, mode));
     }
@@ -144,16 +218,26 @@ function normalizeThemes(input: unknown, mode: GameMode): Theme[] {
   return result;
 }
 
-function normalizeGameState(saved: unknown, mode: GameMode): GameState | null {
+export function normalizeGameState(saved: unknown, mode: GameMode): GameState | null {
   if (!isRecord(saved)) return null;
-  const s = saved;
+  const themes = normalizeThemes(saved.themes, mode);
+  return normalizeSession(saved, themes, mode);
+}
+
+/**
+ * 归一化「会话切片」——即不含 themes 的那部分状态。
+ * 拆开是为了让 themes 与会话分键存储：themes 体量大（全部任务文案），
+ * 但很少变化；会话体量小但每次操作都变。
+ */
+export function normalizeSession(sessionInput: unknown, themes: Theme[], mode: GameMode): GameState | null {
+  if (!isRecord(sessionInput)) return null;
+  const s = sessionInput;
 
   const savedMode = s.mode;
   const actualMode = (savedMode === 'couple' || savedMode === 'normal') ? savedMode : mode;
 
   if (actualMode !== mode) return null;
 
-  const themes = normalizeThemes(s.themes, mode);
   const players = normalizePlayers(s.players, mode).map(p => {
     if (p.themeId === null) return p;
     const theme = themes.find(t => t.id === p.themeId);
@@ -179,6 +263,55 @@ function normalizeGameState(saved: unknown, mode: GameMode): GameState | null {
   };
 }
 
+/** 会话切片里不含 themes —— themes 单独存一个键 */
+export type GameSessionSlice = Omit<GameState, 'themes'>;
+
+function stripThemes(state: GameState): GameSessionSlice {
+  const { themes: _themes, ...rest } = state;
+  return rest;
+}
+
+/** 从持久层读出来的原始切片 */
+export interface PersistedState {
+  themes: Theme[] | null;
+  session: GameSessionSlice | null;
+  /** 是否命中旧版单键状态（需要迁移） */
+  legacy: boolean;
+}
+
+/**
+ * 读取持久化状态。
+ * 优先读拆分后的两个新键；两者都没有时回退到旧版单键，并标记 legacy。
+ */
+export function readPersistedState(mode: GameMode): PersistedState {
+  const savedThemes = loadFromStorage<Theme[] | null>(THEME_KEYS[mode], null);
+  const savedSession = loadFromStorage<GameSessionSlice | null>(SESSION_KEYS[mode], null);
+
+  if (savedThemes || savedSession) {
+    return { themes: savedThemes, session: savedSession, legacy: false };
+  }
+
+  const legacy = loadFromStorage<GameState | null>(LEGACY_STATE_KEYS[mode], null);
+  if (!legacy) return { themes: null, session: null, legacy: false };
+
+  return {
+    themes: legacy.themes ?? null,
+    session: stripThemes(legacy),
+    legacy: true,
+  };
+}
+
+/**
+ * 执行旧键 → 新键迁移：写入拆分后的两个键，然后删掉旧键。
+ * 幂等：迁移后旧键不存在，重复调用不会重复写入。
+ */
+export function migrateLegacyState(mode: GameMode, persisted: PersistedState): void {
+  if (!persisted.legacy) return;
+  saveToStorage(THEME_KEYS[mode], persisted.themes ?? []);
+  saveToStorage(SESSION_KEYS[mode], persisted.session);
+  removeFromStorage(LEGACY_STATE_KEYS[mode]);
+}
+
 function createThemeId(existingIds: Set<string>) {
   const base =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -193,13 +326,22 @@ function createThemeId(existingIds: Set<string>) {
 }
 
 export function useGameState(mode: GameMode) {
-  const storageKey = STORAGE_KEYS[mode];
-  const defaultThemes = mode === 'couple' ? COUPLE_DEFAULT_THEMES : NORMAL_DEFAULT_THEMES;
+  const themeKey = THEME_KEYS[mode];
+  const sessionKey = SESSION_KEYS[mode];
+
+  /** 旧版单键状态需要在挂载后迁移到拆分后的两个键 */
+  const migrationRef = useRef<PersistedState | null>(null);
 
   const [state, setState] = useState<GameState>(() => {
-    const saved = loadFromStorage<GameState | null>(storageKey, null);
+    const persisted = readPersistedState(mode);
     const savedNames = loadFromStorage<string[] | null>(PLAYER_NAMES_KEYS[mode], null);
-    const normalized = normalizeGameState(saved, mode);
+
+    if (persisted.legacy) {
+      migrationRef.current = persisted;
+    }
+
+    const themes = normalizeThemes(persisted.themes, mode);
+    const normalized = persisted.session ? normalizeSession(persisted.session, themes, mode) : null;
 
     if (normalized) {
       if (savedNames) {
@@ -220,7 +362,7 @@ export function useGameState(mode: GameMode) {
       view: 'home',
       turn: 0,
       players,
-      themes: defaultThemes,
+      themes,
       boardMap: generateBoardMap(),
       pathCoords: generateSpiralPath(),
       isRolling: false,
@@ -231,9 +373,54 @@ export function useGameState(mode: GameMode) {
     };
   });
 
+  // 旧键迁移：写入新键后删除旧键，避免两处数据长期不一致
   useEffect(() => {
-    saveToStorage(storageKey, state);
-  }, [state, storageKey]);
+    const migration = migrationRef.current;
+    if (!migration) return;
+    migrationRef.current = null;
+    migrateLegacyState(mode, migration);
+  }, [mode]);
+
+  /**
+   * 主题单独一个键，而且只在主题真正变化时才写。
+   * 引用比较足够：改主题的 setState 一定产生新的 themes 数组引用，
+   * 而改玩家 / 回合 / 掷骰的 setState 会保留原引用。
+   */
+  const writtenThemesRef = useRef<Theme[] | null>(null);
+  useEffect(() => {
+    if (writtenThemesRef.current === state.themes) return;
+    writtenThemesRef.current = state.themes;
+    saveToStorage(themeKey, state.themes);
+  }, [state.themes, themeKey]);
+
+  /** 会话切片体积小；useMemo 保证只有相关字段变化时才会产生新引用 */
+  const sessionSlice = useMemo<GameSessionSlice>(() => ({
+    view: state.view,
+    turn: state.turn,
+    players: state.players,
+    boardMap: state.boardMap,
+    pathCoords: state.pathCoords,
+    isRolling: state.isRolling,
+    mode: state.mode,
+    maleStatus: state.maleStatus,
+    femaleStatus: state.femaleStatus,
+    recentTasks: state.recentTasks
+  }), [
+    state.view,
+    state.turn,
+    state.players,
+    state.boardMap,
+    state.pathCoords,
+    state.isRolling,
+    state.mode,
+    state.maleStatus,
+    state.femaleStatus,
+    state.recentTasks
+  ]);
+
+  useEffect(() => {
+    saveToStorage(sessionKey, sessionSlice);
+  }, [sessionKey, sessionSlice]);
 
   const switchView = useCallback((view: GameState['view']) => {
     setState(prev => ({ ...prev, view }));
@@ -369,8 +556,8 @@ export function useGameState(mode: GameMode) {
       if (theme.tasks.length === 0) return false;
     }
 
-    const maleOpening = buildOpeningStatus('male');
-    const femaleOpening = buildOpeningStatus('female');
+    const maleOpening = buildOpeningStatus('male', mode);
+    const femaleOpening = buildOpeningStatus('female', mode);
 
     setState(prev => ({
       ...prev,
@@ -381,7 +568,7 @@ export function useGameState(mode: GameMode) {
       recentTasks: []
     }));
     return true;
-  }, [state.players, state.themes]);
+  }, [state.players, state.themes, mode]);
 
   const movePlayer = useCallback((steps: number) => {
     setState(prev => {
@@ -571,14 +758,12 @@ export function useGameState(mode: GameMode) {
   const applyStatusTile = useCallback((targetRole: 'male' | 'female', activeThemeId: string): StatusEffect | null => {
     const theme = state.themes.find(t => t.id === activeThemeId);
     const slot: 'action' | 'condition' = Math.random() < 0.5 ? 'action' : 'condition';
-    const newStatus = buildStatus(theme, slot, targetRole);
+    const newStatus = buildStatus(theme, slot, targetRole, mode);
     if (!newStatus) return null;
 
     const statusKey = targetRole === 'male' ? 'maleStatus' : 'femaleStatus';
 
     setState(prev => {
-      const targetStatus = applyStatusToSlots(prev[statusKey], newStatus);
-
       if (newStatus.target === 'both') {
         return {
           ...prev,
@@ -587,15 +772,11 @@ export function useGameState(mode: GameMode) {
         };
       }
 
-      return { ...prev, [statusKey]: targetStatus };
+      return { ...prev, [statusKey]: applyStatusToSlots(prev[statusKey], newStatus) };
     });
 
     return newStatus;
-  }, [state.themes]);
-
-  const performActionStatus = useCallback(() => {
-    setState(prev => ({ ...prev }));
-  }, []);
+  }, [state.themes, mode]);
 
   return {
     state,
@@ -614,7 +795,6 @@ export function useGameState(mode: GameMode) {
     checkTile,
     resolveTask,
     resetGame,
-    applyStatusTile,
-    performActionStatus
+    applyStatusTile
   };
 }

@@ -9,7 +9,6 @@ export const coffeeShop: Script = {
   tags: ['💕 甜蜜', '初阶'],
   duration: 15,
   difficulty: 1,
-  endings: 2,
   characters: [
     {
       role: 'male',

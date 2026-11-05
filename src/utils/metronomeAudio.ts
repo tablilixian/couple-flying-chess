@@ -18,6 +18,9 @@ export const SOUND_CONFIG: Record<SoundType, { label: string }> = {
   'drop': { label: '水滴' },
 };
 
+// 单例 AudioContext：节拍器页与调教节奏页共用，跨视图复用同一实例。
+// 不要在单个视图卸载时 close —— 那会连带打断另一个视图的音频。
+// 需要释放时调用 suspendAudioContext()，它只是挂起，不会销毁实例。
 let audioCtx: AudioContext | null = null;
 let reverbNode: ConvolverNode | null = null;
 let noiseBuffer: AudioBuffer | null = null;
@@ -31,6 +34,13 @@ export function getAudioContext(): AudioContext {
     audioCtx.resume();
   }
   return audioCtx;
+}
+
+/** 挂起共享音频上下文（释放音频硬件占用，实例仍可复用） */
+export function suspendAudioContext(): void {
+  if (audioCtx && audioCtx.state === 'running') {
+    void audioCtx.suspend().catch(() => { /* 忽略 */ });
+  }
 }
 
 // Shared impulse-response reverb so every sound has a little "room"

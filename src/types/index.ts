@@ -43,6 +43,13 @@ export interface Theme {
   tasks: string[];
   actionStates?: string[];
   conditionStates?: string[];
+  /**
+   * 内置主题专用的持久化基线快照（用户可无感，勿手工编辑）。
+   *
+   * 记录的是「用户上次看到的那版代码任务列表」。读档时用它做三方合并，
+   * 才能同时区分「用户删掉的」和「代码新增的」——只存绝对列表无法区分二者。
+   */
+  baseTasks?: string[];
 }
 
 export interface PathCoord {
@@ -84,7 +91,10 @@ export type AppSubview = 'hub' | 'flying-home' | 'flying-game' | 'script-select'
 
 export type TDDifficulty = 'soft' | 'hot' | 'hard' | 'extreme';
 
-export type TDTheme = 'sweet' | 'spicy' | 'confession' | 'roleplay' | 'kinky' | 'bdsm' | 'taboo' | 'dirtytalk' | 'slutwife' | 'swing' | 'exposure';
+export type TDTheme =
+  | 'sweet' | 'spicy' | 'confession' | 'roleplay' | 'kinky' | 'bdsm'
+  | 'taboo' | 'dirtytalk' | 'slutwife' | 'swing' | 'exposure'
+  | 'cuckold' | 'third' | 'home';
 
 export type TDTarget = 'male' | 'female' | 'both';
 
@@ -127,6 +137,9 @@ export const COUPLE_THEMES: ThemeConfig[] = [
   { key: 'slutwife',   label: '淫荡妻子', desc: '暴露幻想，多P想象',       color: '#FF2D55' },
   { key: 'swing',      label: '交换',     desc: '伴侣共享，换偶幻想',       color: '#FF6482' },
   { key: 'exposure',   label: '户外露出', desc: '公共场合暴露体验',         color: '#00C853' },
+  { key: 'cuckold',    label: '绿帽',   desc: 'NTR幻想 · 占有与被占有的张力', color: '#AF52DE' },
+  { key: 'third',      label: '第三者', desc: '旁观与被旁观 · 共享凝视',    color: '#5AC8FA' },
+  { key: 'home',       label: '居家',   desc: '客厅沙发 · 日常场景',       color: '#AC8E68' },
 ];
 
 export const NORMAL_THEMES: ThemeConfig[] = [
@@ -174,7 +187,6 @@ export interface Script {
   tags: string[];
   duration: number;
   difficulty: number;
-  endings: number;
   characters: [ScriptCharacter, ScriptCharacter];
   chapters: ScriptChapter[];
   endingTitle: string;

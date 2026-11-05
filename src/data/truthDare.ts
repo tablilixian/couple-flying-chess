@@ -45,18 +45,23 @@ export function pickQuestion(
   difficulty: TDDifficulty,
   themes: TDTheme[],
   currentPlayer: 0 | 1,
-  playerRoles: ['male' | 'female', 'male' | 'female'],
+  playerRoles: ['male' | 'female', 'male' | 'female'] | null,
   mode: GameMode = 'couple',
   excludeTexts: string[] = [],
 ): TDQuestion | null {
   const sourcePool = mode === 'couple' ? COUPLE_QUESTIONS : NORMAL_QUESTIONS;
 
-  const playerTarget = playerRoles[currentPlayer];
+  const playerTarget = playerRoles ? playerRoles[currentPlayer] : null;
+  // 情侣模式按男/女分配题目；普通模式是中性题库，只用双方都能做的题
+  //（带性别指向的题文案本身写死了「他/她」，不适合玩家 A/B）
+  const targetOk = (q: TDQuestion) =>
+    playerTarget === null ? q.target === 'both' : (q.target === 'both' || q.target === playerTarget);
+
   let pool = sourcePool.filter(q =>
     q.type === type &&
     q.difficulty === difficulty &&
     themes.includes(q.theme) &&
-    (q.target === 'both' || q.target === playerTarget)
+    targetOk(q)
   );
 
   if (excludeTexts.length > 0) {
@@ -66,7 +71,7 @@ export function pickQuestion(
 
   const fallback = pool.length === 0
     ? sourcePool.filter(q =>
-        q.type === type && q.difficulty === difficulty && themes.includes(q.theme)
+        q.type === type && q.difficulty === difficulty && themes.includes(q.theme) && targetOk(q)
       )
     : [];
 

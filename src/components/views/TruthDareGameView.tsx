@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { TDDifficulty, TDTheme, TDQuestion, TDPenalty, TDPlayer, TD_THEMES, GameMode } from '../../types';
 import { pickQuestion, pickPenalty, DIFFICULTIES } from '../../data/truthDare';
 import {
@@ -32,20 +32,45 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
   const [isPenaltyFlipped, setIsPenaltyFlipped] = useState(false);
   const [usedTexts, setUsedTexts] = useState<string[]>([]);
   const flipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const roundStartTimeRef = useRef<number>(Date.now());
 
+  // 会话初始化只在挂载时执行一次，依赖变化不应重开一局
   useEffect(() => {
     const themeLabels = themes.map(t => TD_THEMES.find(c => c.key === t)?.label || t).join('·');
     startNewSession(mode, [
       { id: 0, name: names[0], themeName: themeLabels },
       { id: 1, name: names[1], themeName: themeLabels },
     ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 卸载时清理所有在途定时器，避免对已卸载组件 setState
+  useEffect(() => {
+    return () => {
+      if (flipTimerRef.current) {
+        clearTimeout(flipTimerRef.current);
+        flipTimerRef.current = null;
+      }
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current);
+        transitionTimerRef.current = null;
+      }
+    };
   }, []);
 
   const handleBack = useCallback(() => {
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
     const session = getCurrentSession();
     if (session) {
-      session.entries.length > 0 ? finalizeCurrentSession() : discardCurrentSession();
+      if (session.entries.length > 0) {
+        finalizeCurrentSession();
+      } else {
+        discardCurrentSession();
+      }
     }
     onBack();
   }, [onBack]);
@@ -55,15 +80,20 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
   const playerIcons: [string, string] = mode === 'couple' ? ['♂', '♀'] : ['A', 'B'];
   const selectedThemeCfgs = themes.map(t => TD_THEMES.find(c => c.key === t)!).filter(Boolean);
   const otherPlayer = currentPlayer === 0 ? 1 : 0;
-  // couple 模式用男/女 target,normal 模式不区分 target
-  const playerRoles: ['male' | 'female', 'male' | 'female'] = mode === 'couple' ? ['male', 'female'] : ['male', 'female'];
+  // 情侣模式按男/女分配题目；普通模式是中性题库，不区分 target
+  const playerRoles = useMemo<['male' | 'female', 'male' | 'female'] | null>(
+    () => (mode === 'couple' ? ['male', 'female'] : null),
+    [mode]
+  );
 
   const switchToNextPlayer = useCallback(() => {
     setPhase('transition');
     const next = currentPlayer === 0 ? 1 : 0;
     const nextRound = next === 0 ? round + 1 : round;
     setTransitionText(`${names[currentPlayer]} 已完成`);
-    setTimeout(() => {
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    transitionTimerRef.current = setTimeout(() => {
+      transitionTimerRef.current = null;
       setCurrentPlayer(next);
       setRound(nextRound);
       setPhase('choice');
@@ -133,7 +163,7 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
       return next;
     });
     roundStartTimeRef.current = Date.now();
-  }, [difficulty, currentPlayer, currentQuestion, round, names]);
+  }, [difficulty, currentPlayer, currentQuestion, round, names, mode]);
 
   const handlePenaltyComplete = useCallback(() => {
     if (currentPenalty) {
@@ -230,7 +260,10 @@ export function TruthDareGameView({ mode, names, difficulty, themes, onBack }: T
                 </div>
                 {(() => {
                   const target = currentQuestion.target;
-                  const targetIdx = target === 'both' ? currentPlayer : (target === 'male' ? playerRoles.indexOf('male') : playerRoles.indexOf('female'));
+                  // 普通模式题库只含 target === 'both' 的题，playerRoles 为 null 时落到当前玩家
+                  const targetIdx = target === 'both'
+                    ? currentPlayer
+                    : (playerRoles ? playerRoles.indexOf(target) : currentPlayer);
                   const targetName = names[targetIdx];
                   const targetColor = playerColors[targetIdx];
                   const label = currentQuestion.type === 'truth' ? '作答' : '完成';

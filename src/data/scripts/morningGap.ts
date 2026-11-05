@@ -9,7 +9,6 @@ export const morningGap: Script = {
   tags: ['🔞 成人', '进阶'],
   duration: 20,
   difficulty: 2,
-  endings: 1,
   characters: [
     {
       role: 'male',

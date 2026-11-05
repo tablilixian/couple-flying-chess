@@ -140,6 +140,7 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
   const livePosRef = useRef(0);
   const waveformPhaseRef = useRef(0);
   const elapsedRef = useRef(0);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync refs
   useEffect(() => {
@@ -223,7 +224,11 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
       if (isBeat) {
         playSound(soundRef.current, volumeRef.current);
         setImpactFlash(true);
-        setTimeout(() => setImpactFlash(false), 120);
+        if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = setTimeout(() => {
+          flashTimerRef.current = null;
+          setImpactFlash(false);
+        }, 120);
         setCount(c => c + 1);
 
         if (visualEffectRef.current === 'ripple') {
@@ -299,6 +304,10 @@ export function MetronomeView({ mode, onBack }: MetronomeViewProps) {
   useEffect(() => {
     return () => {
       cancelAnimationFrame(animRef.current);
+      if (flashTimerRef.current) {
+        clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = null;
+      }
     };
   }, []);
 

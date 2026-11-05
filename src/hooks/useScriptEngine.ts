@@ -2,8 +2,14 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Script, ScriptStep, ScriptMood, StepLogEntry } from '../types';
 import { speakText as ttsSpeak, stopSpeaking } from '../utils/ttsService';
 
+type WebkitAudioWindow = typeof window & {
+  webkitAudioContext?: typeof AudioContext;
+};
+
 function getAudioCtx(): AudioContext {
-  const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+  const w = window as WebkitAudioWindow;
+  const Ctx = w.AudioContext || w.webkitAudioContext;
+  if (!Ctx) throw new Error('当前浏览器不支持 Web Audio API');
   return new Ctx();
 }
 
@@ -28,6 +34,10 @@ export function useScriptEngine(script: Script | null) {
 
   const timerRef = useRef<number | null>(null);
   const autoRef = useRef<number | null>(null);
+  /** 步骤推进用的短延时集合，卸载时统一清理 */
+  const pendingTimeoutsRef = useRef<number[]>([]);
+  /** 组件是否仍挂载 —— 异步回调（语音失败等）据此决定是否还要挂定时器 */
+  const isMountedRef = useRef(true);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const prevTimerRemaining = useRef(0);
   const prevCounterValue = useRef(0);
@@ -75,7 +85,20 @@ export function useScriptEngine(script: Script | null) {
       clearTimeout(autoRef.current);
       autoRef.current = null;
     }
+    // 步骤推进用的短延时同样要清，否则卸载后会在别的页面继续朗读
+    pendingTimeoutsRef.current.forEach(id => clearTimeout(id));
+    pendingTimeoutsRef.current = [];
     stopSpeaking();
+  }, []);
+
+  /** 登记一个短延时，回调前先自注销，保证卸载时能被 clearTimers 收走 */
+  const scheduleStep = useCallback((fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      pendingTimeoutsRef.current = pendingTimeoutsRef.current.filter(x => x !== id);
+      fn();
+    }, ms);
+    pendingTimeoutsRef.current.push(id);
+    return id;
   }, []);
 
   const startTimerInterval = useCallback((total: number) => {
@@ -205,6 +228,8 @@ export function useScriptEngine(script: Script | null) {
           const capturedStepIndex = stepIndexRef.current;
           const capturedChapter = chapterIndexRef.current;
           const ms = step.duration || 5000;
+          // 语音失败回调是异步的，可能在卸载后才到达 —— 此时不能再挂新定时器
+          if (!isMountedRef.current) return;
           autoRef.current = window.setTimeout(() => {
             if (stepIndexRef.current !== capturedStepIndex || chapterIndexRef.current !== capturedChapter) return;
             advanceStepRef.current();
@@ -235,7 +260,7 @@ export function useScriptEngine(script: Script | null) {
 
       startMetronome();
     }
-  }, [beep, startTimerInterval, startMetronome]);
+  }, [ensureAudio, startTimerInterval, startMetronome]);
 
   const pause = useCallback(() => {
     if (isPaused || isChapterTransition || isEnding || !isPlaying) return;
@@ -280,7 +305,17 @@ export function useScriptEngine(script: Script | null) {
   }, [beep]);
 
   useEffect(() => {
-    return () => clearTimers();
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      clearTimers();
+      // 关闭 AudioContext，避免反复进出剧本页累积音频实例直到触发浏览器上限
+      const ctx = audioCtxRef.current;
+      audioCtxRef.current = null;
+      if (ctx && ctx.state !== 'closed') {
+        void ctx.close().catch(() => { /* 已关闭则忽略 */ });
+      }
+    };
   }, [clearTimers]);
 
   useEffect(() => {
@@ -288,9 +323,9 @@ export function useScriptEngine(script: Script | null) {
     prevTimerRemaining.current = timerRemaining;
     if (prev > 0 && timerRemaining <= 0 && timerTotal > 0 && isPlaying && !isEnding && !isChapterTransition) {
       setStepLog(l => [...l, { type: 'timer', icon: timerIconRef.current, completed: true }]);
-      window.setTimeout(() => advanceStep(), 600);
+      scheduleStep(() => advanceStep(), 600);
     }
-  }, [timerRemaining, timerTotal, isPlaying, advanceStep, isEnding, isChapterTransition]);
+  }, [timerRemaining, timerTotal, isPlaying, advanceStep, isEnding, isChapterTransition, scheduleStep]);
 
   useEffect(() => {
     const prev = prevCounterValue.current;
@@ -300,9 +335,9 @@ export function useScriptEngine(script: Script | null) {
       timerRef.current = null;
       beep(1200, 0.3, 0.2);
       setStepLog(l => [...l, { type: 'counter', icon: counterIconRef.current, count: counterValue }]);
-      window.setTimeout(() => advanceStep(), 600);
+      scheduleStep(() => advanceStep(), 600);
     }
-  }, [counterValue, counterTarget, isPlaying, advanceStep, beep, isEnding, isChapterTransition]);
+  }, [counterValue, counterTarget, isPlaying, advanceStep, beep, isEnding, isChapterTransition, scheduleStep]);
 
   return {
     chapterIndex,

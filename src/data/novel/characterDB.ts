@@ -14,7 +14,7 @@ export interface Character {
   firstAppearChapter: number;
   lastAppearChapter: number;
   appearCount: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RelationshipEvent {

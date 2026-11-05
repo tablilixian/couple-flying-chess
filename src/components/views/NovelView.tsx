@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, BookOpen, ChevronDown, Loader2, X, User, HeartHandshake, Grid3X3, Info, RotateCcw } from 'lucide-react';
 import { NOVELS, Novel } from '../../data/novels';
 import { CHARACTER_DB } from '../../data/novel/characterDB';
@@ -18,9 +18,11 @@ interface ChapterMeta {
 }
 
 /** 请求超时：弱网下宁可报错让用户重试，也不要无限转圈 */
-async function fetchWithTimeout(url: string, timeout = 12000): Promise<Response> {
+async function fetchWithTimeout(url: string, timeout = 12000, externalSignal?: AbortSignal): Promise<Response> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeout);
+  const onExternalAbort = () => ctrl.abort();
+  externalSignal?.addEventListener('abort', onExternalAbort);
   try {
     const res = await fetch(url, { signal: ctrl.signal });
     if (!res.ok) throw new Error(`加载失败 (${res.status})`);
@@ -30,16 +32,17 @@ async function fetchWithTimeout(url: string, timeout = 12000): Promise<Response>
     throw e;
   } finally {
     clearTimeout(timer);
+    externalSignal?.removeEventListener('abort', onExternalAbort);
   }
 }
 
-async function fetchText(url: string, timeout = 12000): Promise<string> {
-  const res = await fetchWithTimeout(url, timeout);
+async function fetchText(url: string, timeout = 12000, signal?: AbortSignal): Promise<string> {
+  const res = await fetchWithTimeout(url, timeout, signal);
   return res.text();
 }
 
-async function fetchJson<T>(url: string, timeout = 12000): Promise<T> {
-  const res = await fetchWithTimeout(url, timeout);
+async function fetchJson<T>(url: string, timeout = 12000, signal?: AbortSignal): Promise<T> {
+  const res = await fetchWithTimeout(url, timeout, signal);
   return (await res.json()) as T;
 }
 
@@ -95,10 +98,32 @@ export function NovelView({ onExit }: NovelViewProps) {
   const cacheRef = useRef<Map<number, string[]>>(new Map());
   /** 用来丢弃「快速翻页」时过期请求的回包 */
   const reqTokenRef = useRef(0);
+  /** 组件是否仍挂载：卸载后不再 setState */
+  const mountedRef = useRef(true);
+  /** 在途请求的控制器，卸载/切换时统一中断 */
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+      abortRef.current = null;
+    };
+  }, []);
+
+  /** 新请求开始前掐掉上一个在途请求 */
+  const startRequest = useCallback(() => {
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    return ctrl;
+  }, []);
 
   const resetBook = useCallback(() => {
     cacheRef.current.clear();
     reqTokenRef.current += 1;
+    abortRef.current?.abort();
     setChapterList([]);
     setChapterBase(null);
     setChapterLoading(false);
@@ -108,10 +133,11 @@ export function NovelView({ onExit }: NovelViewProps) {
   }, []);
 
   /** 回退方案：分章文件缺失时整本下载（老行为，慢但能用） */
-  const loadFullBook = useCallback(async (novel: Novel) => {
-    const text = await fetchText(novel.src, 30000);
+  const loadFullBook = useCallback(async (novel: Novel, signal?: AbortSignal) => {
+    const text = await fetchText(novel.src, 30000, signal);
     const parsed = parseChapters(text);
     if (!parsed.length) throw new Error('这本小说还没有章节内容');
+    if (!mountedRef.current) return;
     cacheRef.current.clear();
     parsed.forEach((c, i) => cacheRef.current.set(i, c.paragraphs));
     setChapterList(parsed.map(c => ({ title: c.title })));
@@ -120,26 +146,31 @@ export function NovelView({ onExit }: NovelViewProps) {
 
   /** 拉目录（index.json），失败则回退整本 md */
   const loadCatalog = useCallback(async (novel: Novel) => {
+    if (!mountedRef.current) return;
     setLoading(true);
     setError(null);
 
+    const ctrl = startRequest();
     const base = `${import.meta.env.BASE_URL}novels/${novel.id}/`;
     try {
-      const idx = await fetchJson<{ chapters?: ChapterMeta[] }>(`${base}index.json`, 10000);
+      const idx = await fetchJson<{ chapters?: ChapterMeta[] }>(`${base}index.json`, 10000, ctrl.signal);
+      if (!mountedRef.current) return;
       if (!idx?.chapters?.length) throw new Error('empty-index');
       setChapterList(idx.chapters.map(c => ({ title: c.title })));
       setChapterBase(base);
     } catch {
+      if (!mountedRef.current) return;
       // index.json 不存在（老数据 / 未执行拆分脚本）→ 退回整本 md
       try {
-        await loadFullBook(novel);
+        await loadFullBook(novel, ctrl.signal);
       } catch (e) {
+        if (!mountedRef.current) return;
         setError((e as Error)?.message || '加载失败');
       }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  }, [loadFullBook]);
+  }, [loadFullBook, startRequest]);
 
   const enterDetail = useCallback(async (novel: Novel) => {
     resetBook();
@@ -170,17 +201,22 @@ export function NovelView({ onExit }: NovelViewProps) {
 
     setChapterLoading(true);
     setChapterError(null);
+    const ctrl = startRequest();
     try {
       const data = await fetchJson<{ paragraphs?: string[] }>(
-        `${chapterBase}ch/${String(idx + 1).padStart(2, '0')}.json`
+        `${chapterBase}ch/${String(idx + 1).padStart(2, '0')}.json`,
+        12000,
+        ctrl.signal
       );
+      if (!mountedRef.current) return;
       cacheRef.current.set(idx, data.paragraphs || []);
     } catch (e) {
+      if (!mountedRef.current) return;
       if (token === reqTokenRef.current) setChapterError((e as Error)?.message || '本章加载失败');
     } finally {
-      if (token === reqTokenRef.current) setChapterLoading(false);
+      if (mountedRef.current && token === reqTokenRef.current) setChapterLoading(false);
     }
-  }, [chapterBase]);
+  }, [chapterBase, startRequest]);
 
   const enterReader = useCallback((chapterIdx?: number) => {
     setPage('reader');

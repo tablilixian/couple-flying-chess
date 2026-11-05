@@ -9,7 +9,6 @@ export const spaMassage: Script = {
   tags: ['🔞 成人', '进阶'],
   duration: 30,
   difficulty: 2,
-  endings: 1,
   characters: [
     {
       role: 'male',

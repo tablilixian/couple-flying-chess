@@ -38,11 +38,22 @@ export function MetronomePendulum({
   const curveRef = useRef(curve);
   const effectRef = useRef(effect);
   const onBeatRef = useRef(onBeat);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { bpmRef.current = bpm; }, [bpm]);
   useEffect(() => { curveRef.current = curve; }, [curve]);
   useEffect(() => { effectRef.current = effect; }, [effect]);
   useEffect(() => { onBeatRef.current = onBeat; }, [onBeat]);
+
+  // 卸载时清掉在途的高亮定时器，避免对已卸载组件 setState
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current) {
+        clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const loopRef = useRef<(ts: number) => void>(() => {});
   loopRef.current = (timestamp: number) => {
@@ -61,7 +72,11 @@ export function MetronomePendulum({
       const isBeat = prevTRef.current > 0.8 && cycleT < 0.2;
       if (isBeat) {
         setImpactFlash(true);
-        setTimeout(() => setImpactFlash(false), 120);
+        if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = setTimeout(() => {
+          flashTimerRef.current = null;
+          setImpactFlash(false);
+        }, 120);
         onBeatRef.current?.();
         if (effectRef.current === 'ripple' || effectRef.current === 'pulse') {
           ripplesRef.current.push({ age: 0, maxAge: effectRef.current === 'pulse' ? 0.8 : 0.6, key: Date.now() + Math.random() });

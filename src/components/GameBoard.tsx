@@ -1,5 +1,5 @@
 import { TileType, PathCoord, Player } from '../types';
-import { Sparkles, Bomb, Trophy, Infinity, User, UserRound } from 'lucide-react';
+import { Sparkles, Bomb, Trophy, Infinity as InfinityIcon, User, UserRound } from 'lucide-react';
 
 interface GameBoardProps {
   boardMap: TileType[];
@@ -47,7 +47,7 @@ export function GameBoard({ boardMap, pathCoords, players, currentTurn }: GameBo
           <Bomb className="text-[#BF5AF2]" size={14} />
         )}
         {!isStart && !isEnd && type === 'status' && (
-          <Infinity className="text-[#30D158]" size={14} />
+          <InfinityIcon className="text-[#30D158]" size={14} />
         )}
       </div>
     );

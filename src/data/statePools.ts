@@ -34,10 +34,14 @@ export function pickStatusForTarget(pool: string[], target: 'male' | 'female'): 
 }
 
 // ════════════════════════════════════════════
-// 通用保底状态池（主题无专属状态时使用）
+// 情侣模式保底状态池（主题无专属状态时使用）
+//
+// ⚠️ 以下三组池子全部为成人向内容，只允许在情侣模式（couple）下使用。
+//    普通模式（normal）面向朋友局/聚会局，必须完全走不到这里 ——
+//    判定统一收敛在 utils/statusLogic.ts 的 isStatusEnabled()。
 // ════════════════════════════════════════════
 
-export const DEFAULT_ACTION_STATES: string[] = [
+export const COUPLE_DEFAULT_ACTION_STATES: string[] = [
   "[M] 每次掷骰前，隔着裤子摸自己阴茎 5 下",
   "[M] 每次掷骰前，把手伸进裤子里握住阴茎 10 秒",
   "[M] 每次掷骰前，用力捏自己乳头 3 下",
@@ -50,7 +54,7 @@ export const DEFAULT_ACTION_STATES: string[] = [
   "[both] 每次掷骰前，在对方耳边说一句脏话情话"
 ];
 
-export const DEFAULT_CONDITION_STATES: string[] = [
+export const COUPLE_DEFAULT_CONDITION_STATES: string[] = [
   "[M] 保持下身裸露——裤子拉链拉开，阴茎保持可见",
   "[M] 阴茎保持半勃起状态，对方可随时伸手检查",
   "[F] 保持上身裸露——上衣解开或脱掉",
@@ -62,10 +66,10 @@ export const DEFAULT_CONDITION_STATES: string[] = [
 ];
 
 // ════════════════════════════════════════════
-// 开场状态池（游戏开始时随机抽一条赋给双方）
+// 开场状态池（游戏开始时随机抽一条赋给双方）— 仅情侣模式
 // ════════════════════════════════════════════
 
-export const OPENING_STATES: string[] = [
+export const COUPLE_OPENING_STATES: string[] = [
   "[M] 每次掷骰前，隔着裤子摸自己阴茎 5 下",
   "[F] 每次掷骰前，隔着内裤揉自己阴蒂 5 下",
   "[both] 每次掷骰前，深吻对方 5 秒",

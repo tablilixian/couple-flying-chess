@@ -9,7 +9,6 @@ export const summerMorning: Script = {
   tags: ['🔞 成人', '高阶'],
   duration: 35,
   difficulty: 2,
-  endings: 1,
   characters: [
     {
       role: 'male',

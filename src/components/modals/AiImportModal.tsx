@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface AiImportModalProps {
   isOpen: boolean;
@@ -12,6 +12,17 @@ export function AiImportModal({ isOpen, themeName, onClose, onImport }: AiImport
   const [jsonText, setJsonText] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 卸载时清掉「已复制」回弹定时器
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) {
+        clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -86,7 +97,11 @@ export function AiImportModal({ isOpen, themeName, onClose, onImport }: AiImport
               try {
                 await navigator.clipboard.writeText(prompt);
                 setCopied(true);
-                setTimeout(() => setCopied(false), 1200);
+                if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+                copiedTimerRef.current = setTimeout(() => {
+                  copiedTimerRef.current = null;
+                  setCopied(false);
+                }, 1200);
               } catch {
                 setCopied(false);
               }

@@ -62,6 +62,10 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
     removeFromStorage(getProgressKey(scenario.id));
   }, [scenario.id]);
 
+  const saveProgressAt = useCallback((actIdx: number, stepIdx: number) => {
+    saveToStorage(getProgressKey(scenario.id), { currentActIdx: actIdx, currentStepIdx: stepIdx });
+  }, [scenario.id]);
+
   useEffect(() => {
     if (startActIdx > 0) return;
     const saved = loadFromStorage<{ currentActIdx: number; currentStepIdx: number } | null>(
@@ -75,6 +79,30 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
 
   const currentAct = scenario.acts[currentActIdx];
   const currentStep = currentAct?.steps[currentStepIdx];
+
+  const handleNext = useCallback(() => {
+    if (!currentAct) return;
+    setSelectedSuggestions(new Set());
+
+    const nextStepIdx = currentStepIdx + 1;
+    if (nextStepIdx < currentAct.steps.length) {
+      setCurrentStepIdx(nextStepIdx);
+      saveProgressAt(currentActIdx, nextStepIdx);
+      return;
+    }
+
+    const nextActIdx = currentActIdx + 1;
+    if (nextActIdx < scenario.acts.length) {
+      setCurrentActIdx(nextActIdx);
+      setCurrentStepIdx(0);
+      setShowActIntro(true);
+      saveProgressAt(nextActIdx, 0);
+      return;
+    }
+
+    clearProgress();
+    setShowEnding(true);
+  }, [currentAct, currentStepIdx, currentActIdx, scenario.acts.length, saveProgressAt, clearProgress]);
 
   useEffect(() => {
     if (!autoPlayRef.current) return;
@@ -94,7 +122,7 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
       }, delay);
     }
     return () => clearTimeout(timer);
-  }, [autoPlay, currentStepIdx, currentActIdx, showActIntro, showResume, showEnding, currentStep?.type, currentStep?.suggestions?.length]);
+  }, [autoPlay, currentStepIdx, currentActIdx, showActIntro, showResume, showEnding, currentStep, handleNext]);
 
   const totalSteps = scenario.acts.reduce((acc, act) => acc + act.steps.length, 0);
   const completedSoFar = scenario.acts
@@ -141,34 +169,6 @@ export function ImmersiveGameView({ scenario, roleAssignment, startActIdx = 0, o
       else next.add(idx);
       return next;
     });
-  };
-
-  const saveProgressAt = useCallback((actIdx: number, stepIdx: number) => {
-    saveToStorage(getProgressKey(scenario.id), { currentActIdx: actIdx, currentStepIdx: stepIdx });
-  }, [scenario.id]);
-
-  const handleNext = () => {
-    if (!currentAct) return;
-    setSelectedSuggestions(new Set());
-
-    const nextStepIdx = currentStepIdx + 1;
-    if (nextStepIdx < currentAct.steps.length) {
-      setCurrentStepIdx(nextStepIdx);
-      saveProgressAt(currentActIdx, nextStepIdx);
-      return;
-    }
-
-    const nextActIdx = currentActIdx + 1;
-    if (nextActIdx < scenario.acts.length) {
-      setCurrentActIdx(nextActIdx);
-      setCurrentStepIdx(0);
-      setShowActIntro(true);
-      saveProgressAt(nextActIdx, 0);
-      return;
-    }
-
-    clearProgress();
-    setShowEnding(true);
   };
 
   const canGoBack = currentActIdx > 0 || currentStepIdx > 0;

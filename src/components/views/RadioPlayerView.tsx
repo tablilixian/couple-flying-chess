@@ -190,6 +190,17 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
         }
       }
     })();
+
+    // 卸载或切章时：作废在途请求 + 停止播放。
+    // 不作废的话，异步回包会在组件卸载后才 assign src 并自行 play()，
+    // 造成「幽灵播放」，且该 Blob URL 永远不会被 revoke。
+    return () => {
+      // 这里必须读 ref 的「当前值」而不是捕获的 token：
+      // 递增当前值才能让所有在途请求（无论何时发出）都失效。
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      playTokenRef.current++;
+      audio.pause();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, chapters]);
 
@@ -201,11 +212,17 @@ export function RadioPlayerView({ mode, onBack }: RadioPlayerViewProps) {
     }
   }, [volume, muted, speed]);
 
-  // 清理 Blob URL (组件卸载时)
+  // 卸载清理：停止播放 + 回收 Blob URL
+  // 媒体元素移出文档后播放不会自动停，必须显式 pause()
   useEffect(() => {
+    // <audio> 是无条件渲染的，元素在整个生命周期内不会被替换，
+    // 因此卸载时直接持有该实例暂停播放是安全的。
+    const audioEl = audioRef.current;
     return () => {
+      audioEl?.pause();
       if (currentBlobUrlRef.current) {
         URL.revokeObjectURL(currentBlobUrlRef.current);
+        currentBlobUrlRef.current = null;
       }
     };
   }, []);
