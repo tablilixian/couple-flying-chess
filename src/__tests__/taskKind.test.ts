@@ -89,8 +89,12 @@ function rolePoolSize(theme: { tasks: string[] }, role: 'male' | 'female'): numb
  *   女方选这个包 → 男方执行它 → 题目必须男方能做
  *   两边都能选     → 取两边较小值
  *
- * 一局 48 次落点约触发 37 个任务，**两人分摊** → 单方每局约 18~19 个。
- * 所以「两局不重复」需要单方池 ≥ 37。
+ * 一局到底抽多少题，用 `scripts/sim-play.ts` 实测（真实棋盘 + 骰子 + 抽题逻辑，
+ * 每包跑 200 局）：**一局约 17.1 个任务，两人分摊 → 单方每局约 8.6 个**。
+ * ⚠️ 事件判定只在**落点**触发一次（不是每走一步都触发），所以远少于「每格一次」的粗算。
+ *
+ * 按单方池算，能撑几局不重复 ≈ 池子 ÷ 8.6：
+ *   ≥ 9 一局 / ≥ 18 两局 / ≥ 26 三局 / ≥ 35 四局
  */
 function executorPool(theme: { tasks: string[]; audience: string }): number {
   const male = rolePoolSize(theme, 'male');
@@ -230,20 +234,20 @@ describe('转换包 · 数据完整性', () => {
     }
   });
 
-  it('场景包够打两局不重复（≥37）；烈度包至少够打一局（≥28）', () => {
+  it('场景包够打四局不重复（≥35，实测取 37）；烈度包至少够打三局（≥26，实测取 28）', () => {
     for (const t of scenePacks) {
       expect(t.tasks.length, t.name).toBeGreaterThanOrEqual(74);
       expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(37);
     }
     // 烈度包一包只收一个烈度档，题量天然比场景包小：
-    // 单方一局要抽 18~19 个题，所以 28 是「一局不重复」的下限
+    // 单方一局抽 8.6 个题，28 条 ≈ 够三局不重复
     for (const t of tierPacks) {
       expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(28);
     }
   });
 
-  it('达不到「两局不重复」的烈度包就是已知的那几个（内容变了要同步）', () => {
-    const thin = tierPacks.filter(t => executorPool(t) < 37).map(t => t.name).sort();
+  it('达不到「四局不重复」的烈度包就是已知的那几个（内容变了要同步）', () => {
+    const thin = tierPacks.filter(t => executorPool(t) < 35).map(t => t.name).sort();
     expect(thin).toEqual(['戏中失控', '束缚试探', '细水长流', '隐秘心事']);
   });
 
