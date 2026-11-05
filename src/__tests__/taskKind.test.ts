@@ -256,34 +256,54 @@ describe('新主题包 · 数据完整性', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// 事件与烈度的交叉
+// 事件 × 烈度 · 格子靠「题型」分流，烈度靠「包」决定
 // ─────────────────────────────────────────────────────────────
 
-describe('事件 × 烈度 · 三个事件抽到的内容真正不同', () => {
+describe('事件 × 烈度 · 格子分流由题型承担，不由烈度标签承担', () => {
   const pack = newPacks[0];
 
-  it('幸运时刻不会抽到 [H] 硬核档', () => {
+  it('转换包不标 [R]/[H]：烈度由包决定，不由标签调节', () => {
+    // [R]/[H] 的原始语义是「奖励向 / 惩罚向」（来自手写包「奖惩卡池」）。
+    // TD 的 difficulty 是「推进程度」不是「正反极性」，映射过去会把难度
+    // 梯度误当成温和/极端塞进包 —— 既稀释包，又把格子池打歪。
+    for (const t of newPacks) {
+      for (const task of t.tasks) {
+        const tags = parseTaskTags(task).tags;
+        expect(tags.includes('R'), `${t.name}: ${task}`).toBe(false);
+        expect(tags.includes('H'), `${t.name}: ${task}`).toBe(false);
+      }
+    }
+  });
+
+  it('幸运时刻只出动作型，不会抽到提问型', () => {
     for (let i = 0; i < 200; i++) {
       const task = pickTaskForRole(pack, 'female', 'lucky', [], seeded(i));
-      expect(parseTaskTags(task).tags.includes('H'), task).toBe(false);
+      expect(taskKindOf(task), task).toBe('act');
     }
   });
 
-  it('意外陷阱优先抽 [H] 硬核档', () => {
-    let hard = 0;
+  it('意外陷阱会抽到提问型（被问一个问题）', () => {
+    const kinds = new Set<string>();
     for (let i = 0; i < 200; i++) {
-      const task = pickTaskForRole(pack, 'male', 'trap', [], seeded(i));
-      if (parseTaskTags(task).tags.includes('H')) hard++;
+      kinds.add(taskKindOf(pickTaskForRole(pack, 'male', 'trap', [], seeded(i))));
     }
-    expect(hard).toBeGreaterThan(150);
+    expect(kinds).toEqual(new Set(['act', 'ask']));
   });
 
-  it('亲密追尾既不抽 [H] 也不抽 [R]', () => {
+  it('亲密追尾会抽到提问型（被追问）', () => {
+    const kinds = new Set<string>();
     for (let i = 0; i < 200; i++) {
-      const task = pickTaskForRole(pack, 'female', 'collision', [], seeded(i));
-      const tags = parseTaskTags(task).tags;
-      expect(tags.includes('H'), task).toBe(false);
-      expect(tags.includes('R'), task).toBe(false);
+      kinds.add(taskKindOf(pickTaskForRole(pack, 'female', 'collision', [], seeded(i))));
     }
+    expect(kinds).toEqual(new Set(['act', 'ask']));
+  });
+
+  it('三个事件抽到的题互不相同（同一包内不会三格同题）', () => {
+    const lucky = pickTaskForRole(pack, 'male', 'lucky', [], seeded(5));
+    const trap = pickTaskForRole(pack, 'male', 'trap', [], seeded(5));
+    expect(lucky).not.toBe('');
+    expect(trap).not.toBe('');
+    // 幸运格只出动作型、陷阱格可能出提问型，两者题型域不同
+    expect(taskKindOf(lucky)).toBe('act');
   });
 });

@@ -4,8 +4,11 @@
  * 复用飞行棋既有的「[标签] 前缀」约定，不改动 Theme 的数据结构：
  *   [M]/[F]/[both]  执行方（沿用 TD 的 target 语义，已抽样验证完全同构）
  *   [Q]             提问型（真问题）；没有 [Q] 一律视为动作型
- *   [R]             奖励向（温和档）
- *   [H]             硬核向（极限档）
+ *   [R]/[H]         奖励向 / 惩罚向（**仅手写包使用**；语义来自「奖惩卡池」）
+ *
+ * 转换包不带 [R]/[H]：TD 的 difficulty 是「推进程度」不是「正反极性」，
+ * 映射过去会把难度梯度误当成温和/极端塞进包，既稀释包又把格子分流打歪。
+ * 转换包的格子分流由题型承担（动作型 / 提问型）。
  *
  * 转换出来的文件是**静态提交**的，运行期不依赖 TD 题库。
  *
@@ -358,18 +361,24 @@ function roleTag(target: TDQuestion['target']): string {
 /**
  * 难度 → H/R。
  *
- * soft（温和）→ [R]：幸运时刻优先抽它
- * extreme（极限）→ [H]：意外陷阱优先抽它
- * hot / hard 不加标签：两个事件都能抽到
+ * ⚠️ 这条映射**已被停用**。
  *
- * 这样三个事件天然分流：
- *   lucky     只出动作型，优先 R（温和）
- *   trap      动作型/提问型随机，优先 H（极限）
- *   collision 动作型/提问型随机，排除 H/R（中性档）
+ * `[R]`/`[H]` 的原始语义来自手写包「奖惩卡池」：
+ *   `[R]` = 奖励向   `[H]` = 惩罚向
+ * 抽题逻辑（幸运格优先 R、陷阱格优先 H）一直是按这个语义写的。
+ *
+ * 而 TD 的 difficulty 标的是**题目的推进程度**，不是「奖励/惩罚」：
+ * 同一个场景里 soft 是入门层、extreme 是推进层，二者都不是「正反两面」。
+ * 举例（禁忌主题）：
+ *   hard    「你有过的最疯狂的一次性幻想是什么？」
+ *   extreme 「你幻想过的多人场景是什么样的？」   ← 并不比 hard 更露骨，只是更禁忌
+ * 若把 difficulty 映射成 R/H，会造成两个后果：
+ *   1. 把难度梯度当成「温和/极端」塞进包 —— 正是要避免的稀释
+ *   2. 格子分流被打歪：口无遮拦的幸运格只剩 5 条、易主之夜只剩 6 条
+ *
+ * 所以转换包**不标 R/H**，格子分流改由题型（动作型 / 提问型）承担。
  */
-function intensityTag(difficulty: TDQuestion['difficulty']): string {
-  if (difficulty === 'soft') return '[R]';
-  if (difficulty === 'extreme') return '[H]';
+function intensityTag(_difficulty: TDQuestion['difficulty']): string {
   return '';
 }
 
@@ -412,7 +421,10 @@ function toSource(pack: ReturnType<typeof buildPack>): string {
   lines.push('//');
   lines.push('// 标签约定：');
   lines.push('//   [M]/[F]/[both] 执行方   [Q] 提问型（要回答一个问题）');
-  lines.push('//   [R] 奖励向（温和档）    [H] 硬核向（极限档）');
+  lines.push('//');
+  lines.push('// 本包是「场景包」：包内题目的烈度是这个场景的推进梯度（入门 → 极限），');
+  lines.push('// 不是混入的温和题，所以整体保留；格子分流由「动作型 / 提问型」承担，');
+  lines.push('// 不使用 [R]/[H]（那两个标签的语义是奖励向 / 惩罚向，来自「奖惩卡池」）。');
   lines.push('//');
   lines.push('');
   lines.push(`const ${spec.id.replace(/-([a-z])/g, (_, c) => c.toUpperCase())}: Omit<Theme, 'mode'> = {`);
