@@ -22,6 +22,17 @@ interface PackSpec {
   name: string;
   desc: string;
   tdTheme: TDTheme;
+  /**
+   * 谁可以选这个包。
+   *
+   * 飞行棋里 **包的执行方永远是对方**：
+   *   男方选 → 女方执行（所以包要够 `[F]`/`[both]`）
+   *   女方选 → 男方执行（所以包要够 `[M]`/`[both]`）
+   *
+   * 因此角色极不平衡的库要用 audience 把它钉给合适的一方：
+   * `slutwife` 有 129 条 `[F]`、只有 12 条 `[M]`，正好只给男方选。
+   */
+  audience: 'common' | 'male' | 'female';
   actionStates: string[];
   conditionStates: string[];
 }
@@ -32,6 +43,7 @@ const PACKS: PackSpec[] = [
     name: '众目之下',
     desc: '公共场合的暴露与窥视',
     tdTheme: 'exposure',
+    audience: 'common',
     actionStates: [
       '[M] 每次掷骰前，把手放在对方大腿外侧停 3 秒',
       '[F] 每次掷骰前，把外套拉链往下拉一点点又拉回去',
@@ -48,6 +60,7 @@ const PACKS: PackSpec[] = [
     name: '客厅禁区',
     desc: '客厅沙发 · 日常里的越界',
     tdTheme: 'home',
+    audience: 'common',
     actionStates: [
       '[M] 每次掷骰前，把对方按在沙发靠背上亲一下',
       '[F] 每次掷骰前，跨坐到对方腿上再下来',
@@ -64,6 +77,7 @@ const PACKS: PackSpec[] = [
     name: '深夜坦白',
     desc: '深层对话 · 灵魂拷问',
     tdTheme: 'confession',
+    audience: 'common',
     actionStates: [
       '[M] 每次掷骰前，说出一句一直没敢说的心里话',
       '[F] 每次掷骰前，讲一件对方不知道的小事',
@@ -73,6 +87,109 @@ const PACKS: PackSpec[] = [
       '[M] 本局不许开玩笑，认真回答每一题',
       '[F] 必须如实回答，不许敷衍',
       '[both] 所有问题都要正面回答，不许用「随便」搪塞'
+    ]
+  },
+  {
+    id: 'beyond-the-line',
+    name: '底线之后',
+    desc: '大胆突破 · 解锁没试过的',
+    tdTheme: 'taboo',
+    audience: 'common',
+    actionStates: [
+      '[M] 每次掷骰前，说出一个你们都没试过但都好奇的事',
+      '[F] 每次掷骰前，用最轻的声音说一句你的底线',
+      '[both] 每次掷骰前，十指相扣同时问一句「敢不敢」'
+    ],
+    conditionStates: [
+      '[M] 今晚任何底线都可以重新商量',
+      '[F] 谁先说不敢，这一局就听谁的',
+      '[both] 答应对方的任何要求都不能反悔'
+    ]
+  },
+  {
+    id: 'three-way',
+    name: '三人世界',
+    desc: '旁观与被旁观 · 共享凝视',
+    tdTheme: 'third',
+    audience: 'common',
+    actionStates: [
+      '[M] 每次掷骰前，描述一次「如果第三个人在场会怎样」',
+      '[F] 每次掷骰前，讲一个你们聊过的第三人话题',
+      '[both] 每次掷骰前，同时说出对方最能接受的那个「第三个人」'
+    ],
+    conditionStates: [
+      '[M] 今晚可以随时假设第三个人在场',
+      '[F] 谈论第三个人时不许表现出排斥',
+      '[both] 任何关于第三人的话题都要正面回答'
+    ]
+  },
+  {
+    id: 'loose-tongue',
+    name: '口无遮拦',
+    desc: '言语挑逗 · 粗口刺激',
+    tdTheme: 'dirtytalk',
+    audience: 'common',
+    actionStates: [
+      '[M] 每次掷骰前，用最直接的词夸对方一次',
+      '[F] 每次掷骰前，说一句让对方脸红的台词',
+      '[both] 每次掷骰前，比一次谁先绷不住'
+    ],
+    conditionStates: [
+      '[M] 今晚说脏话不许收敛',
+      '[F] 不许用手或别的东西代替说话',
+      '[both] 嘴上的话必须和动作同步'
+    ]
+  },
+  {
+    id: 'changed-hands',
+    name: '易主之夜',
+    desc: '被夺走与看着被夺走',
+    tdTheme: 'cuckold',
+    audience: 'common',
+    actionStates: [
+      '[M] 每次掷骰前，讲一次「看着对方属于别人」的想象',
+      '[F] 每次掷骰前，演一次「不再属于你」的样子',
+      '[both] 每次掷骰前，换一个位置扮演主导方'
+    ],
+    conditionStates: [
+      '[M] 今晚允许对方「不把你当回事」',
+      '[F] 必须真的把对方当成「别人的」',
+      '[both] 交换主导权后不许笑场'
+    ]
+  },
+  {
+    id: 'swapped-night',
+    name: '互换之夜',
+    desc: '伴侣共享 · 换偶幻想',
+    tdTheme: 'swing',
+    audience: 'common',
+    actionStates: [
+      '[M] 每次掷骰前，说一个你想「让出去」的特权',
+      '[F] 每次掷骰前，说一个你想「独占」的时刻',
+      '[both] 每次掷骰前，一起数三个你们都能接受的原则'
+    ],
+    conditionStates: [
+      '[M] 今晚不能表现出占有欲',
+      '[F] 你提出的底线对方必须尊重',
+      '[both] 任何决定都由两人共同做出'
+    ]
+  },
+  {
+    id: 'seductive-wife',
+    name: '风情妻子',
+    desc: '风情万种 · 属于对方的妻子',
+    tdTheme: 'slutwife',
+    // 129 条 [F] / 12 条 [M] —— 只给男方选，交给女方执行
+    audience: 'male',
+    actionStates: [
+      '[M] 每次掷骰前，用一句话形容对方今天有多迷人',
+      '[F] 每次掷骰前，诱惑对方一次（用声音或姿态）',
+      '[both] 每次掷骰前，互相比一句「换我也会选你」'
+    ],
+    conditionStates: [
+      '[M] 今晚由对方掌握节奏，你只负责配合',
+      '[F] 保持「属于对方」的姿态，不许主动收回',
+      '[both] 今晚所有的主导权都交给对方'
     ]
   }
 ];
@@ -102,7 +219,72 @@ const OVERRIDES = new Map<string, string>([
   // TD 原文本身的两处读不通，顺手修掉
   ['打开你的手机浏览器无痕模式给对看', '打开你的手机浏览器无痕模式给对方看'],
   ['你有没有偷偷羡慕过别人的老婆身材更好？', '你有没有偷偷羡慕过别人伴侣的身材更好？'],
-  ['你有没有偷偷羡慕过别人的老公更浪漫？', '你有没有偷偷羡慕过别人伴侣更浪漫？']
+  ['你有没有偷偷羡慕过别人的老公更浪漫？', '你有没有偷偷羡慕过别人伴侣更浪漫？'],
+
+  // ── 原文里「他」和「她」同时出现 = 指的是**两个人**，抹平成「对方」后会读不通 ──
+  // 一律改成「一方…另一方…」的写法，角色中性，男女执行都读得通
+  ['如果她同意，你会想尝试跟她和她闺蜜同时暧昧吗？', '如果对方同意，你会想尝试跟对方和对方的闺蜜同时暧昧吗？'],
+  ['如果他同意，你会想尝试跟他和他最好的朋友一起暧昧吗？', '如果对方同意，你会想尝试跟对方和对方最好的朋友一起暧昧吗？'],
+  [
+    '如果我说我可以原谅你一次逢场作戏的身体出轨，但我要知道每个细节，你会利用这个许可吗？',
+    '如果对方说可以原谅你一次逢场作戏的身体出轨，但要知道每个细节，你会利用这个许可吗？'
+  ],
+  [
+    '把对方的双手按在墙上，凑近嘴唇说："如果你现在在和我老婆/老公偷情，你会怎么求我别停？"',
+    '把对方的双手按在墙上，凑近嘴唇说："如果你现在在和我对象偷情，你会怎么求我别停？"'
+  ],
+  [
+    '用他的手机给他的一个好兄弟发一条"我女朋友今天说想看你……"，发送前让他决定撤不撤回。',
+    '用对方的手机给对方的好兄弟发一条"我女朋友今天说想看你……"，发送前让对方决定撤不撤回。'
+  ],
+  [
+    '角色扮演：一方是丈夫，一方是妻子，妻子坦白刚刚和修水管的小哥调情了，丈夫的反应必须即兴。',
+    '角色扮演：一人演"在外有别人"，一人演"被瞒着的那位"；前者坦白刚刚和修水管的小哥调情了，后者的反应必须即兴。'
+  ],
+  [
+    '一起拍一张照片，她负责摆出"有秘密"的表情，他负责"假装不知道"',
+    '一起拍一张照片，一方摆出"有秘密"的表情，另一方负责"假装不知道"'
+  ],
+  [
+    '面对面坐着，她扮演"刚和别人约会回来"，他扮演"在家等着的丈夫"，即兴对话2分钟',
+    '面对面坐着，一方扮演"刚和别人约会回来"，另一方扮演"在家等着的人"，即兴对话2分钟'
+  ],
+  [
+    '模拟一次"单男面试"：她做面试官问问题，他扮演单男回答，要尽量进入角色',
+    '模拟一次"单男面试"：一方做面试官问问题，另一方扮演单男回答，要尽量进入角色'
+  ],
+  [
+    '互相协助，给对方穿戴整齐，然后她出门在走廊站一分钟（确保安全），他通过猫眼偷看',
+    '互相协助给对方穿戴整齐，然后对方出门在走廊站一分钟（确保安全），另一人通过猫眼偷看'
+  ],
+  [
+    '对他说一句："如果你是别人的老婆，我现在就会……"并补完这句话',
+    '对对方说一句："如果你是别人的伴侣，我现在就会……"并补完这句话'
+  ],
+  [
+    '你愿不愿意让他把你的照片发到某个成人社区，标明"共享妻子"？',
+    '你愿不愿意让对方把你的照片发到某个成人社区，标明"共享伴侣"？'
+  ],
+  [
+    '让她假装是别人的妻子，你第一次见到她，开始搭讪',
+    '让对方假装是别人的伴侣，你第一次见到对方，开始搭讪'
+  ],
+  [
+    '让他假装是别人的丈夫，你第一次见到他，展现你的魅力',
+    '让对方假装是别人的伴侣，你第一次见到对方，展现你的魅力'
+  ],
+  [
+    '用第三人称讲述一个故事：你的妻子在别人怀里，而你在一旁看着',
+    '用第三人称讲述一个故事：你的伴侣在别人怀里，而你在一旁看着'
+  ],
+  [
+    '用第三人称讲述一个故事：你的丈夫在别人身上，而你在一旁观看',
+    '用第三人称讲述一个故事：你的伴侣在别人身上，而你在一旁观看'
+  ],
+  [
+    '让你妻子给你戴上一顶"绿帽子"（可以是实物或指代），然后她赞美你',
+    '让对方给你戴上一顶"绿帽子"（可以是实物或指代），然后对方赞美你'
+  ]
 ]);
 
 /**
@@ -126,8 +308,10 @@ function normalizeSegment(seg: string, opts: { quoted: boolean; isTruth: boolean
   }
 
   // R2：他/她 → 对方
+  //  - 「他/她」连写 = 指的是同一个人，整体收敛成一个「对方」
   //  - 「其他/其它/其中」的「他」不是指人
   //  - 「他们/她们」是第三方群体
+  s = s.replace(/他\/她/g, '对方');
   s = s.replace(/([其])(他|她)/g, keep);
   s = s.replace(/(他|她)(们)/g, keep);
   s = s.replace(/他|她/g, '对方');
@@ -200,8 +384,18 @@ function toTask(q: TDQuestion): string {
 
 function buildPack(spec: PackSpec) {
   const questions = COUPLE_QUESTIONS.filter(q => q.theme === spec.tdTheme);
-  const tasks = questions.map(toTask);
-  return { spec, questions, tasks };
+  // TD 原库自身有重复文案（同一句出现两次）；转换后同文更是没有意义，直接去重
+  const seen = new Set<string>();
+  const items: { task: string; raw: string }[] = [];
+  const dropped: string[] = [];
+  for (const q of questions) {
+    const task = toTask(q);
+    const body = bodyOf(task);
+    if (seen.has(body)) { dropped.push(body); continue; }
+    seen.add(body);
+    items.push({ task, raw: q.text });
+  }
+  return { spec, questions, items, tasks: items.map(i => i.task), dropped };
 }
 
 function esc(s: string): string {
@@ -225,7 +419,7 @@ function toSource(pack: ReturnType<typeof buildPack>): string {
   lines.push(`  id: '${spec.id}',`);
   lines.push(`  name: '${spec.name}',`);
   lines.push(`  desc: '${esc(spec.desc)}',`);
-  lines.push("  audience: 'common',");
+  lines.push(`  audience: '${spec.audience}',`);
   lines.push('  tasks: [');
   for (const t of tasks) lines.push(`    "${esc(t)}",`);
   lines.push('  ],');
@@ -244,31 +438,40 @@ function toSource(pack: ReturnType<typeof buildPack>): string {
 
 // ─────────────────────────── 诊断 ───────────────────────────
 
-const SUSPECT = /对方[^，。！？,!?]{0,4}对方|对方\s*面前|里的对方|给对方的对方/;
+/** 剥掉所有开头标签，只留正文 */
+function bodyOf(task: string): string {
+  return task.replace(/^(\[[^\]]+\]\s*)+/, '');
+}
 
 function report(pack: ReturnType<typeof buildPack>) {
-  const { spec, questions, tasks } = pack;
-  console.log(`\n════════ ${spec.name} (${spec.tdTheme}) ${tasks.length} 条 ════════`);
+  const { spec, questions, tasks, dropped } = pack;
+  console.log(`\n════════ ${spec.name} (${spec.tdTheme}) ${tasks.length} 条 · audience=${spec.audience} ════════`);
+  if (dropped.length > 0) {
+    console.log(`  去重 ${dropped.length} 条（原库重复）：${dropped.map(d => `「${d}」`).join('')}`);
+  }
 
   let suspect = 0;
   let residual = 0;
-  for (let i = 0; i < tasks.length; i++) {
-    const t = tasks[i];
-    const body = t.replace(/^\[[^\]]+\]\s*/, '');
+  const multiRef: string[] = [];
+  for (const item of pack.items) {
+    const body = bodyOf(item.task);
+    const raw = item.raw;
     const issues: string[] = [];
-    if (SUSPECT.test(body)) issues.push('双重指代');
+    // 原文里「他」和「她」同时出现 = 指的是**两个人**，抹平成「对方」后会读不通
+    if (/他/.test(raw) && /她/.test(raw)) issues.push('双人人称');
+    if ((body.match(/对方/g) || []).length >= 3) issues.push('多次指代');
     if (/男生|女生/.test(body)) issues.push('残留性别词');
     if (/[他她](?!们)/.test(body)) issues.push('残留他她');
     if (/老婆|老公|妻子|丈夫/.test(body)) issues.push('残留伴侣称谓');
-    if (/(^|[^你他她对方])我/.test(body)) issues.push('残留我');
-    if (body.includes('对方对方')) issues.push('对方对方');
+    if (/@@|\$1|__KEEP/.test(body)) issues.push('占位符残留');
     if (issues.length > 0) {
       residual++;
-      if (issues.includes('双重指代') || issues.includes('残留性别词')) suspect++;
-      console.log(`  ⚠️ [${issues.join('/')}] ${body}`);
+      if (issues.includes('残留性别词') || issues.includes('占位符残留')) suspect++;
+      else multiRef.push(`  ⚠️ [${issues.join('/')}] ${body}`);
     }
   }
-  console.log(`  → 需人工复核 ${residual} 条（其中重点 ${suspect} 条）`);
+  multiRef.forEach(l => console.log(l));
+  console.log(`  → 需人工复核 ${residual} 条（其中重点 ${suspect} 条，其余为「多次指代」待确认）`);
 
   const kinds = { act: 0, ask: 0 };
   const roles = { M: 0, F: 0, both: 0 };
@@ -278,10 +481,13 @@ function report(pack: ReturnType<typeof buildPack>) {
     if (q.target === 'male') roles.M++; else if (q.target === 'female') roles.F++; else roles.both++;
     ints[q.difficulty] = (ints[q.difficulty] || 0) + 1;
   }
+  // 包的执行方永远是对方：男方选 → 女方执行；女方选 → 男方执行
   const malePool = roles.M + roles.both;
   const femalePool = roles.F + roles.both;
+  const executorPool = spec.audience === 'male' ? femalePool : spec.audience === 'female' ? malePool : Math.min(malePool, femalePool);
   console.log(`  题型 act:${kinds.act} / ask:${kinds.ask}`);
   console.log(`  角色 M:${roles.M} F:${roles.F} both:${roles.both}  → 男可执行池 ${malePool} / 女可执行池 ${femalePool}`);
+  console.log(`  本包实际执行方池 = ${executorPool} ${executorPool >= 74 ? '✅ 够两局' : executorPool >= 37 ? '⚠️ 够一局' : '❌ 偏薄'}`);
   console.log(`  难度 ${Object.entries(ints).map(([k, v]) => `${k}:${v}`).join(' ')}`);
 }
 

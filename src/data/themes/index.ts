@@ -14,6 +14,12 @@ import coupleContractLovers from './coupleContractLovers';
 import couplePublicEyes from './couplePublicEyes';
 import coupleLivingRoom from './coupleLivingRoom';
 import coupleDeepConfession from './coupleDeepConfession';
+import coupleBeyondTheLine from './coupleBeyondTheLine';
+import coupleThreeWay from './coupleThreeWay';
+import coupleLooseTongue from './coupleLooseTongue';
+import coupleChangedHands from './coupleChangedHands';
+import coupleSwappedNight from './coupleSwappedNight';
+import coupleSeductiveWife from './coupleSeductiveWife';
 import normalTruthDare from './normalTruthDare';
 import normalFunChallenges from './normalFunChallenges';
 import normalPerformance from './normalPerformance';
@@ -34,7 +40,13 @@ const RAW_COUPLE_THEMES: Omit<Theme, 'mode'>[] = [
   coupleContractLovers,
   couplePublicEyes,
   coupleLivingRoom,
-  coupleDeepConfession
+  coupleDeepConfession,
+  coupleBeyondTheLine,
+  coupleThreeWay,
+  coupleLooseTongue,
+  coupleChangedHands,
+  coupleSwappedNight,
+  coupleSeductiveWife
 ];
 
 const RAW_NORMAL_THEMES: Omit<Theme, 'mode'>[] = [

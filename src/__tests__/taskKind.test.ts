@@ -16,7 +16,17 @@ import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
  * 3. **转换没有代词残留** —— 题面里不能出现「老公/老婆/男生/女生」这类第三人称
  */
 
-const NEW_PACK_IDS = ['public-eyes', 'living-room', 'deep-confession'];
+const NEW_PACK_IDS = [
+  'public-eyes',
+  'living-room',
+  'deep-confession',
+  'beyond-the-line',
+  'three-way',
+  'loose-tongue',
+  'changed-hands',
+  'swapped-night',
+  'seductive-wife'
+];
 
 const coupleThemes = COUPLE_DEFAULT_THEMES;
 const newPacks = coupleThemes.filter(t => NEW_PACK_IDS.includes(t.id));
@@ -43,6 +53,25 @@ function rolePoolSize(theme: { tasks: string[] }, role: 'male' | 'female'): numb
     else n++;
   }
   return n;
+}
+
+/**
+ * 这个包**实际**能被用到的题池大小。
+ *
+ * 飞行棋里包的执行方永远是对方：
+ *   男方选这个包 → 女方执行它 → 题目必须女方能做
+ *   女方选这个包 → 男方执行它 → 题目必须男方能做
+ *   两边都能选     → 取两边较小值
+ *
+ * 一局 48 次落点约触发 37 个任务，**两人分摊** → 单方每局约 18~19 个。
+ * 所以「两局不重复」需要单方池 ≥ 37。
+ */
+function executorPool(theme: { tasks: string[]; audience: string }): number {
+  const male = rolePoolSize(theme, 'male');
+  const female = rolePoolSize(theme, 'female');
+  if (theme.audience === 'male') return female;
+  if (theme.audience === 'female') return male;
+  return Math.min(male, female);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -150,24 +179,33 @@ describe('事件分流 · 题型由系统随机决定', () => {
 // ─────────────────────────────────────────────────────────────
 
 describe('新主题包 · 数据完整性', () => {
-  it('三个包都已注册，且属于情侣模式', () => {
-    expect(newPacks).toHaveLength(3);
+  it('九个包都已注册，且都属于情侣模式', () => {
+    expect(newPacks).toHaveLength(9);
     for (const t of newPacks) {
       expect(t.mode).toBe('couple');
-      expect(t.audience).toBe('common');
     }
   });
 
-  it('普通模式拿不到这三个包', () => {
+  it('普通模式拿不到这九个包', () => {
     const normalIds = NORMAL_DEFAULT_THEMES.map(t => t.id);
     for (const id of NEW_PACK_IDS) expect(normalIds).not.toContain(id);
   });
 
-  it('每个包题量够打两局（≥74），且男女执行池都不薄', () => {
+  it('角色极不平衡的包用 audience 钉给合适的一方', () => {
+    // 「风情妻子」有 129 条 [F]、只有 12 条 [M] —— 只能给男方选、交给女方执行
+    const wife = newPacks.find(t => t.id === 'seductive-wife')!;
+    expect(wife.audience).toBe('male');
+    expect(rolePoolSize(wife, 'female')).toBeGreaterThanOrEqual(37);
+    // 其余包男女都能选
+    for (const t of newPacks.filter(x => x.id !== 'seductive-wife')) {
+      expect(t.audience).toBe('common');
+    }
+  });
+
+  it('每个包的实际执行方池够打两局不重复（≥37）', () => {
     for (const t of newPacks) {
       expect(t.tasks.length, t.name).toBeGreaterThanOrEqual(74);
-      expect(rolePoolSize(t, 'male'), t.name).toBeGreaterThanOrEqual(74);
-      expect(rolePoolSize(t, 'female'), t.name).toBeGreaterThanOrEqual(74);
+      expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(37);
     }
   });
 
@@ -190,7 +228,7 @@ describe('新主题包 · 数据完整性', () => {
     }
   });
 
-  it('三个包之间没有重复文案', () => {
+  it('九个包之间没有重复文案', () => {
     const seen = new Map<string, string>();
     for (const t of newPacks) {
       for (const task of t.tasks) {
