@@ -175,9 +175,16 @@ export function normalizeThemes(input: unknown, mode: GameMode): Theme[] {
         // 用户从未碰过这个主题 → 直接用代码版本
         tasks = dt.tasks;
       } else if (storedBase === null) {
-        // 迁移路径：老版本没有基线快照，先原样保留用户列表，
-        // 本次读档后 baseTasks 会被写成当前代码基线，之后即可正常合并
-        tasks = storedTasks;
+        // 迁移路径：老版本没有基线快照。
+        //
+        // 之前这里直接用 storedTasks（原样保留），但那样会**永久丢掉代码新增的题**：
+        // 本次读档把 baseTasks 写成新基线、tasks 写成旧列表，
+        // 下一次读档三方合并就会把这些题当成「用户自己删掉的」，再也回不来。
+        //
+        // 正确做法是取并集 —— 用户手上的一概不动，代码新增的一并下发。
+        // 代价是代码侧删掉的旧题也会留下（这里分不清「用户删的」和「代码删的」，
+        // 保守选择是不动用户已有的数据）。
+        tasks = mergeThemeTasks(dt.tasks, storedTasks, storedTasks);
       } else {
         tasks = mergeThemeTasks(dt.tasks, storedBase, storedTasks);
       }

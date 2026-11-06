@@ -10,22 +10,31 @@
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../src/data/themes';
 import { PACKS as TD_PACK_SPECS } from './td-pack-specs';
 import { IMMERSIVE_PACKS } from './immersive-pack-specs';
+import { NORMAL_TIER_PACK_IDS } from './normal-pack-specs';
 import { parseTaskTags, taskKindOf, type TaskKind } from '../src/utils/personalizeTask';
 import { EVENT_KINDS, type TaskEventType } from '../src/utils/taskPicker';
 
 /**
- * 包的三种来源，直接取自转换器的规格表，避免两处各写一遍：
- * - hand  手写包（含 11 个阶梯包 + 普通模式 5 个包）
+ * 包的五种来源，直接取自转换器的规格表，避免两处各写一遍：
+ * - hand   手写包（含 11 个阶梯包 + 普通模式 5 个包）
  * - conv   场景包：一个 TD 主题 = 一个包，包内是该幻想的推进梯度
  * - tier   烈度包：同一个 TD 主题按烈度档拆开，一包只收一档
  * - imm    沉浸包：由「沉浸剧场 / 调教节奏」转换而来
+ * - entry  入门包：新写的软一档入门层（束缚 / 调教 / 禁忌）
+ * - ntier  普通库烈度包：由普通题库按烈度切出来的 4 个包
  */
 const TIER_PACK_IDS = new Set(TD_PACK_SPECS.filter(s => s.tiers).map(s => s.id));
 const CONVERTED_PACK_IDS = new Set(TD_PACK_SPECS.map(s => s.id));
 const IMMERSIVE_PACK_IDS = new Set(IMMERSIVE_PACKS.map(s => s.id));
+/** 新写的入门层包 */
+const ENTRY_PACK_IDS = new Set(['bond-intro', 'dominator-intro', 'taboo-intro']);
 
-function sourceOf(pack: { id: string; tasks: string[] }): 'hand' | 'conv' | 'tier' | 'imm' {
+export type PackSource = 'hand' | 'conv' | 'tier' | 'imm' | 'entry' | 'ntier';
+
+function sourceOf(pack: { id: string; tasks: string[] }): PackSource {
   if (IMMERSIVE_PACK_IDS.has(pack.id)) return 'imm';
+  if (ENTRY_PACK_IDS.has(pack.id)) return 'entry';
+  if (NORMAL_TIER_PACK_IDS.has(pack.id)) return 'ntier';
   if (!CONVERTED_PACK_IDS.has(pack.id)) return 'hand';
   return TIER_PACK_IDS.has(pack.id) ? 'tier' : 'conv';
 }
@@ -50,7 +59,7 @@ interface PackRow {
   R: number;
   H: number;
   u: number;
-  src: 'hand' | 'conv' | 'tier' | 'imm';
+  src: PackSource;
 }
 
 const rows: PackRow[] = [];
@@ -168,7 +177,7 @@ const normalRows = rows.filter(r => r.m === 'normal');
 const sum = (rs: PackRow[], k: keyof PackRow) => rs.reduce((a, r) => a + (r[k] as number), 0);
 console.log(`// 飞行棋 ${rows.length} 包 / ${sum(rows, 't')} 题`);
 console.log(`// 情侣 ${coupleRows.length} 包 / ${sum(coupleRows, 't')} 题（转换包 ${coupleRows.filter(r => r.src !== 'hand').length} 个 / ${sum(coupleRows.filter(r => r.src !== 'hand'), 't')} 题）`);
-console.log(`//   其中场景包 ${coupleRows.filter(r => r.src === 'conv').length} 个 / 烈度包 ${coupleRows.filter(r => r.src === 'tier').length} 个 / 沉浸包 ${coupleRows.filter(r => r.src === 'imm').length + normalRows.filter(r => r.src === 'imm').length} 个`);
-console.log(`// 普通 ${normalRows.length} 包 / ${sum(normalRows, 't')} 题`);
+console.log(`//   其中场景包 ${coupleRows.filter(r => r.src === 'conv').length} 个 / 烈度包 ${coupleRows.filter(r => r.src === 'tier').length} 个 / 沉浸包 ${coupleRows.filter(r => r.src === 'imm').length + normalRows.filter(r => r.src === 'imm').length} 个 / 入门包 ${coupleRows.filter(r => r.src === 'entry').length} 个`);
+console.log(`// 普通 ${normalRows.length} 包 / ${sum(normalRows, 't')} 题（普通库烈度包 ${normalRows.filter(r => r.src === 'ntier').length} 个 / ${sum(normalRows.filter(r => r.src === 'ntier'), 't')} 题）`);
 console.log(`// 提问型 [Q] ${sum(rows, 'Q')} 条 · 奖励向 [R] ${sum(rows, 'R')} 条 · 惩罚向 [H] ${sum(rows, 'H')} 条`);
 console.log(`// 三格同池的包：${pools.filter(p => p.same).length} / ${pools.length}`);

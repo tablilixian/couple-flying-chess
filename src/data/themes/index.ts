@@ -36,12 +36,19 @@ import coupleRhythmControl from './coupleRhythmControl';
 import coupleRoleLines from './coupleRoleLines';
 import coupleSceneUndercurrent from './coupleSceneUndercurrent';
 import coupleFantasyBuild from './coupleFantasyBuild';
+import coupleBondIntro from './coupleBondIntro';
+import coupleDominatorIntro from './coupleDominatorIntro';
+import coupleTabooIntro from './coupleTabooIntro';
 import normalTruthDare from './normalTruthDare';
 import normalFunChallenges from './normalFunChallenges';
 import normalPerformance from './normalPerformance';
 import normalMindBender from './normalMindBender';
 import normalGroupChaos from './normalGroupChaos';
 import normalTrustProbe from './normalTrustProbe';
+import normalWarmUp from './normalWarmUp';
+import normalHeatUp from './normalHeatUp';
+import normalGoSerious from './normalGoSerious';
+import normalAllIn from './normalAllIn';
 
 const RAW_COUPLE_THEMES: Omit<Theme, 'mode'>[] = [
   couplePrelude,
@@ -79,7 +86,10 @@ const RAW_COUPLE_THEMES: Omit<Theme, 'mode'>[] = [
   coupleRhythmControl,
   coupleRoleLines,
   coupleSceneUndercurrent,
-  coupleFantasyBuild
+  coupleFantasyBuild,
+  coupleBondIntro,
+  coupleDominatorIntro,
+  coupleTabooIntro
 ];
 
 const RAW_NORMAL_THEMES: Omit<Theme, 'mode'>[] = [
@@ -88,7 +98,11 @@ const RAW_NORMAL_THEMES: Omit<Theme, 'mode'>[] = [
   normalPerformance,
   normalMindBender,
   normalGroupChaos,
-  normalTrustProbe
+  normalTrustProbe,
+  normalWarmUp,
+  normalHeatUp,
+  normalGoSerious,
+  normalAllIn
 ];
 
 export const COUPLE_DEFAULT_THEMES: Theme[] = RAW_COUPLE_THEMES.map(theme => ({

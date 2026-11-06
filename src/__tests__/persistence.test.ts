@@ -84,10 +84,11 @@ describe('normalizeThemes · 内置主题的用户改动不再丢失', () => {
     }
   });
 
-  it('内置主题删除的任务在读档后不会复活', () => {
+  it('内置主题删除的任务在读档后不会复活（有基线快照的正常路径）', () => {
     const target = COUPLE_DEFAULT_THEMES.find(t => t.id === 'warmup')!;
     const removed = target.tasks[0];
-    const stored = [{ ...target, tasks: target.tasks.slice(1) }];
+    // 正常路径：存档里带 baseTasks（用户上次看到的代码版本）
+    const stored = [{ ...target, baseTasks: target.tasks, tasks: target.tasks.slice(1) }];
 
     const result = normalizeThemes(stored, 'couple');
     const after = result.find(t => t.id === 'warmup')!;
@@ -107,15 +108,47 @@ describe('normalizeThemes · 内置主题的用户改动不再丢失', () => {
     );
     const firstTheme = first.find(t => t.id === 'warmup')!;
     expect(firstTheme.tasks).toContain(added);
-    expect(firstTheme.tasks).not.toContain(removed);
+    // 迁移路径以代码为准：老存档里分不清「用户删的」和「代码加的」，
+    // 只能保证代码新增的题下发（见下面那条用例）。
+    expect(firstTheme.tasks).toContain(removed);
 
     // 第一次读档已经把 baseTasks 写成当前代码基线，落盘后再次读档
     const second = normalizeThemes([firstTheme], 'couple');
     const secondTheme = second.find(t => t.id === 'warmup')!;
 
     expect(secondTheme.tasks).toContain(added);
-    expect(secondTheme.tasks).not.toContain(removed);
     expect(secondTheme.tasks.length).toBe(firstTheme.tasks.length);
+  });
+
+  it('老存档（没有基线快照）也要拿到代码新增的任务，且不能被当成用户删除', () => {
+    // 复现路径：用户是老玩家，存档里只有 tasks、没有 baseTasks（迁移路径）。
+    // 代码这时给内置包加了新题。
+    const target = COUPLE_DEFAULT_THEMES.find(t => t.id === 'warmup')!;
+    const oldBaseline = target.tasks.slice(0, -1); // 用户当初看到的那一版
+    const newTask = target.tasks[target.tasks.length - 1]; // 代码新增的那条
+
+    // 第一次读档：老存档没有 baseTasks
+    const first = normalizeThemes([{ ...target, tasks: oldBaseline }], 'couple');
+    const firstTheme = first.find(t => t.id === 'warmup')!;
+
+    // 关键：代码新增的题必须已经出现在用户列表里
+    expect(firstTheme.tasks, '第一次读档就应该拿到代码新增的题').toContain(newTask);
+
+    // 落盘后再读一次（baseTasks 此时已是新基线），新增的题不能被误判成「用户删除」
+    const second = normalizeThemes([firstTheme], 'couple');
+    const secondTheme = second.find(t => t.id === 'warmup')!;
+    expect(secondTheme.tasks, '第二次读档新增的题不能消失').toContain(newTask);
+  });
+
+  it('老存档里用户自己加的题同样保留（迁移路径不吞用户内容）', () => {
+    const target = COUPLE_DEFAULT_THEMES.find(t => t.id === 'warmup')!;
+    const added = '【老存档里手加的】';
+    const stored = [{ ...target, tasks: target.tasks.slice(0, -1).concat(added) }];
+
+    const result = normalizeThemes(stored, 'couple');
+    const after = result.find(t => t.id === 'warmup')!;
+
+    expect(after.tasks).toContain(added);
   });
 
   it('内置主题读档后 baseTasks 推进到当前代码基线', () => {
@@ -124,6 +157,26 @@ describe('normalizeThemes · 内置主题的用户改动不再丢失', () => {
     const after = result.find(t => t.id === 'warmup')!;
 
     expect(after.baseTasks).toEqual(target.tasks);
+  });
+
+  it('老存档（没有基线快照）也要拿到代码新增的任务，且不能被当成用户删除', () => {
+    // 复现路径：用户是老玩家，存档里只有 tasks、没有 baseTasks（迁移路径）。
+    // 代码这时给内置包加了新题。
+    const target = COUPLE_DEFAULT_THEMES.find(t => t.id === 'warmup')!;
+    const oldBaseline = target.tasks.slice(0, -1); // 用户当初看到的那一版
+    const newTask = target.tasks[target.tasks.length - 1]; // 代码新增的那条
+
+    // 第一次读档：老存档没有 baseTasks
+    const first = normalizeThemes([{ ...target, tasks: oldBaseline }], 'couple');
+    const firstTheme = first.find(t => t.id === 'warmup')!;
+
+    // 关键：代码新增的题必须已经出现在用户列表里
+    expect(firstTheme.tasks, '第一次读档就应该拿到代码新增的题').toContain(newTask);
+
+    // 落盘后再读一次（baseTasks 此时已是新基线），新增的题不能被误判成「用户删除」
+    const second = normalizeThemes([firstTheme], 'couple');
+    const secondTheme = second.find(t => t.id === 'warmup')!;
+    expect(secondTheme.tasks, '第二次读档新增的题不能消失').toContain(newTask);
   });
 
   it('用户自建主题的读写行为不变', () => {

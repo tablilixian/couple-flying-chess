@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { parseTaskTags, taskKindOf, stripTaskTags } from '../utils/personalizeTask';
 import { pickTaskForRole, EVENT_KINDS } from '../utils/taskPicker';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
+import { NORMAL_PACKS } from '../../scripts/normal-pack-specs';
 
 /**
  * 「提问型任务」这一维度，以及由它带来的转换包。
@@ -61,6 +62,12 @@ const IMMERSIVE_COUPLE_PACK_IDS = [
 /** 沉浸/调教转换包（普通）：剧本「信任探索」 */
 const IMMERSIVE_NORMAL_PACK_IDS = ['trust-probe'];
 
+/** 新写的入门层包：束缚 / 调教 / 禁忌的软一档入口 */
+const ENTRY_PACK_IDS = ['bond-intro', 'dominator-intro', 'taboo-intro'];
+
+/** 普通库烈度包：普通题库按烈度切出来的 4 个包 */
+const NORMAL_TIER_PACK_IDS = ['warm-up', 'heat-up', 'go-serious', 'all-in'];
+
 const CONVERTED_PACK_IDS = [...SCENE_PACK_IDS, ...TIER_PACK_IDS];
 
 const coupleThemes = COUPLE_DEFAULT_THEMES;
@@ -68,10 +75,15 @@ const scenePacks = coupleThemes.filter(t => SCENE_PACK_IDS.includes(t.id));
 const tierPacks = coupleThemes.filter(t => TIER_PACK_IDS.includes(t.id));
 const immersiveCouplePacks = coupleThemes.filter(t => IMMERSIVE_COUPLE_PACK_IDS.includes(t.id));
 const immersiveNormalPacks = NORMAL_DEFAULT_THEMES.filter(t => IMMERSIVE_NORMAL_PACK_IDS.includes(t.id));
+const entryPacks = coupleThemes.filter(t => ENTRY_PACK_IDS.includes(t.id));
+const normalTierPacks = NORMAL_DEFAULT_THEMES.filter(t => NORMAL_TIER_PACK_IDS.includes(t.id));
 const convertedPacks = coupleThemes.filter(t => CONVERTED_PACK_IDS.includes(t.id));
 /** 手写包 —— 一条 [Q] 都没有，行为必须与改造前完全一致 */
 const legacyPacks = coupleThemes.filter(
-  t => !CONVERTED_PACK_IDS.includes(t.id) && !IMMERSIVE_COUPLE_PACK_IDS.includes(t.id)
+  t =>
+    !CONVERTED_PACK_IDS.includes(t.id) &&
+    !IMMERSIVE_COUPLE_PACK_IDS.includes(t.id) &&
+    !ENTRY_PACK_IDS.includes(t.id)
 );
 
 /**
@@ -80,6 +92,14 @@ const legacyPacks = coupleThemes.filter(
  * 转换包有三种来源，题目品质要求一致，所以合并做同一组断言。
  */
 const allConvertedPacks = [...convertedPacks, ...immersiveCouplePacks, ...immersiveNormalPacks];
+
+/**
+ * 所有**受同等质量约束**的包。
+ *
+ * 转换包、沉浸包、入口层包、普通库烈度包，题面都必须守同一套规矩：
+ * 不许有第三人称残留、不许重复、必须有状态池。
+ */
+const qualityPacks = [...allConvertedPacks, ...entryPacks, ...normalTierPacks];
 
 /** 可复现的伪随机（mulberry32），让抽题测试是确定性的 */
 function seeded(seed: number): () => number {
@@ -232,26 +252,32 @@ describe('事件分流 · 题型由系统随机决定', () => {
 // ─────────────────────────────────────────────────────────────
 
 describe('转换包 · 数据完整性', () => {
-  it('21 个 TD 转换包 + 5 个沉浸转换包都已注册', () => {
+  it('21 个 TD 转换包 + 5 个沉浸转换包 + 3 个入口层包 + 4 个普通库烈度包都已注册', () => {
     expect(scenePacks).toHaveLength(9);
     expect(tierPacks).toHaveLength(12);
     expect(convertedPacks).toHaveLength(21);
     expect(immersiveCouplePacks).toHaveLength(4);
     expect(immersiveNormalPacks).toHaveLength(1);
+    expect(entryPacks).toHaveLength(3);
+    expect(normalTierPacks).toHaveLength(4);
     for (const t of convertedPacks) {
       expect(t.mode).toBe('couple');
     }
     for (const t of immersiveCouplePacks) {
       expect(t.mode).toBe('couple');
     }
-    for (const t of immersiveNormalPacks) {
+    for (const t of [...immersiveNormalPacks, ...normalTierPacks]) {
       expect(t.mode).toBe('normal');
     }
   });
 
   it('普通模式拿不到任何情侣转换包', () => {
     const normalIds = NORMAL_DEFAULT_THEMES.map(t => t.id);
-    for (const id of [...CONVERTED_PACK_IDS, ...IMMERSIVE_COUPLE_PACK_IDS]) {
+    for (const id of [
+      ...CONVERTED_PACK_IDS,
+      ...IMMERSIVE_COUPLE_PACK_IDS,
+      ...ENTRY_PACK_IDS
+    ]) {
       expect(normalIds).not.toContain(id);
     }
   });
@@ -279,9 +305,10 @@ describe('转换包 · 数据完整性', () => {
     }
   });
 
-  it('达不到「四局不重复」的烈度包就是已知的那几个（内容变了要同步）', () => {
+  it('所有烈度包都够打四局不重复（执行方池 ≥ 35）', () => {
+    // 补题之后不再有「只够三局」的烈度包
     const thin = tierPacks.filter(t => executorPool(t) < 35).map(t => t.name).sort();
-    expect(thin).toEqual(['戏中失控', '束缚试探', '细水长流', '隐秘心事']);
+    expect(thin).toEqual([]);
   });
 
   it('每个 TD 转换包动作型与提问型都有，两种题型都玩得到', () => {
@@ -295,7 +322,7 @@ describe('转换包 · 数据完整性', () => {
 
   it('题面没有转换残留：第三人称代词 / 占位符', () => {
     const bad = /老公|老婆|妻子|丈夫|男生|女生|@@KEEP|\$1|__KEEP__/;
-    for (const t of allConvertedPacks) {
+    for (const t of qualityPacks) {
       for (const task of t.tasks) {
         const body = stripTaskTags(task);
         expect(bad.test(body), `${t.name}: ${body}`).toBe(false);
@@ -329,7 +356,7 @@ describe('转换包 · 数据完整性', () => {
 
   it('转换包之间没有重复文案', () => {
     const seen = new Map<string, string>();
-    for (const t of allConvertedPacks) {
+    for (const t of qualityPacks) {
       for (const task of t.tasks) {
         const body = stripTaskTags(task);
         expect(seen.has(body), `重复：${body}`).toBe(false);
@@ -339,14 +366,14 @@ describe('转换包 · 数据完整性', () => {
   });
 
   it('每个包都有状态池（行动 + 条件）', () => {
-    for (const t of allConvertedPacks) {
+    for (const t of qualityPacks) {
       expect((t.actionStates || []).length, t.name).toBeGreaterThan(0);
       expect((t.conditionStates || []).length, t.name).toBeGreaterThan(0);
     }
   });
 
   it('状态池文案同样没有第三人称残留', () => {
-    for (const t of allConvertedPacks) {
+    for (const t of qualityPacks) {
       for (const s of [...(t.actionStates || []), ...(t.conditionStates || [])]) {
         expect(/老公|老婆|妻子|丈夫|男生|女生/.test(stripTaskTags(s)), s).toBe(false);
       }
@@ -366,17 +393,18 @@ describe('沉浸转换包 · 台词方向与题量', () => {
     for (const id of IMMERSIVE_NORMAL_PACK_IDS) expect(normalIds).toContain(id);
   });
 
-  it('流式素材全是动作型：三个包没有提问型，剧本包有', () => {
+  it('流式素材原本全是动作型，现在三个包都补上了提问型', () => {
     // 调教流程的原始素材就是「控制者下的指令」，一句提问都没有；
     // 剧本（淫妻启蒙 / 信任探索）本来就是一问一答，所以两种题型都有。
+    // 现在三个流式包也各自补了同烈度的提问型变体 —— 三格不再抽同一个池。
     for (const id of ['rhythm-control', 'role-lines', 'scene-undercurrent']) {
       const t = immersiveCouplePacks.find(x => x.id === id)!;
-      expect(t.tasks.filter(x => taskKindOf(x) === 'ask').length, t.name).toBe(0);
+      expect(t.tasks.filter(x => taskKindOf(x) === 'ask').length, t.name).toBeGreaterThan(0);
       expect(t.tasks.filter(x => taskKindOf(x) === 'act').length, t.name).toBeGreaterThan(0);
     }
     for (const t of [...immersiveCouplePacks, ...immersiveNormalPacks]) {
-      if (['rhythm-control', 'role-lines', 'scene-undercurrent'].includes(t.id)) continue;
       expect(t.tasks.filter(x => taskKindOf(x) === 'ask').length, t.name).toBeGreaterThan(0);
+      expect(t.tasks.filter(x => taskKindOf(x) === 'act').length, t.name).toBeGreaterThan(0);
     }
   });
 
@@ -420,6 +448,59 @@ describe('沉浸转换包 · 台词方向与题量', () => {
     expect(roles.M).toBeGreaterThan(0);
     expect(roles.F).toBeGreaterThan(0);
     expect(roles.both).toBeGreaterThan(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 入口层包 · 普通库烈度包
+// ─────────────────────────────────────────────────────────────
+
+describe('入口层包与普通库烈度包', () => {
+  it('三个入口层包都在情侣模式，动作型和提问型都有', () => {
+    expect(entryPacks).toHaveLength(3);
+    for (const t of entryPacks) {
+      expect(t.mode).toBe('couple');
+      expect(t.tasks.filter(x => taskKindOf(x) === 'act').length, t.name).toBeGreaterThan(0);
+      expect(t.tasks.filter(x => taskKindOf(x) === 'ask').length, t.name).toBeGreaterThan(0);
+    }
+  });
+
+  it('四个普通库烈度包都在普通模式，动作型和提问型都有', () => {
+    expect(normalTierPacks).toHaveLength(4);
+    for (const t of normalTierPacks) {
+      expect(t.mode).toBe('normal');
+      expect(t.tasks.filter(x => taskKindOf(x) === 'act').length, t.name).toBeGreaterThan(0);
+      expect(t.tasks.filter(x => taskKindOf(x) === 'ask').length, t.name).toBeGreaterThan(0);
+    }
+  });
+
+  it('普通模式没有男女角色分工：不标 [M]/[F]', () => {
+    for (const t of normalTierPacks) {
+      for (const task of t.tasks) {
+        const tags = parseTaskTags(task).tags;
+        expect(tags.includes('M'), `${t.name}: ${task}`).toBe(false);
+        expect(tags.includes('F'), `${t.name}: ${task}`).toBe(false);
+      }
+    }
+  });
+
+  it('入口层包和普通库烈度包的执行方池都够打四局（≥35）', () => {
+    for (const t of [...entryPacks, ...normalTierPacks]) {
+      expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(35);
+    }
+  });
+
+  it('普通库烈度包按烈度切，一包一档', () => {
+    // 四个包分别对应 soft / hot / hard / extreme，档位互不重复
+    const tiers = NORMAL_PACKS.map(p => p.tier);
+    expect(tiers.sort()).toEqual(['extreme', 'hard', 'hot', 'soft']);
+    // 注册表和规格表对得上
+    expect(normalTierPacks.map(t => t.id).sort()).toEqual(NORMAL_PACKS.map(p => p.id).sort());
+    for (const t of normalTierPacks) {
+      const spec = NORMAL_PACKS.find(p => p.id === t.id)!;
+      expect(t.name).toBe(spec.name);
+      expect(t.tasks.length).toBeGreaterThanOrEqual(35);
+    }
   });
 });
 

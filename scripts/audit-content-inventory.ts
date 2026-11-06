@@ -153,10 +153,17 @@ line(
 );
 line(`  无 [R] 的包 → ${noR.map(r => r.name).join('、')}`);
 line(`  无 [H] 的包 → ${noH.map(r => r.name).join('、')}`);
-const smallPool = coupleOnly.filter(r => r.execPool < 37);
+// 执行方池的判据（scripts/sim-play.ts 实测：单方一局抽 8.6 个题）：
+//   ≥9 一局 / ≥18 两局 / ≥26 三局 / ≥35 四局
+const smallPool = coupleOnly.filter(r => r.execPool < 35);
 line(
-  `执行方池 <37（不够两局不重复）：${smallPool.length} 个情侣包` +
+  `执行方池 <35（不够四局不重复）：${smallPool.length} 个情侣包` +
     (smallPool.length ? ` → ${smallPool.map(r => `${r.name}(${r.execPool})`).join('、')}` : ''),
+);
+const thinPool = coupleOnly.filter(r => r.execPool < 26);
+line(
+  `执行方池 <26（不够三局不重复）：${thinPool.length} 个情侣包` +
+    (thinPool.length ? ` → ${thinPool.map(r => `${r.name}(${r.execPool})`).join('、')}` : ''),
 );
 line();
 
