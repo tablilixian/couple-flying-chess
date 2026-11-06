@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>题库分布总览 · 飞行棋</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#fafafa; --card:#ffffff; --line:#e4e4e7; --line-soft:#f1f1f3;
+    --ink:#18181b; --ink-2:#52525b; --muted:#a1a1aa;
+    --primary:#3b82f6; --primary-soft:rgba(59,130,246,.10);
+    --m:#3b82f6; --f:#f43f5e; --both:#cbd5e1; --q:#f59e0b; --r:#10b981; --h:#7c3aed;
+    --warn:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Outfit',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+    font-size:15px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  @media (max-width:768px){ .wrap{padding:0 16px} }
+
+  /* ---------- Hero ---------- */
+  header{padding:56px 0 36px;border-bottom:1px solid var(--line);background:
+    radial-gradient(1100px 300px at 12% -10%, rgba(59,130,246,.07), transparent 65%),
+    radial-gradient(900px 260px at 88% -20%, rgba(244,63,94,.05), transparent 60%);}
+  h1{font-size:34px;line-height:1.2;font-weight:600;letter-spacing:-.02em;margin:0 0 12px}
+  .lede{font-size:16px;color:var(--ink-2);max-width:70ch;margin:0}
+  .lede b{color:var(--ink);font-weight:600}
+
+  .statband{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:32px;
+    border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  @media (max-width:900px){ .statband{grid-template-columns:repeat(2,1fr)} }
+  .stat{padding:16px 18px;border-right:1px solid var(--line-soft)}
+  .stat:last-child{border-right:none}
+  .stat .k{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:4px}
+  .stat .v{font-size:24px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat .u{font-size:12px;color:var(--muted);font-weight:400;margin-left:3px}
+
+  /* ---------- Section ---------- */
+  section{padding:44px 0 0}
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .sec-head svg{color:var(--primary);flex:none}
+  h2{font-size:23px;font-weight:600;letter-spacing:-.015em;margin:0}
+  .sec-sub{color:var(--ink-2);margin:0 0 22px;font-size:14px;max-width:82ch}
+  .sec-sub b{color:var(--ink);font-weight:600}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04)}
+
+  /* ---------- Bench bars ---------- */
+  .bench{display:grid;grid-template-columns:118px 1fr 54px;gap:12px;align-items:center;padding:5px 0}
+  .bench-label{font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bench-track{height:18px;background:var(--line-soft);border-radius:5px;overflow:hidden;display:flex}
+  .seg{height:100%}
+  .seg + .seg{border-left:1px solid rgba(255,255,255,.65)}
+  .bench-val{font-size:13px;text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums;
+    font-family:'JetBrains Mono',monospace}
+  .bench-row:hover .bench-track{outline:2px solid rgba(59,130,246,.35);outline-offset:1px}
+  .tagrow{display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
+
+  /* ---------- 包手风琴：点开看题 ---------- */
+  .pack{border-radius:10px;transition:background .16s}
+  .pack:hover{background:#fbfbfd}
+  .pack.open{background:#f7f8fb}
+  .pack .bench{cursor:pointer;align-items:start;padding:7px 0}
+  .pack .chev{display:inline-block;width:9px;margin-right:5px;color:var(--muted);
+    transition:transform .18s;transform:translateY(-1px)}
+  .pack.open .chev{transform:rotate(90deg) translateY(-1px)}
+  .peek{font-size:12px;color:var(--muted);margin-top:4px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .pack-detail{display:none;margin:4px 0 10px;padding:13px 15px;background:var(--bg);
+    border:1px solid var(--line-soft);border-left:3px solid var(--primary);border-radius:10px}
+  .pack.open .pack-detail{display:block}
+  .pd-head{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:10px}
+  .pd-head .nm{font-size:14px;font-weight:600}
+  .pd-head .meta{font-size:12.5px;color:var(--ink-2)}
+  .pd-head .sp{flex:1}
+  .pd-filter{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .pd-filter button{font-family:inherit;font-size:11.5px;padding:4px 10px;border:none;background:var(--card);
+    color:var(--ink-2);cursor:pointer;border-right:1px solid var(--line-soft)}
+  .pd-filter button:last-child{border-right:none}
+  .pd-filter button[aria-pressed="true"]{background:var(--primary-soft);color:#1d4ed8;font-weight:600}
+  .tasklist{max-height:360px;overflow:auto;border:1px solid var(--line-soft);
+    border-radius:8px;background:var(--card)}
+  .task{display:grid;grid-template-columns:36px 1fr;gap:9px;padding:7px 11px;
+    border-bottom:1px solid var(--line-soft);font-size:13px;line-height:1.55}
+  .task:last-child{border-bottom:none}
+  .task .ix{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;
+    text-align:right;padding-top:3px}
+  .task .tx{color:var(--ink-2);word-break:break-word}
+  .task .tx mark{background:rgba(245,158,11,.32);color:var(--ink);border-radius:2px;padding:0 1px}
+  .chip{display:inline-block;font-size:10px;line-height:1;padding:2px 5px;border-radius:4px;
+    margin-right:4px;font-family:'JetBrains Mono',monospace;font-weight:600;vertical-align:1px}
+  .chip.M{background:rgba(59,130,246,.12);color:#1d4ed8}
+  .chip.F{background:rgba(244,63,94,.12);color:#be123c}
+  .chip.Q{background:rgba(245,158,11,.16);color:#b45309}
+  .chip.R{background:rgba(16,185,129,.16);color:#047857}
+  .chip.H{background:rgba(124,58,237,.14);color:#6d28d9}
+  .chip.dup{background:rgba(161,161,170,.16);color:#71717a}
+  .pd-empty{padding:10px 2px;font-size:12.5px;color:var(--muted)}
+  .mini{font-size:10.5px;line-height:1;padding:3px 6px;border-radius:5px;font-weight:600;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.02em}
+  .mini.q{background:rgba(245,158,11,.14);color:#b45309}
+  .mini.r{background:rgba(16,185,129,.14);color:#047857}
+  .mini.h{background:rgba(124,58,237,.12);color:#6d28d9}
+  .mini.na{background:rgba(161,161,170,.12);color:#71717a}
+  .mini.aud{background:rgba(59,130,246,.10);color:#1d4ed8}
+  .mini.st{background:rgba(15,23,42,.06);color:#3f3f46}
+  .mini.sc{background:rgba(59,130,246,.10);color:#1d4ed8}
+  .mini.ti{background:rgba(245,158,11,.14);color:#b45309}
+  .mini.im{background:rgba(16,185,129,.14);color:#047857}
+  .mini.en{background:rgba(20,184,166,.14);color:#0f766e}
+  .mini.nt{background:rgba(236,72,153,.12);color:#be185d}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin:0 0 18px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+  .toolbar{display:flex;gap:8px;align-items:center;margin:0 0 18px;flex-wrap:wrap}
+  .toolbar button{font-family:inherit;font-size:13px;font-weight:500;padding:6px 13px;border-radius:9px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink-2);cursor:pointer;transition:all .18s}
+  .toolbar button:hover{border-color:#c7c7ce;color:var(--ink)}
+  .toolbar button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .toolbar .spacer{flex:1}
+  .toolbar input{font-family:inherit;font-size:13px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);width:190px}
+  .toolbar input:focus{outline:2px solid rgba(59,130,246,.35);outline-offset:0;border-color:var(--primary)}
+
+  /* ---------- Heatmap ---------- */
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line-soft)}
+  th{font-weight:600;color:var(--ink-2);font-size:12px;letter-spacing:.02em;white-space:nowrap}
+  tbody tr:hover td{background:#fcfcfd}
+  .hm td.cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;
+    color:var(--ink-2);position:relative}
+  .hm td.cell .sw{position:absolute;inset:2px;border-radius:5px;z-index:0}
+  .hm td.cell span{position:relative;z-index:1}
+  .hm td.zero span{color:#d4d4d8}
+  .hm th.rz{text-align:center}
+  .hm td.tot{font-weight:600;font-family:'JetBrains Mono',monospace;text-align:right}
+  .scroll-x{overflow-x:auto}
+
+  /* ---------- Pool table ---------- */
+  .pt td.pc{text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-2);
+    white-space:nowrap}
+  .pt td.pc em{font-style:normal;color:var(--muted);margin:0 1px}
+  .pt td.pc .alt{color:var(--q)}
+  .pt th.pk{text-align:left}
+  .pt tr.stair td.pc{background:rgba(15,23,42,.015)}
+  .pt .badge{display:inline-block;font-size:10.5px;line-height:1;padding:3px 7px;border-radius:5px;
+    font-weight:600;letter-spacing:.02em}
+  .badge.same{background:rgba(161,161,170,.12);color:#71717a}
+  .badge.diff{background:rgba(16,185,129,.14);color:#047857}
+  .ptnote{font-size:12.5px;color:var(--muted);margin:10px 2px 0}
+
+  /* ---------- Asset list ---------- */
+  .asset{display:grid;grid-template-columns:1fr;gap:0}
+  .asset .item{display:grid;grid-template-columns:170px 1fr 200px;gap:18px;align-items:center;
+    padding:13px 18px;border-bottom:1px solid var(--line-soft)}
+  .asset .item:last-child{border-bottom:none}
+  .asset .nm{font-size:14px;font-weight:500}
+  .asset .nm small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+  .asset .bar{height:12px;border-radius:4px;background:var(--line-soft);overflow:hidden}
+  .asset .bar i{display:block;height:100%;border-radius:4px;background:var(--primary);opacity:.75}
+  .asset .vv{font-size:12.5px;color:var(--ink-2);text-align:right;font-family:'JetBrains Mono',monospace}
+
+  /* ---------- Gap list ---------- */
+  .gaps{list-style:none;padding:0;margin:0;counter-reset:g}
+  .gaps li{counter-increment:g;position:relative;padding:16px 18px 16px 54px;border-bottom:1px solid var(--line-soft)}
+  .gaps li:last-child{border-bottom:none}
+  .gaps li::before{content:counter(g);position:absolute;left:18px;top:16px;width:22px;height:22px;
+    border-radius:6px;background:var(--primary-soft);color:#1d4ed8;font-size:12px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace}
+  .gaps li > b{display:block;font-size:14.5px;margin-bottom:3px}
+  .gaps p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .gaps p b{color:var(--ink);font-weight:600}
+  .gaps code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--line-soft);
+    padding:1px 5px;border-radius:4px}
+
+  footer{padding:44px 0 56px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);margin-top:44px}
+  .foot-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+  @media (max-width:768px){ .foot-grid{grid-template-columns:1fr} }
+  .foot-grid h4{margin:0 0 8px;font-size:13px;color:var(--ink-2);font-weight:600}
+  .foot-grid p{margin:0 0 4px}
+  code.path{font-family:'JetBrains Mono',monospace;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>题库分布总览</h1>
+    <p class="lede">
+      全站 9 类内容资产、<b>49 个飞行棋主题包</b>已经铺开，规模不再是瓶颈。
+      内容分六种组织方式：<b>阶梯包</b>（手写 11 个，Level 0→5，包内烈度单一）、
+      <b>场景包</b>（转换 9 个，包内是同一幻想的推进梯度）、
+      <b>烈度包</b>（转换 12 个，一包只收一个烈度档）、
+      <b>沉浸包</b>（转换 5 个：由「沉浸剧场 / 调教节奏」改编而来）、
+      <b>入门包</b>（新写 3 个：束缚 / 调教 / 禁忌的软一档入口）、
+      <b>普通烈度包</b>（转换 4 个：由普通题库按烈度切出）。
+      这一轮把<b>每个包的执行方池都补到了 35 以上</b>（单方一局抽 8.6 题 → 够四局不重复），
+      普通模式也从 6 个包扩到 10 个。
+      真正还欠的是<b>去重窗口只有 10</b>，以及 <b>12 个情侣包三格同池</b>。
+    </p>
+    <div class="statband">
+      <div class="stat"><div class="k">飞行棋</div><div class="v">3378<span class="u">题</span></div></div>
+      <div class="stat"><div class="k">真心话大冒险</div><div class="v">2210<span class="u">条</span></div></div>
+      <div class="stat"><div class="k">提问型 [Q]</div><div class="v">1241<span class="u">条</span></div></div>
+      <div class="stat"><div class="k">转换包</div><div class="v">30<span class="u">个 / 2527 题</span></div></div>
+      <div class="stat"><div class="k">可交互单元</div><div class="v">8054<span class="u">个</span></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ========== 1. 飞行棋包全景 ========== -->
+<section>
+  <div class="sec-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="4" width="3" height="14"/></svg>
+    <h2>飞行棋 · 49 个主题包的执行方构成与题目内容</h2>
+  </div>
+  <p class="sec-sub">
+    条形长度 = 题量，分段 = 执行方标签（男方 / 女方 / 通用）。
+    <b>点包名即可展开这个包的全部题目原文</b>（就是运行期真正会抽到的那一条条题），
+    搜索框同时搜包名和 <b>3378 条题目正文</b>，命中会直接定位到所在的包。
+    标<b>阶梯包</b>的 11 个是手写内容（Level 0→5，包内烈度单一）；
+    标<b>场景包</b>的 9 个由 TD 转换而来（包内是同一幻想的推进梯度）；
+    标<b>烈度包</b>的 12 个是同一个幻想按烈度档拆开的结果，一包只收一档；
+    标<b>沉浸包</b>的 5 个由「沉浸剧场 / 调教节奏」改编而来；
+    标<b>入门包</b>的 3 个是新写的软一档入口（束缚 / 调教 / 禁忌）；
+    标<b>普通烈度包</b>的 4 个由普通题库按烈度切出。
+    转换包普遍「通用」占比高，是因为 TD 原文大量写成双方共同任务。
+  </p>
+
+  <div class="toolbar">
+    <button data-filter="all" aria-pressed="true">全部 49</button>
+    <button data-filter="couple" aria-pressed="false">情侣 39</button>
+    <button data-filter="normal" aria-pressed="false">普通 10</button>
+    <button data-filter="conv" aria-pressed="false">场景包 9</button>
+    <button data-filter="tier" aria-pressed="false">烈度包 12</button>
+    <button data-filter="imm" aria-pressed="false">沉浸包 5</button>
+    <button data-filter="entry" aria-pressed="false">入门包 3</button>
+    <button data-filter="ntier" aria-pressed="false">普通烈度包 4</button>
+    <button data-filter="hand" aria-pressed="false">手写包 11</button>
+    <button data-act="expand">展开全部</button>
+    <button data-act="collapse">收起全部</button>
+    <span class="spacer"></span>
+    <input id="q" type="search" placeholder="搜索包名或题目内容…" />
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--m)"></i>男方执行 [M]</span>
+    <span><i style="background:var(--f)"></i>女方执行 [F]</span>
+    <span><i style="background:var(--both)"></i>通用 [both]</span>
+    <span><i style="background:var(--q)"></i>[Q] 提问型（被问一个问题）</span>
+    <span><i style="background:var(--r)"></i>[R] 奖励向</span>
+    <span><i style="background:var(--h)"></i>[H] 惩罚向</span>
+  </div>
+
+  <div class="card" style="padding:20px 22px">
+    <div id="packs"></div>
+    <div style="border-top:1px solid var(--line-soft);margin-top:14px;padding-top:12px;
+      display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline;font-size:12.5px;color:var(--muted)">
+      <span id="packsum" style="flex:1 1 340px"></span>
+      <span id="packsrc" style="flex:0 1 auto"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 2. 格子分流模型 ========== -->
+<section>
+  <div class="sec-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <h2>格子怎么分流：靠题型，不靠烈度</h2>
+  </div>
+  <p class="sec-sub">
+    抽题按格子收窄，但收窄的是<b>题型</b>不是<b>烈度</b>——烈度由玩家选的包决定。
+    <code style="font-family:'JetBrains Mono',monospace">[R]/[H]</code> 的语义是
+    <b>奖励向 / 惩罚向</b>（来自手写包「奖惩卡池」），不是低烈度 / 高烈度；
+    转换包因此不再标它们。烈度包则直接把烈度拆进包名与内容，一包一档。
+    下面是每个包在三种格子下的<b>有效池实测值</b>（按抽题逻辑逐级收窄后剩下的题数）。
+  </p>
+  <div class="card scroll-x">
+    <table class="hm pt" id="pooltable"></table>
+  </div>
+  <div class="card" style="margin-top:14px;padding:18px 22px">
+    <div style="font-size:14px;font-weight:600;margin-bottom:4px">六种包，六种分流路径</div>
+    <p style="margin:0;font-size:13.5px;color:var(--ink-2)">
+      <b style="color:var(--ink)">场景包</b>（转换 9 个）动作型与提问型几乎 1:1 ——
+      幸运格只出动作型（做一件事），意外陷阱与亲密追尾会抽到提问型（被问一个问题）。
+      <b style="color:var(--ink)">烈度包</b>（转换 12 个）把这个幻想按烈度档拆开，
+      一包只收一档——玩家选包就等于选了烈度，包内不混档。
+      <b style="color:var(--ink)">阶梯包</b>（手写 11 个）全是动作型，其中 10 个三种格子抽的是同一个池，
+      这是「选包即选烈度」的必然结果：不能为了区分格子就往包里塞别的烈度的题。
+      唯一的例外是<b style="color:var(--ink)">「奖惩卡池」</b>——它真的带 <code style="font-family:'JetBrains Mono',monospace">[R]/[H]</code>，
+      所以幸运格只出奖励、陷阱只出惩罚，三格天然分流。<br><br>
+      <b style="color:var(--ink)">沉浸包</b>（转换 5 个）里，「节奏掌控 / 角色台词 / 场景暗线」
+      原本也是三格同池——它们的原始素材是「调教节奏」里控制者下的指令，<b>一句提问都没有</b>。
+      这一轮给这三个包<b>补了 40 条同烈度的提问型变体</b>（正向版 / 加压版），
+      于是「意外陷阱 / 亲密追尾」能抽到问题，三格终于分开。<br><br>
+      <b style="color:var(--ink)">入门包</b>（新写 3 个）一上来就带 <code style="font-family:'JetBrains Mono',monospace">[Q]</code>：
+      束缚 / 调教 / 禁忌的软一档入口写的就是「第一次」，而第一次必然要先问一句再动手，
+      所以动作型和提问型天然各占一半，不需要额外补题就分流。
+    </p>
+  </div>
+</section>
+
+<!-- ========== 3. 真心话大冒险 ========== -->
+<section>
+  <div class="sec-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+    <h2>真心话大冒险 · 主题 × 难度热力图</h2>
+  </div>
+  <p class="sec-sub">
+    情侣题库 <b>1961 条</b>（真心话 + 大冒险）、普通题库 <b>249 条</b>。颜色越深 = 该格题目越多。
+    注意 <b>「火辣」一个主题就占 439 条</b>，而「束缚 / 调教 / 禁忌」在 soft 与 hot 两档整列是空的——
+    这三个主题<b>没有入门层</b>，只有 hard / extreme。转换包直接继承 TD 的 difficulty 分布，
+    所以场景包内部本来就是「一段推进梯度」，而不是「一堆同烈度的题」。
+    <br><br>
+    现在 <b>14 个主题全部消化完毕</b>：9 个转成场景包，
+    另外 5 个（甜蜜 130 / 火辣 439 / 角色扮演 76 / 调教 106 / 束缚 79，共 830 条）
+    按烈度档拆成 <b>12 个烈度包</b>——这些题原本从未进过任何包。
+  </p>
+  <div class="card scroll-x">
+    <table class="hm" id="tdtable"></table>
+  </div>
+</section>
+
+<!-- ========== 4. 其他资产 ========== -->
+<section>
+  <div class="sec-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <h2>其余 6 类内容资产</h2>
+  </div>
+  <p class="sec-sub">条形按「可交互条目数」归一化。</p>
+  <div class="card asset" id="assets"></div>
+</section>
+
+<!-- ========== 5. 缺口清单 ========== -->
+<section>
+  <div class="sec-head">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+    <h2>按优先级排的缺口清单</h2>
+  </div>
+  <p class="sec-sub">这 <span id="gapcount">0</span> 项决定「内容够不够玩」和「玩两局会不会重样」。</p>
+  <div class="card">
+    <ul class="gaps" id="gaps"></ul>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <h4>数据来源</h4>
+      <p>全部数字由 <code class="path">scripts/audit-content-inventory.ts</code> 与 <code class="path">scripts/audit-level-dist.ts</code> 从运行期数据对象实时统计，不是手写维护的清单。</p>
+      <p>包内的<b>题目原文</b>由 <code class="path">scripts/emit-page-data.ts --write</code> 从同一批运行期数据导出——页面读到的就是游戏里真正会抽到的那一条条题，本页共 <span id="taskcount">0</span> 条。</p>
+      <p class="path" style="margin-top:6px">npx vite-node scripts/audit-content-inventory.ts<br>npx vite-node scripts/audit-level-dist.ts<br>npx vite-node scripts/emit-page-data.ts --write</p>
+    </div>
+    <div>
+      <h4>口径说明</h4>
+      <p>「唯一题面」= 剥掉标签后去重；「执行方池」= 一局内该方实际可能被抽到的全部题目（三种格子的并集）。</p>
+      <p>普通模式 5 个包不使用 M/F 标签，其执行方池不适用该口径。</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ================= 数据 ================= */
+/* ===== DATA:BEGIN 由 scripts/emit-page-data.ts 生成，勿手改 ===== */
+const PACKS = [
+  {id:"prelude",n:"心动序章",m:"couple",a:"common",t:38,M:3,F:3,B:32,Q:0,R:0,H:0,u:38,src:"hand"},
+  {id:"sweet",n:"甜蜜日常",m:"couple",a:"common",t:50,M:0,F:0,B:50,Q:0,R:0,H:0,u:50,src:"hand"},
+  {id:"warmup",n:"暧昧升温",m:"couple",a:"common",t:37,M:2,F:2,B:33,Q:0,R:0,H:0,u:37,src:"hand"},
+  {id:"firewood",n:"干柴烈火",m:"couple",a:"common",t:63,M:8,F:6,B:49,Q:0,R:0,H:0,u:63,src:"hand"},
+  {id:"temptation",n:"极度诱惑",m:"couple",a:"common",t:49,M:6,F:6,B:37,Q:0,R:0,H:0,u:49,src:"hand"},
+  {id:"union",n:"灵肉合一",m:"couple",a:"common",t:98,M:49,F:49,B:0,Q:0,R:0,H:0,u:80,src:"hand"},
+  {id:"roleplay",n:"情境扮演",m:"couple",a:"common",t:48,M:13,F:10,B:25,Q:0,R:0,H:0,u:48,src:"hand"},
+  {id:"reward-punish",n:"奖惩卡池",m:"couple",a:"common",t:36,M:0,F:1,B:35,Q:0,R:19,H:17,u:36,src:"hand"},
+  {id:"dominator",n:"主控调教",m:"couple",a:"male",t:50,M:15,F:21,B:14,Q:0,R:0,H:0,u:50,src:"hand"},
+  {id:"queen",n:"女王支配",m:"couple",a:"female",t:53,M:15,F:18,B:20,Q:0,R:0,H:0,u:53,src:"hand"},
+  {id:"contract-lovers",n:"契约情侣",m:"couple",a:"common",t:47,M:12,F:12,B:23,Q:0,R:0,H:0,u:47,src:"hand"},
+  {id:"public-eyes",n:"众目之下",m:"couple",a:"common",t:196,M:20,F:20,B:156,Q:99,R:0,H:0,u:196,src:"conv"},
+  {id:"living-room",n:"客厅禁区",m:"couple",a:"common",t:185,M:10,F:10,B:165,Q:91,R:0,H:0,u:185,src:"conv"},
+  {id:"deep-confession",n:"深夜坦白",m:"couple",a:"common",t:134,M:7,F:7,B:120,Q:87,R:0,H:0,u:134,src:"conv"},
+  {id:"beyond-the-line",n:"底线之后",m:"couple",a:"common",t:78,M:1,F:0,B:77,Q:38,R:0,H:0,u:78,src:"conv"},
+  {id:"three-way",n:"三人世界",m:"couple",a:"common",t:99,M:11,F:11,B:77,Q:50,R:0,H:0,u:99,src:"conv"},
+  {id:"loose-tongue",n:"口无遮拦",m:"couple",a:"common",t:98,M:11,F:10,B:77,Q:48,R:0,H:0,u:98,src:"conv"},
+  {id:"changed-hands",n:"易主之夜",m:"couple",a:"common",t:100,M:38,F:36,B:26,Q:50,R:0,H:0,u:100,src:"conv"},
+  {id:"swapped-night",n:"互换之夜",m:"couple",a:"common",t:99,M:8,F:8,B:83,Q:50,R:0,H:0,u:99,src:"conv"},
+  {id:"seductive-wife",n:"风情妻子",m:"couple",a:"male",t:140,M:11,F:128,B:1,Q:70,R:0,H:0,u:140,src:"conv"},
+  {id:"first-feelings",n:"青涩记事",m:"couple",a:"common",t:54,M:5,F:5,B:44,Q:31,R:0,H:0,u:54,src:"tier"},
+  {id:"slow-warmth",n:"细水长流",m:"couple",a:"common",t:40,M:5,F:5,B:30,Q:23,R:0,H:0,u:40,src:"tier"},
+  {id:"hidden-heart",n:"隐秘心事",m:"couple",a:"common",t:39,M:4,F:3,B:32,Q:21,R:0,H:0,u:39,src:"tier"},
+  {id:"flame-probe",n:"火辣试探",m:"couple",a:"common",t:126,M:34,F:35,B:57,Q:70,R:0,H:0,u:126,src:"tier"},
+  {id:"flame-daily",n:"烈焰日常",m:"couple",a:"common",t:165,M:40,F:40,B:85,Q:88,R:0,H:0,u:165,src:"tier"},
+  {id:"desire-abyss",n:"欲海深陷",m:"couple",a:"common",t:147,M:35,F:34,B:78,Q:73,R:0,H:0,u:147,src:"tier"},
+  {id:"role-cast",n:"角色试镜",m:"couple",a:"common",t:48,M:6,F:6,B:36,Q:26,R:0,H:0,u:48,src:"tier"},
+  {id:"role-lost",n:"戏中失控",m:"couple",a:"common",t:35,M:0,F:0,B:35,Q:18,R:0,H:0,u:35,src:"tier"},
+  {id:"kink-list",n:"癖好清单",m:"couple",a:"common",t:48,M:9,F:9,B:30,Q:25,R:0,H:0,u:48,src:"tier"},
+  {id:"kink-beyond",n:"越界癖好",m:"couple",a:"common",t:58,M:4,F:4,B:50,Q:27,R:0,H:0,u:58,src:"tier"},
+  {id:"bond-first",n:"束缚试探",m:"couple",a:"common",t:35,M:0,F:0,B:35,Q:17,R:0,H:0,u:35,src:"tier"},
+  {id:"bond-deep",n:"枷锁深处",m:"couple",a:"common",t:51,M:0,F:0,B:51,Q:24,R:0,H:0,u:51,src:"tier"},
+  {id:"rhythm-control",n:"节奏掌控",m:"couple",a:"common",t:55,M:0,F:0,B:55,Q:14,R:0,H:0,u:55,src:"imm"},
+  {id:"role-lines",n:"角色台词",m:"couple",a:"common",t:143,M:0,F:0,B:143,Q:14,R:0,H:0,u:143,src:"imm"},
+  {id:"scene-undercurrent",n:"场景暗线",m:"couple",a:"common",t:97,M:0,F:0,B:97,Q:12,R:0,H:0,u:97,src:"imm"},
+  {id:"fantasy-build",n:"幻想构建",m:"couple",a:"common",t:48,M:13,F:11,B:24,Q:24,R:0,H:0,u:48,src:"imm"},
+  {id:"bond-intro",n:"束缚入门",m:"couple",a:"common",t:40,M:4,F:4,B:32,Q:15,R:0,H:0,u:40,src:"entry"},
+  {id:"dominator-intro",n:"调教入门",m:"couple",a:"common",t:40,M:4,F:4,B:32,Q:16,R:0,H:0,u:40,src:"entry"},
+  {id:"taboo-intro",n:"禁忌入门",m:"couple",a:"common",t:42,M:4,F:4,B:34,Q:16,R:0,H:0,u:42,src:"entry"},
+  {id:"truth-dare",n:"真心话大冒险",m:"normal",a:"common",t:35,M:0,F:0,B:35,Q:0,R:0,H:0,u:35,src:"hand"},
+  {id:"fun-challenges",n:"趣味挑战",m:"normal",a:"common",t:35,M:0,F:0,B:35,Q:0,R:0,H:0,u:35,src:"hand"},
+  {id:"performance",n:"表演达人",m:"normal",a:"common",t:30,M:0,F:0,B:30,Q:0,R:0,H:0,u:30,src:"hand"},
+  {id:"mind-bender",n:"脑洞大开",m:"normal",a:"common",t:30,M:0,F:0,B:30,Q:0,R:0,H:0,u:30,src:"hand"},
+  {id:"group-chaos",n:"全员搞事",m:"normal",a:"common",t:30,M:0,F:0,B:30,Q:0,R:0,H:0,u:30,src:"hand"},
+  {id:"trust-probe",n:"信任试探",m:"normal",a:"common",t:10,M:2,F:2,B:6,Q:4,R:0,H:0,u:10,src:"imm"},
+  {id:"warm-up",n:"温热开场",m:"normal",a:"common",t:48,M:0,F:0,B:48,Q:24,R:0,H:0,u:48,src:"ntier"},
+  {id:"heat-up",n:"热场时刻",m:"normal",a:"common",t:48,M:0,F:0,B:48,Q:24,R:0,H:0,u:48,src:"ntier"},
+  {id:"go-serious",n:"认真摊牌",m:"normal",a:"common",t:51,M:0,F:0,B:51,Q:26,R:0,H:0,u:51,src:"ntier"},
+  {id:"all-in",n:"豁出去一点",m:"normal",a:"common",t:52,M:0,F:0,B:52,Q:26,R:0,H:0,u:52,src:"ntier"},
+];
+
+/* 每个包的题目原文（含标签前缀）· 点开包即可读全文，支持跨包检索 */
+const TASKS = {
+  "prelude": ["[both] 并排坐着时故意把手臂贴着对方的手臂，感受体温不躲开","[both] 假装看手机，其实从屏幕反光里偷偷观察对方的侧脸","[both] 假装要帮对方拿掉头发上的东西，趁机靠近到呼吸可闻的距离","[both] 两人同时伸手去拿同一个东西，手碰在一起时故意多停3秒","[M] 男生把手轻轻搭在女生腰上，不说话只看着她眼睛","[F] 女生用手指在男生胸口慢慢画圈，画的什么让他猜，猜错一次就凑近一分直到鼻尖相碰","[both] 帮对方把一缕碎发别到耳后，指尖滑过耳廓","[both] 闭上眼睛，让对方用指尖在你脸上描一遍五官轮廓","[both] 说一句你平时绝对不会说出口的肉麻情话，看着对方的眼睛说完，不许笑场不许低头","[both] 假装要亲上去，在最后一厘米停住然后坏笑着躲开","[both] 让对方的头靠在你肩膀上，数到60之前谁也不许动","[both] 用嘴唇若有若无地擦过对方的耳垂，然后若无其事地继续聊天","[both] 从背后蒙住对方的眼睛，凑到耳边用变声的气音说一句话，让他猜你是谁","[M] 男生凑到女生耳边，用最轻的气声说一个秘密","[F] 女生解开男生衬衫最上面一颗扣子，然后停住","[both] 两人脸贴脸自拍一张，然后设成对方的聊天背景","[both] 握住对方的手，从拇指到小指一根一根地揉捏按摩每一个指节，每根至少揉捏5秒","[both] 故意穿对方的衣服/外套，说「借我穿一下」","[both] 用吸管喝同一杯饮料，越喝越近直到嘴唇几乎碰到","[both] 在对方脖子上轻轻吹一口气，看会不会起鸡皮疙瘩，没有反应就换个位置再吹直到他/她缩脖子为止","[both] 让对方躺在你腿上，你低头和他/她对视不说话","[both] 用手指从对方的手腕沿着前臂内侧慢慢滑到肘弯","[both] 两人用同一副耳机听歌，耳机越分越近变成共用一边","[both] 在对方耳边小声说一个今晚你想对他/她做的动作的名字","[both] 假装看对方的手相，大拇指在掌心慢慢摩挲","[both] 把对方拉近到你面前，说「别动」，然后慢慢靠近又停住","[both] 从背后环住对方的腰，把下巴搁在肩膀上闭上眼睛","[both] 让对方面对你坐在你腿上，双手扶着他的腰保持平衡30秒","[both] 用鼻尖去蹭对方的脖子侧面，一点一点地移动","[F] 女生从男生手里拿走东西时，故意让手指在他掌心多停留一会儿，再用指甲轻轻刮一下才抽走","[M] 男生扶住女生的腰把她抱上桌子/台面，站在她两腿之间","[both] 用嘴唇轻轻碰对方的锁骨，然后马上退开像什么都没发生","[both] 在黑暗里只用手摸索，找出对方身体的三个特征","[both] 互相用嘴喂对方吃一颗糖/一颗葡萄，嘴唇碰到了不许躲开，含着糖对视3秒","[both] 靠着墙站，让对方一只手撑在你耳侧的墙上（壁咚），对视10秒","[both] 把对方喝过的那杯水接过来喝一口，然后对着杯沿笑一下","[both] 对方打哈欠的时候，凑过去用手掌贴在对方的后颈上凉一凉，然后轻声问一句「累了吧」","[both] 在对方随口说的一句话后面接一句「真的吗？再讲一遍」，然后认真听对方再讲一次"],
+  "sweet": ["[both] 两人并在枕头上，对视30秒，谁先笑谁输","[both] 把头埋在对方颈窝里，深呼吸闻对方的味道10秒","[both] 用手指在对方手心写一个字，让对方猜","[both] 趴在对方胸口，静静听心跳1分钟","[both] 给对方讲一个睡前小故事或者笑话，要讲到对方笑出声为止","[both] 互相挠痒痒，坚持10秒不许笑","[both] 给对方捏捏肩膀或按按头2分钟","[both] 用鼻尖蹭对方的鼻尖10下（爱斯基摩之吻）","[both] 握着对方的手，十指紧扣1分钟","[both] 从背后抱着对方，在他/她耳边说一句情话","[both] 用手机拍一张对方现在的睡颜（不许丑照）","[both] 互相分享一个童年的糗事，听完必须说一个自己的同类糗事作为交换","[both] 模仿对方生气的样子","[both] 摸摸对方的头，说「乖，摸摸头」，然后被摸的人要闭眼蹭一蹭那只手","[both] 用脸颊蹭对方的脸颊，感受体温","[both] 给对方暖暖手（或暖暖脚），暖到对方说可以了才准松开","[both] 躺在对方腿上，让对方帮你掏耳朵或者梳理头发","[both] 模仿猫咪叫声，并在对方怀里蹭几下，对方必须摸摸头说「好乖」","[both] 用嘴唇轻轻触碰对方的额头，停留3秒再慢慢移开","[both] 说出对方最让你心动的三个优点","[both] 互相整理一下对方的刘海或碎发","[both] 用被子把两人裹成一个「寿司卷」拥抱30秒，谁先松开谁输","[both] 玩一次石头剪刀布，输的人亲赢的人脸颊一下","[both] 用手指测量对方的睫毛有多长","[both] 把手放在对方肚子上，感受呼吸起伏","[both] 互相喂对方喝一口水（假装是交杯酒）","[both] 用额头抵住对方额头，闭眼冥想30秒","[both] 说出三个你对未来的共同规划","[both] 互相给对方手臂上画一块手表","[both] 在镜子前一起刷牙，保持节奏一致","[both] 互相给对方吹头发","[both] 假装吵架但只能笑着说狠话","[both] 一人戴耳机听歌哼出来，另一人猜是什么歌","[both] 用方言跟对方说一句情话","[both] 两人同时伸出一只手，十指相扣后一起做另一个动作","[both] 帮对方挤痘痘或贴创可贴（温柔版）","[both] 两人面对面做一次深呼吸然后一起屏住呼吸","[both] 给对方剪指甲","[both] 学对方的口头禅和招牌动作","[both] 将手心贴在一起缓缓摩挲1分钟","[both] 按太阳穴放松，让对方帮你按按头皮","[both] 玩一次瞎子摸人——蒙眼摸对方的脸猜表情","[both] 一人躺着，另一人用头发轻轻扫对方的脸","[both] 互相分享一下今天最开心和最不开心的事","[both] 给对方读一段书或文章，声音要轻柔","[both] 把对方的手机拿过来，设一个「想念」提醒","[both] 用枕头轻轻打对方三下，然后丢掉枕头紧紧抱在一起至少10秒不许松开","[both] 假装外国人用不标准的中文聊天3分钟","[both] 一起看着窗外发呆一分钟，然后说说各自在想什么","[both] 在对方耳边轻轻说「晚安」，然后吻一下耳垂"],
+  "warmup": ["[both] 两人面对面站，膝盖和膝盖轻轻碰在一起不许分开，谁先移开谁输，输的人要被亲一下","[both] 从背后环住对方的腰，把下巴搁在肩膀上，在耳边说情话","[both] 用手指从对方的锁骨中央慢慢滑到肚脐位置，隔着衣服，滑到底后停住3秒再沿原路慢慢收回","[both] 对方闭上眼睛，你用嘴唇在他/她的脖子上来回游走但不留下吻痕","[M] 男生把女生的手腕轻轻按在墙上，凑到面前5cm处停住","[F] 女生跪在男生面前仰头看着他，双手放在他大腿上，指尖轻轻在大腿内侧画圈但不往上移","[both] 用舌尖轻轻舔一下对方的耳廓，然后朝耳洞里吹一口气","[both] 两人面对面跨坐在对方大腿上，双手搭在对方肩上对视30秒","[both] 在脖子上种一颗草莓（吻痕），位置由对方指定","[both] 用冰/冰块在对方胸口画一个图案，画完让对方猜是什么，猜错了含住冰块继续画直到猜对","[both] 咬住对方的下嘴唇轻轻往外拉，保持3秒","[both] 一只手隔着衣服放在对方胸口/胸肌上，感受心跳","[both] 从脚踝开始，用手指沿着小腿内侧慢慢往上滑到大腿根部","[both] 把对方压在床上/沙发上，双手撑在他/她头两侧俯视10秒","[both] 用领带/丝巾/眼罩蒙住对方的眼睛，然后轻轻碰触他的嘴唇","[both] 用舌尖写一个字在对方的锁骨上","[both] 用自己的大腿夹住对方的手，慢慢用力","[both] 用嘴唇含住对方的指尖，一颗一颗手指交替，含住时用舌尖轻轻扫过指腹，每根至少含5秒","[both] 在昏暗灯光下，用身体挡住光线，俯身在对方身体上方悬停","[both] 把对方的手放在你的腰上，引导他/她慢慢滑向你的臀部","[M] 女生趴在床上，男生从后面压上去，在她耳边呼吸但不碰触","[both] 用对方身体的某个部位（手/脚/头发）在自己身上来回滑动，闭上眼睛感受，结束时说出最舒服的部位","[both] 把对方压在镜子前，从镜子里四目相对，然后从背后贴上","[both] 把精油/乳液倒在手心搓热，从对方的肩膀开始往下涂抹","[both] 用舌头在你的牙齿和对方的耳垂之间搭一座「桥」","[both] 在对方已经敏感的部位用指甲轻轻刮过（不超过痛感）","[both] 你坐着，让对方面对你坐在你大腿上，用腿夹紧你的腰","[both] 把脸埋进对方胸口深呼吸30秒，然后抬头吻上去","[both] 用手指在对方大腿内侧画圈，从膝盖画到大腿根，越来越慢","[both] 用湿毛巾/冰块在对方身上画一条从脖子到肚脐的线","[both] 关掉灯，只用嘴唇探索对方上半身，找出最敏感的部位","[both] 从背后抱住对方，双手从腰慢慢滑到胸口再滑回腰，重复3次","[F] 女生跨坐在男生腰上俯身在他耳边说最脏的情话","[both] 把彼此的呼吸节奏调整到一致，同步呼吸2分钟","[both] 用两只手的拇指从对方的后颈沿着脊椎一路按压到尾椎","[both] 用你的膝盖轻轻分开对方的双腿，然后身体前倾","[both] 在对方耳边说出今晚你想对他/她做的一个具体动作，越详细越好"],
+  "firewood": ["[both] 脱掉对方的上衣，从锁骨一路吻到小腹，舌尖轻触与嘴唇含吮交替，每寸皮肤都不跳过，不能着急","[M] 男生把女生翻转过去，从背后吻她的后颈和肩胛骨，舌尖划过脊椎时感受她起鸡皮疙瘩的反应","[F] 女生坐在男生腰上，慢慢解开他的皮带/裤扣，用眼神询问","[both] 用舌头在对方的乳尖画圈，左三圈右三圈，然后轻轻含住，用舌尖快速拨弄10秒","[both] 把对方的手放在你的内裤边缘，带着他/她慢慢往下拉","[both] 你们只穿内衣/内裤贴着站着，双腿交缠，慢慢磨蹭","[M] 男生跪在女生面前，吻她的大腿内侧，从膝盖一直吻到大腿根","[F] 女生背对着男生坐在他怀里，向后仰头和他深吻，双手向后搂住他的脖子","[both] 用舌尖从对方的腹股沟沿着腹部中线一路舔到肚脐，再沿原路返回腹股沟","[both] 关灯，全裸拥抱1分钟，只能感受体温和心跳，不许说话","[both] 把精油倒在你手心，从对方的肩膀开始给他/她做全身精油推油","[M] 女生趴在床上，男生把她的内裤从后面慢慢脱下，用嘴唇碰她的臀缝","[F] 女生用手握住男生的性器（隔着内裤），用拇指慢慢画圈，感受它在掌心里逐渐变硬的变化","[both] 把对方的双手固定在头顶，从上到下用嘴唇「检查」每一寸皮肤，至少花2分钟不许偷工减料","[both] 坐在对方身上，用你的私处隔着内裤摩擦对方的大腿/小腹","[both] 用冰块含在嘴里，然后用冰凉的嘴去含对方的乳尖","[both] 用领带/丝巾把对方的手绑住，然后用嘴唇和手指从耳垂开始一路向下探索，重点照顾脖子、乳尖、腰侧和大腿内侧","[both] 两人侧躺面对面，把中间那条腿搭在对方腰上，磨蹭到两个人都湿/硬","[M] 男生躺在下面，女生骑在他腰上俯身，乳房垂在他脸上方，他用嘴去接","[F] 女生跪在男生两腿之间，从腹肌一路吻到内裤边缘，用牙齿咬住边缘往下拉","[both] 用你的体液（唾液/汗/爱液）在对方身上写字","[both] 全裸在镜子前从背后抱着对方，抚摸彼此的身体，看着镜子里的画面","[both] 把对方抱到洗手台上，站在他/她两腿之间，从脖子一路吻到胸口","[M] 男生把女生转过去面对墙/镜子，从后面贴着，一只手从腰滑到胸口，另一只手从腰滑到小腹","[both] 用嘴唇含住对方的手指，模拟口交的动作，全程保持眼神接触不许闭眼也不许移开","[both] 用按摩棒/跳蛋（如果有）从脚踝沿小腿外侧慢慢上移，经过大腿内侧时停留画圈，再到小腹和胸口，每处敏感地带逗留3秒","[both] 一人站着弯下腰扶住桌子/床沿，另一人从后面贴上，用性器隔着内裤磨蹭","[M] 女生用大腿夹住男生的手，男生用手指（隔着内裤）按压她的私处","[F] 女生跪在男生面前，用舌头隔着内裤舔他的性器轮廓","[both] 坐在对方腿上面对面，用彼此的性器隔着衣物摩擦，直到两个人都忍不住","[both] 全裸互相用身体磨蹭，除了性交什么都可以做，至少持续3分钟才允许停下","[both] 把对方的性器含在嘴里（隔着内裤/薄布料），感受轮廓和温度","[both] 用舌头从对方的会阴一路舔到尾椎骨（安全区域）","[both] 你们的身体之间夹着一个枕头，隔着枕头磨蹭和摩擦，直到两个人都忍不住发出声音","[both] 从背后抱着对方，你握着自己的性器/用手指从后面碰触对方的私处（隔着内裤）","[both] 用精油/润滑液涂满对方的胸部/腹肌，然后用身体去蹭","[both] 把对方的腿扛到肩膀上，从脚踝一路吻到大腿根内侧","[both] 让对方坐在你的脸上（69姿势的雏形），你用舌头隔着内裤/直接挑逗","[both] 一人仰面躺着，把双腿分开到最大，另一人跪在中间俯身下去，用嘴唇碰触私处上方的那片皮肤","[M] 男生从背后握住自己的性器，贴着女生的臀缝上下滑动（隔着内裤）","[F] 女生躺在床边头悬空后仰，男生站在她面前，女生用嘴接住男生的性器（隔着内裤）","[both] 用手机/镜子放在下方，让对方看着自己被爱抚的画面","[both] 用一条绳子/丝巾从你的胸口松松地绑到对方的胸口，在解开之前至少完成3次掷骰","[both] 把你最喜欢的一种性幻想中的姿势摆出来，保持不动让对方欣赏30秒","[both] 在对方的乳尖上涂抹润滑液/唾液，然后用你的乳尖去摩擦对方的乳尖","[both] 全裸坐在地板上面对面，腿交叉缠绕，用手指同时爱抚对方的私处","[both] 把对方按倒在床上，用你的重量压住他/她，然后慢慢从耳朵一路吻到性器","[both] 两人四肢交缠抱紧翻滚一圈，停在上面的那个人开始爱抚下面的人","[both] 用对方的性器（隔着内裤）在你的私处/臀缝来回滑动，模拟性交的动作","[both] 最后一片布料/内裤由对方用嘴脱下","[both] 脱掉对方的上衣，用指尖从背脊从上往下划到尾椎骨","[both] 轮流用嘴帮对方脱衣服，每人每次只能用嘴脱对方一件，脱完一件停下来对视5秒再继续","[both] 一人只穿内衣/内裤，跨坐在对方腿上环抱30秒，把脸埋在对方脖颈间，感受彼此的体温和心跳","[both] 用绳子/领带把对方双手轻轻绑在床头，然后抚摸他/她的全身，故意绕开所有敏感部位，直到对方开口说「求你碰我」","[both] 跪在对方两腿之间，用嘴唇隔着裤子/内裤轻轻碰触，每次碰触后立刻退开3秒，制造期待感","[both] 对方躺平，你从脚趾开始用嘴唇一路向上，到锁骨停住","[both] 用一只手从对方衣摆下方伸进去，从肋骨慢慢滑到腰侧","[both] 在对方身体上滴一滴蜂蜜/巧克力酱，然后用舌头舔掉","[M] 男生用胡茬轻轻蹭女生的大腿内侧","[both] 用头发扫过对方的乳头/胸口，左右交替，每边扫10下，速度由慢到快","[both] 让对方趴下，用嘴唇从对方的后颈一路碎吻到尾椎骨，途经肩胛骨和脊椎两侧","[both] 把对方的手放在你的私密部位（隔着衣服），覆盖着对方的手不动","[both] 用舌头在你的唇间和对方的乳尖之间来回切换"],
+  "temptation": ["[M] 用舌头从对方的脚踝一路舔到大腿根","[F] 用舌尖在对方的龟头上画圈","[both] 69姿势维持1分钟，只能用手和嘴，不能插入","[both] 用舌头在对方的会阴和睾丸/阴唇之间来回游走","[both] 含着对方的性器保持不动，用喉咙收缩刺激，持续20秒","[M] 把对方的腿打开到最大，用舌头从会阴到阴蒂/龟头做长条舔舐，来回10次","[F] 把对方的整个龟头/阴蒂含入嘴里，用舌头在口腔内搅动，同时用手套弄根部","[both] 口交时抬头和对方保持眼神接触，持续15秒","[both] 用跳蛋/按摩棒在对方的阴蒂/龟头上震动，同时用舌头舔对方的脖子或大腿内侧","[M] 用手指插入对方的后穴/阴道，同时用嘴含住对方的阴蒂/龟头吸吮，持续1分钟","[F] 用嘴含住对方的睾丸/阴唇，同时用手套弄对方的性器，持续30秒","[both] 口交时，被服务的一方说出「继续」「快点」「别停」中的一个，服务方根据指令调整","[both] 把对方的精液/爱液涂在自己的嘴唇上，然后吻对方","[both] 用舌头从对方的胸骨一路舔到耻骨，中间不许断，持续20秒","[both] 一人平躺，另一人用嘴唇和舌头只碰触对方上半身，不许碰下半身1分钟","[both] 用眼罩蒙住被服务方的眼睛，服务方用3种不同技巧依次挑逗，每种5秒","[both] 口交到对方快高潮时停下来，等对方说出「求你继续」再继续","[both] 用冰块含在嘴里融化后，用冰凉的嘴去含对方的阴蒂/龟头","[both] 对着对方的私处说话/吹气/呼吸热气，但不直接碰触，持续30秒","[M] 用舌头从对方的尾椎骨沿着臀缝一路舔到私处","[F] 用嘴唇含住对方的龟头/阴蒂，用舌头在顶端打转","[both] 互相口交的同时用手机录下声音，录30秒后回放给对方听","[both] 你手淫给对方看，对方用口交辅助，但不能代替手淫","[both] 把对方推到镜子前，让对方看着镜子里被口交的画面，不许移开视线","[both] 用嘴唇含住对方的阴唇/包皮系带，轻轻往外拉，用舌尖弹","[both] 在口交的同时用手指按摩对方的会阴和肛门外围","[both] 比赛谁先让对方高潮，输的人必须当着对方的面自慰","[both] 用蜂蜜/奶油涂在对方私处上，然后用舌头清理干净","[both] 口交时让对方的双腿夹住你的头，用大腿的挤压控制节奏","[M] 从对方的背后口交——对方跪趴着，你从后面用舌头进入","[F] 用嘴含住对方的性器，同时用手托住对方的睾丸/阴唇轻轻揉捏","[both] 整个口交过程中不许用手辅助，只用嘴和舌头","[both] 用舌尖在对方的阴蒂/龟头上快速震颤，持续20秒后转为温柔舔舐","[both] 口交到对方即将高潮时停下来，转移到对方的大腿内侧继续挑逗30秒","[both] 用你自己的唾液涂满手指，然后插入对方的后穴/阴道同时用嘴口交","[both] 口交的同时用另一只手自慰给对方看","[both] 用舌头和嘴唇在对方的大腿内侧制造一个吻痕，同时用手刺激对方的私处","[F] 给对方口交到射精，对方射在你嘴里","[M] 口交到对方高潮，对方夹紧你的头不让你离开直到高潮结束","[both] 对方仰躺双腿抬高架在你的肩上，你从这个角度进行口交","[both] 把对方的精液/爱液涂在自己的乳头上，让对方舔干净","[both] 用舌头模仿性交的动作进入对方的口腔","[both] 口交时用指甲轻轻刮过对方的大腿内侧和臀部","[both] 让对方坐在你的脸上，你用舌头从下往上服务","[both] 用舌头在对方的整条脊柱上做「之」字形舔舐，最后停在尾椎","[both] 口交时对方用手按住你的头来控制节奏和深度","[both] 把你的爱液/前液涂在对方嘴唇上，然后深吻共享味道","[both] 在对方即将高潮时停下来，用舌尖在对方的阴蒂/龟头上画「8」字","[both] 用各种你能想到的方式口交，直到对方满意为止"],
+  "union": ["[M] 请坐在下方，让对方面对面坐入，双手托住对方臀部配合其骨盆摆动","[F] 请面对面坐入对方身上，自主前后摆动骨盆，配合对方托举动作","[M] 采用传教士体位，俯身从对方额头吻至嘴唇，深吻同时缓缓进入，插入后放慢节奏感受结合温度","[F] 采用传教士体位平躺，配合对方俯身亲吻（额头至嘴唇），感受深吻时的缓慢进入，插入后放慢节奏","[M] 请让对方跪趴，从后方进入，节奏由慢到快再到慢","[F] 请跪趴姿势，让对方从后方进入，感受节奏由慢到快再到慢","[M] 从背后缓慢进入，抽送时在对方耳边说情话","[F] 请背对对方，让其从背后缓慢进入，感受抽送时耳边的情话","[M] 平躺下方，让对方背对坐入，由对方控制角度和深度","[F] 请背对对方坐入，自主控制插入角度和深度","[M] 站在床边/桌前，让对方弯腰扶沿，从后方进入","[F] 站在床边/桌边，弯腰扶住沿边，让对方从后方进入","[M] 与对方面对面坐抱，仅以骨盆运动，保持呼吸交缠","[F] 与对方面对面坐抱，仅以骨盆运动，保持呼吸交缠","[M] 将对方双腿扛至肩上，以最深角度进入，缓慢抽送","[F] 请抬起双腿让对方扛至肩上，感受最深角度的缓慢抽送","[M] 用枕头垫高对方腰部使骨盆抬起，从上方进入观察结合处","[F] 配合对方用枕头垫高腰部使骨盆抬起，观察上方进入的结合处","[M] 带对方到镜子正前方进行，确保双方可见交合画面","[F] 配合对方到镜子正前方进行，确保双方可见交合画面","[M] 将跳蛋/按摩棒置于对方阴蒂/会阴处，插入同时启动震动，由你控制强度","[F] 配合对方将跳蛋/按摩棒置于阴蒂/会阴处，插入同时感受震动，由对方控制强度","[M] 进入后在最深处保持静止，以骨盆轻微挤压刺激，持续1分钟","[F] 请配合对方在最深处保持静止，感受骨盆挤压刺激，持续1分钟","[M] 平躺让对方在上控制节奏，双手抚摸对方腰臀及乳房","[F] 请在上方自主控制节奏和深度，配合对方抚摸动作","[M] 在对方小腹涂抹润滑液，使双方耻骨紧密摩擦","[F] 配合对方在小腹涂抹润滑液，使双方耻骨紧密摩擦","[M] 用安全带/领带将对方双手束缚于床头或背后，由你掌控全程节奏","[F] 请配合对方用安全带/领带束缚双手于床头或背后，由对方掌控全程节奏","[M] 站于床边/床下，让对方平躺床边，将双腿架至肩上","[F] 平躺床边，将双腿架至对方肩上","[M] 请选择一种新体位或不常用体位，保持3分钟","[F] 请选择一种新体位或不常用体位，保持3分钟","[M] 抽送同时以手指按摩对方会阴及肛门","[F] 抽送同时以手指按摩对方会阴及肛门","[M] 播放一首慢歌，跟随节奏进行，歌曲结束时更换体位","[F] 播放一首慢歌，跟随节奏进行，歌曲结束时更换体位","[M] 用眼罩遮蔽对方双眼，由你完全控制动作节奏","[F] 用眼罩遮蔽对方双眼，由你完全控制动作节奏","[M] 进行过程中拍摄一张照片（不露脸），结束后共同观看","[F] 进行过程中拍摄一张照片（不露脸），结束后共同观看","[M] 从背后插入后，一手绕至前方抚摸对方阴蒂，另一手握住乳房","[F] 配合对方从背后插入，感受一手抚阴蒂一手握乳房的刺激","[M] 用双腿夹紧对方腰部或头部，以腿部力量控制节奏","[F] 用双腿夹紧对方腰部或头部，以腿部力量控制节奏","[M] 传教士体位时用枕头垫高对方臀部，改变进入角度","[F] 传教士体位时配合对方垫高臀部，感受角度变化","[M] 在对方阴道高潮时加强夹紧力度，持续至收缩结束","[F] 在阴道高潮时加强夹紧力度，阻止对方抽出，持续至收缩结束","[M] 使用振动棒/按摩棒辅助对方阴蒂高潮，由你控制节奏，敏感时放慢","[F] 配合对方使用振动棒/按摩棒辅助阴蒂高潮，敏感时感受节奏放缓","[M] 与对方面对面侧躺呈剪刀式交叉，从侧面进入","[F] 与对方面对面侧躺呈剪刀式交叉，配合对方从侧面进入","[M] 从后方进入后转为侧躺汤勺位，转换过程中保持插入状态","[F] 配合对方从后方进入后转为侧躺汤勺位，转换过程中保持插入状态","[M] 跪姿进入，对方平躺双腿抬至耳旁呈V字形","[F] 平躺双腿抬至耳旁呈V字形，配合对方跪姿进入","[M] 请平躺，让对方趴于身上放松，由下方缓慢向上挺动","[F] 趴于对方身上完全放松，感受从下方缓慢向上的挺动","[M] 采用对号体位，让对方面对面将一条腿架至你肩上","[F] 采用对号体位，面对面将一条腿架至对方肩上","[M] 在阳台/窗前（确保隐私）从背后抱住对方进行","[F] 在阳台/窗前（确保隐私）配合对方从背后抱住进行","[M] 请准备水果/巧克力，边喂食边进行，放慢节奏享受","[F] 请准备水果/巧克力，边喂食边进行，放慢节奏享受","[M] 平躺下方，对方悬空蹲跪于上方，双手托住对方臀部辅助其动作","[F] 悬空蹲跪于对方上方，自主控制深浅，配合对方托举辅助","[M] 进行过程中双手交握十指相扣，直至结束不得松开","[F] 进行过程中双手交握十指相扣，直至结束不得松开","[M] 从常规节奏突变为极慢摩擦，仅让龟头在最敏感部位进出","[F] 从常规节奏突变为极慢摩擦，仅让龟头在最敏感部位进出","[M] 在即将高潮时放慢或停止，待冲动消退后重新开始","[F] 在即将高潮时放慢或停止，待冲动消退后重新开始","[M] 请完全平躺静止，由对方全程主导动作节奏","[F] 请完全平躺静止，由对方全程主导动作节奏","[M] 从女上位开始，中途不抽出状态下翻滚转换为男上位","[F] 从女上位开始，配合对方在不抽出状态下翻滚转换为男上位","[M] 请让对方夹紧大腿，限制插入深度，仅在阴道口附近挑逗","[F] 请夹紧大腿限制插入深度，仅允许对方在阴道口附近挑逗","[M] 故意从阴道滑出，以龟头在对方阴唇/会阴处磨蹭后重新插入","[F] 配合对方故意滑出，感受龟头在阴唇/会阴处磨蹭后重新插入","[M] 在对方体内高潮时，以最性感的声音呼唤对方名字","[F] 在对方体内高潮时，以最性感的声音呼唤对方名字","[M] 在对方高潮后继续插入/逗弄其敏感身体，直至对方求饶","[F] 在高潮后配合对方继续插入/逗弄，直至自己求饶","[M] 高潮来临时双方保持静止，紧抱感受体内收缩的每一波","[F] 高潮来临时双方保持静止，紧抱感受体内收缩的每一波","[M] 抽送过程中用指甲轻刮对方背/腰/臀部，观察反应找到敏感区重点刺激","[F] 抽送过程中用指甲轻刮对方背/腰/臀部，观察反应找到敏感区重点刺激","[M] 使用另一个名字/角色称呼对方进行角色扮演（需约定安全词）","[F] 使用另一个名字/角色称呼对方进行角色扮演（需约定安全词）","[M] 进行中途暂停，共同洗澡/喝水后，以最慢速度重新进入","[F] 进行中途暂停，共同洗澡/喝水后，配合对方以最慢速度重新进入","[M] 在音乐最激烈时刻与对方同步高潮","[F] 在音乐最激烈时刻与对方同步高潮","[M] 结束后保持连接状态不抽出，相拥缓息数分钟","[F] 结束后保持连接状态不抽出，相拥缓息数分钟"],
+  "roleplay": ["[M] 男生扮演在酒吧初次相遇的陌生人，走到女生面前用最老套的搭讪开场，女生翻个白眼再笑着接过话头陪他演下去","[F] 女生扮演高冷吧台调酒师，男生是来搭讪的客人，调一杯「特调」给对方","[M] 男生是上门按摩的技师，女生是客人，从正经按摩开始慢慢越界，每越过一条「边界」就问一句「这里可以吗」","[F] 女生是精油按摩师，男生趴在床上，女生骑在男生腰上从背按到臀缝","[M] 扮演老师和学生，女生是穿短裙的性感老师，男生是留堂补习的学生","[M] 男生是严厉教授，女生是来求高分的女学生，办公室门锁上了","[F] 女生扮演女总裁，男生是新来的男秘书，总裁让秘书「加班」","[M] 男生是霸道CEO，女生是新入职的助理，CEO在办公桌上「面试」她","[both] 扮演在电梯里被困的两个陌生人，从保持距离到呼吸交缠","[F] 女生是合租室友，男生是室友，假装「不小心」撞见对方换衣服","[M] 男生扮演快递员/外卖员，女生开门后只披着一件衬衫签收","[M] 女生扮演查水表/抄电表的工作人员，男生从背后抱住「检查」","[both] 扮演一对偷情的男女，老公随时可能回来，必须保持安静，听到门外有动静就立刻停住不动屏住呼吸","[M] 男生扮演医生，女生是来做妇科检查的病人，检查越来越仔细","[F] 女生扮演心理医生，男生是来倾诉的病人，医生用「特殊疗法」帮他放松","[M] 男生是私家侦探，女生是委托人，两人在昏暗房间里「讨论案情」","[both] 扮演在电影院邻座的陌生人，手越过扶手慢慢握在一起","[F] 女生是coser穿上水手服/女仆装，男生是偶然闯入的「主人」","[M] 男生穿上制服/西装扮演保镖，女生是大小姐，保镖要「贴身保护」","[both] 扮演古装剧里的王爷和侍妾，侍妾伺候王爷更衣就寝","[F] 女生扮演狐狸精/妖精，男生是被迷惑的书生，被勾引到床上","[M] 男生扮演吸血鬼，女生是误入古堡的少女，吸血鬼从脖子开始「享用」","[both] 扮演新婚夫妻的洞房花烛夜，两人都假装是第一次很紧张，关灯后手在黑暗里乱摸假装找不到对方的位置","[F] 女生扮演猫娘/宠物，男生是主人，宠物要讨好主人才有奖励","[M] 男生扮演狼人，女生是月圆之夜独自在森林里的旅人","[both] 扮演在午夜列车上偶遇的邻座旅客，从聊天到在洗手间接吻","[F] 女生是泳池救生员，男生是溺水被她救起的「受害者」","[M] 男生扮演健身教练，女生是学员，教练手把手「纠正动作」","[both] 扮演间谍和审讯官，审讯官用特殊手段让间谍「开口」，间谍不松口审讯官就不停手","[F] 女生扮演万人迷明星，男生是狂热私生饭偷偷潜入房间","[both] 扮演猎头和候选人，猎头把条件讲得口干舌燥，候选人反手给他开条件：「你先说服我。」","[both] 扮演房东和看房客，房东「不小心」把备用钥匙落在门锁上，让看房客进来等门锁修好","[both] 扮演两个甲乙方代表在会议室谈合同，酒过三巡，条款一个比一个离谱","[both] 扮演修车厂的师傅和车主，车主躺在车底伸手递扳手，师傅扶着他的腰多停了两秒","[both] 扮演理发师和客人，洗头时指腹按过头皮，指尖一路滑到后颈","[both] 扮演化妆师和试妆客人，在镜子前一层层把对方画成另一个人","[both] 扮演服装秀后台的模特和服装师，扣最后一颗扣子时手停在胸口不肯放开","[both] 扮演珠宝店店员和客人，请客人替对方把项链扣上，两个人都盯着对方的后颈","[both] 扮演深夜网约车司机和乘客，导航一直绕路，计价器一直在跳，谁都不提下车","[both] 扮演末班地铁上挤在一起的两个陌生人，车厢晃了一下，是谁先碰到了谁的手","[both] 扮演三万英尺高空的乘务员和睡不着的乘客，广播声一停，安静得能听见彼此的呼吸","[both] 扮演便利店的夜班店员和等着打烊的顾客，关东煮的味道越来越淡，谁先开的口","[both] 扮演第一次见面的相亲对象，坐在餐厅两端，各自低头研究菜单，菜凉了也没动","[both] 扮演网友第一次线下见面，两杯咖啡都凉了，还是没人敢先开口","[both] 扮演多年没见的两个旧同学，在同学聚会上重逢，先聊天气，后来聊到那年没说完的那句","[both] 扮演婚礼上的伴郎和伴娘，被推上台做婚礼小游戏，赢的那个要接受惩罚","[both] 扮演演唱会前排的两个歌迷，灯海亮起来那一刻，两只手自己牵在了一起","[both] 扮演搬家公司工人和住户，床垫卡在楼梯转角抬不上去，两个人都出了一身汗"],
+  "reward-punish": ["[H][both] 惩罚：双手举过头顶，让对方挠痒痒10秒不许躲","[H][both] 惩罚：被对方用皮带/拖鞋/衣架轻轻打五下屁股","[H][both] 惩罚：用嘴巴把放在对方后背的扑克牌叼下来，手不能碰到对方的身体，碰到一次加罚一张","[H][both] 惩罚：单膝跪地用最真诚的语气说「我错了，请原谅我」，直到对方点头原谅才能站起来","[H][both] 惩罚：蒙眼转五圈走到对方面前，亲到的第一个地方就算数","[H][both] 惩罚：让对方在你脸上/身上贴三张贴纸，想贴哪贴哪","[H][both] 惩罚：双手被绑在床头，被对方用羽毛/纸巾/头发挑逗30秒","[H][both] 惩罚：学狗叫三声，边叫边摇尾巴（扭屁股），然后用嘴接过对方丢来的「骨头」","[H][both] 惩罚：趴在床上撅起屁股，让对方打十下并计数","[H][both] 惩罚：用最夸张的语气念一段对方写的羞耻台词","[H][both] 惩罚：双脚分开站好，对方隔着裤子用手指弹你私处三下","[H][both] 惩罚：跪在对方面前，双手背在身后，直到对方允许才能起来","[R][both] 奖励：获得一次免做金牌，下次可跳过任意一个任务","[R][F] 奖励：指定对方为你口交/手淫30秒","[R][both] 奖励：对方必须用最性感的声音说出你指定的一句话，不说够三遍不许停","[R][both] 奖励：对方为你按摩全身任意部位3分钟","[R][both] 奖励：对方脱掉一件衣服/内衣作为奖励","[R][both] 奖励：你可以命令对方做一个动作（不过线即可）","[R][both] 奖励：让对方用舌头舔你身体的任意一个部位","[R][both] 奖励：对方必须用你最喜欢的姿势给你一次高潮","[R][both] 奖励：获得一次额外的回合机会","[R][both] 奖励：让对方在你耳边说出一个他/她从未说过的性幻想","[R][both] 奖励：对方今晚必须满足你提出的一个额外要求","[R][both] 奖励：拍一张对方最诱人的私密照片给你（阅后即焚）","[R][both] 奖励：让对方伺候你洗完一次澡","[R][both] 奖励：对方要闭眼由你摆布三分钟，全程不许看，也不许问","[R][both] 奖励：获得一次「无条件服从」——接下来一个回合，对方不许对你的任何要求说不行","[R][both] 奖励：对方必须用最慢的语速念出你指定的十句话，念错一句从头再来","[R][both] 奖励：你今晚可以指定对方身上一个位置，对方必须一直待在那儿不许动","[R][both] 奖励：对方要说出今晚最想对你做的一件事，说完就真的做给你看","[R][both] 奖励：下一回合由你决定对方穿什么、做什么，对方不许提出异议","[H][both] 惩罚：你要蒙眼站着，让对方在你身上任意摸十秒，每摸一下都要说出来","[H][both] 惩罚：被对方用丝巾蒙住眼睛，接下来三分钟你只能靠对方的声音判断方向","[H][both] 惩罚：单手撑墙俯卧撑十下，另一只手不许撑地，每一下都要报数","[H][both] 惩罚：对着对方念十句你当场编的情话，念到对方笑场为止","[H][both] 惩罚：你要学对方平时最常说的那句口头禅，说十遍，说到不为止"],
+  "dominator": ["[M] 男生用手指抬起女生的下巴，命令她看着你的眼睛，对她说出今晚的规矩：没有得到许可，她不许主动碰你","[M] 男生命令女生站好、双手背在身后，你绕着她走一圈，从上到下审视她，每看一处她都要保持姿势不动","[M] 男生把女生的双手按在墙/床沿上，凑到她耳边用气声说一句命令，说完后退开，命令她保持这个姿势10秒","[M] 男生命令女生脱掉自己的一件衣物，必须由你指定脱哪一件，脱之前要问「主人，可以吗」","[M] 男生让女生趴在你腿上，用皮带/手掌轻轻打她屁股5下，每一下她都要报数并说「谢谢主人」","[M] 男生捏住女生的下巴让她张开嘴，命令她伸出舌头保持10秒，然后你决定要不要「奖励」她","[M] 男生命令女生闭眼躺着不许动，你只用嘴和手指从她的锁骨一路向下挑逗，直到她求饶","[M] 男生命令女生背对你站好，你从背后环住她，双手停在腰际不许往下，她每动一下你就收紧一分","[M] 男生命令女生跪坐在你脚边，双手放在大腿上，保持这个姿势听你下达接下来的3个指令","[M] 男生命令女生自己抚摸阴蒂/龟头，只准接近高潮不许到达，快到了就必须停手，重复3次，每次都要向你报告感受","[M] 男生命令女生用嘴含住你的手指模拟口交，你喊「停」她必须立刻吐出，喊「继续」才能继续","[M] 男生命令女生数数：从1数到10，每数一个数就脱掉自己身上的一件衣物，脱完为止","[M] 男生命令女生跪下，双手背在身后，用最软的语气求你做一件她想做的事，你决定答不答应","[M] 男生让女生坐在你腿上背对着你，你从后面控制她的双手，问她「想被摸哪里」，她回答后你再决定","[M] 男生命令女生保持跪姿用嘴服务30秒，你喊停后她必须立刻停下，不许偷懒继续","[F] 女生跪在男生面前，双手背在身后，叫一声「主人」，等男生点头才准起身","[F] 女生用嘴把男生的皮带扣解开，动作要慢，每解开一步都要抬头看男生的眼睛，直到他满意","[F] 女生把上衣撩到胸口以上，双手举过头顶，保持这个姿势听男生下达接下来的指令","[F] 女生用手捂住自己的乳房，从指缝间让男生看，坚持30秒，期间不许把手放下","[F] 女生背对男生跪坐，双手撑地，把臀部微微翘起保持1分钟，等男生「验收」后才准恢复","[F] 女生把自己的手放进男生手里，由男生握着她的手，引导她去抚摸自己的阴蒂/龟头","[F] 女生把手伸进内裤里抚摸自己，但每碰一下都要先说一句「求主人许可」，男生不答就不许动","[F] 女生把内衣脱下来，双手捧着举到男生面前说「献给主人」，然后等男生处理","[F] 女生跪着用嘴唇隔着内裤亲吻男生的私处轮廓，男生说「停」就必须立刻停","[F] 女生保持跪姿用嘴服务男生30秒，男生喊停后必须立刻停下，不许继续","[F] 女生单腿站立，另一条腿慢慢抬高给男生看，坚持10秒，放下来之前要先问「主人我可以放下来吗」","[F] 女生闭眼站好，男生用指尖在她身上游走，她要说对每一次被碰到的地方","[F] 女生跪在男生面前，双手放在大腿上，用最软的语气向男生「讨」一个许可，直到他点头","[both] 两人约定今晚的安全词，任何一方说出安全词，另一方必须立刻停下并抱住对方","[both] 定下「命令规则」：接下来3回合，一方说「不许」另一方必须立刻停手，违反一次罚5个深蹲","[both] 玩一次「服从测试」：一方连续下达3个动作指令，另一方必须无条件照做，做错一次就重来","[both] 双方互换身份30秒——刚才的主导方现在服从对方下达的一个命令","[both] 用领带/丝巾绑住一方的手腕，被绑者必须用嘴或肩膀完成一件事（递水/拿枕头）","[both] 定一个「听话奖励」：本轮服从表现好的一方，可以要求对方做一件小事（喂水/按摩/夸一句）","[F] 对方说「跪下」的时候你要立刻跪下，跪下之后先问一句「主人，要我做什么」再动手","[F] 对方给你的每个指令都要先复述一遍再执行，复述错了就等对方再说一次","[F] 对方说「停」你要立刻停手，说「继续」你才能继续，一整晚都不许自作主张","[F] 结束后你要向对方报告：哪一步最听话、哪一步想反抗，说完不许找借口","[F] 对方给你的许可随时可能收回，只要对方说一声「今天到这儿」，你就必须马上退开","[F] 你主动向对方申请一次加码：说出你今晚想要什么，等对方点头才准开始","[F] 对方要做的事让你有点抗拒时，你要先说出来，等对方说「继续」才准做","[F] 今晚你有一件事可以做主：对方的命令太难时，你可以要求换成等价的一件，对方答应才算数","[both] 今晚任何一条命令，对方只要说「等一下」，你就必须先停下确认再继续","[both] 轮流当一次发令方：一方下一个指令，另一方先复述一遍再照做，三轮之后交换","[both] 两人同时说「开始」，在对方喊停之前不许自己先停，谁先停谁认输","[both] 每做完一轮，双方都要各自说一句「刚才哪一下最听话」，说完再继续","[both] 今晚任何一方都可以撤回一次已经给出的许可，撤回时只说一句「撤销」","[both] 挑一个双方都没试过的小动作，当场约定谁先提出来谁加码一次","[both] 一方可以坦白一句「我其实有点想反抗」，对方必须先问一句「你想停吗」再决定要不要继续","[both] 定一条交换规则：任何一方说了「服从」，另一方就多提一个要求，说了不算数的一方要重来"],
+  "queen": ["[F] 女生命令男生跪在你面前，双手背在身后，抬头看着你——在他获得「允许」之前不许动","[F] 女生坐在椅子上，让男生跪在你两腿之间，命令他用嘴唇隔着裤子亲吻你的大腿内侧，直到你满意","[F] 女生命令男生双手举过头顶站好，你绕着他走一圈，点评他的身体，每点评一处他都要说「谢谢女王」","[F] 女生用脚隔着内裤轻轻踩一下男生的私处，命令他保持不动10秒，不许躲也不许出声","[F] 寸止挑战：女生命令男生自己抚摸自己，只准接近高潮不许到达，你说「开始」才能继续，重复5轮","[F] 女生命令男生自己握住阴茎，每动3下就要停下来向你报告，直到你说「够了」才准停","[F] 女生命令男生「不许射精/不许高潮」，他必须用意志力忍住，忍不住就要接受惩罚","[F] 女生命令男生把裤子拉开/脱下，露出阴茎保持状态，你数到30才允许他遮住","[F] 女生命令男生复述你的规矩：「没有女王的允许，不许擅自高潮」，说完后你才决定要不要奖励他","[F] 女生用手隔着内裤握住男生的阴茎，慢慢上下套弄，每套弄5下就停5秒，重复4次，男生全程不许出声","[F] 女生命令男生闭眼跪好，你用嘴唇若即若离地碰他身上的敏感部位，每次碰一下问他「想要吗」，他必须回答「想，求女王」","[F] 女生命令男生自己抚摸，你只负责在旁边倒数，倒数结束他必须立刻停手","[F] 女生命令男生张开嘴，你把食指伸进去让他含住，命令他含到你抽手为止","[F] 女生命令男生用嘴脱掉你的一只袜子，然后用嘴唇从脚踝吻到小腿，得到允许才继续往上","[F] 女生命令男生单膝跪地，双手捧着你的手，低头亲吻你的手背，保持10秒","[F] 女生坐在床边，命令男生跪在你面前，用舌头隔着内裤舔你的私处，直到你说「停」，你没说停他不许停","[F] 女生命令男生背对你跪好，翘起臀部接受你的管教（用皮带/手掌轻拍），每一下报数说「谢谢女王」","[F] 女生命令男生进入「待命状态」：跪好、低头、双手背在身后，直到你说「解放」才能动","[M] 男生跪在女生面前，双手背在身后，用最恭敬的语气叫一声「女王」，然后请求她允许你抚摸她","[M] 男生闭眼跪好，双手放在膝盖上，等女王用指尖在你脸上游走，你猜她刚才碰到了哪里","[M] 男生用舌头隔着内裤舔女生的私处轮廓，每舔一下要停下来问「女王这样可以吗」","[M] 男生单膝跪地，低头等待女王的命令，她让你抬头就抬头，让你低头就低头","[M] 男生跪在女生面前，双手撑地，让女生检查你的背——她要你弓背就弓背，要你塌腰就塌腰","[M] 男生跪着用嘴给女生按摩小腿，每按一会儿就要抬头问一次「女王舒服吗」","[M] 男生在女生命令下，用嘴唇轻吻她的脚背到膝盖，一路只许吻不许用手","[M] 男生跪好双手放在膝盖上，把女王刚才的命令复述一遍，说错一个字就要重来","[both] 两人约定今晚的安全词，任何一方说出安全词必须立刻停下并抱住对方","[both] 定下规则：接下来3回合，女生是女王、男生是奴，违反一次命令罚男生做5个俯卧撑","[both] 角色互换30秒——这次男生做主导，给女生下达一个命令，然后换回来","[both] 两人一起复习「今晚规矩」：喊女王、得许可、守安全词，背不下来的人要被罚","[both] 用丝巾蒙住一方的眼睛，另一方用手指从脚踝慢慢向上游走，被蒙眼者猜停在哪个位置","[both] 定一个小奖励：服从表现好的一方，可以要求对方做一件小事（喂水/按摩/夸一句）","[M] 女王说「跪下」的时候你立刻跪下，跪下之后先问一句「女王，要我做什么」再动手","[M] 女王数到二十之前你不许动，数到一半口令变了，你要定在原地不动，等新的那一句","[M] 女王说「到你了」你才准自己动手，快到的时候必须先问一句「可以了吗」","[M] 一轮结束后你要向女王交代：哪一下忍得最久，哪一下差点破功，说完不许找借口","[M] 女王给你的许可随时可能收回——目光一移开，你就得自己退开，别等命令说完","[M] 女王要你做的事你并不想做时，先开口说「能不能换一个」，等女王点头才准开始","[M] 你要主动向女王请一次恩典：说出你今晚最想要的一样东西，等女王点头才准开始","[both] 今晚谁是女王由你们当场定：一方说「今晚我当女王」，另一方接下这个身份，今晚的规矩由对方定","[both] 双方各说一句「我最怕被命令什么」，说完对方必须答应不碰那条线","[both] 有一方要命令对方脱掉一件衣物时，必须先问一句「可以吗」，得到「可以」才准动手","[both] 约定一个「暂停手势」：对方举起手就立刻停，等对方放下才继续","[both] 今晚先由一方提出三个要求，另一方只回答「接受」或「改一个」，不许直接拒绝","[both] 结束时双方都要说一句「今晚我最听话的一刻是」，说完再熄灯","[both] 一方先说一个「今晚不许碰的地方」，另一方复述一遍才算生效","[both] 两人轮流说一句「再加大一点」，对方每次都要先回答「可以吗」才继续","[both] 中途任何一方都可以喊「今晚结束」，喊完另一方必须立刻松手、坐好、安静三秒","[both] 一方做完一段之后必须向对方复盘一句「刚才哪一下我差点没忍住」，另一方听完再决定要不要继续","[both] 惩罚只允许加一次：对方一旦说了「够了」，今晚所有惩罚立刻冻结","[both] 每完成一个指令，双方都要各自说一次「是」，不许沉默代替回答","[both] 一方可以要求对方把同一个指令重复三遍，每一遍都必须一丝不差","[both] 今晚所有「不可以」都要说出口，不许用沉默代替拒绝"],
+  "contract-lovers": ["[M] 男生提出「契约情侣」计划：因公司年会需要带上女伴，找到女生商量合作。你拿出一份手写的《契约情侣协议》，上面列着合作期限和亲密权限的边界，递给她时心跳得比想象中快","[F] 女生看完协议，轻笑一声，用口红在纸角签上了名字。然后拿起笔加了一条：「牵手可以，但必须十指相扣——做戏要做全套」。推回给男生时指尖在纸面上多停了一秒","[both] 双方交换一件随身物品作为信物——她给了你一根发绳，你给了她一枚硬币。仪式感十足地握手庆祝合作开始，但这一握谁也没有先松开","[M] 男生陪女生去挑选「年会战袍」。她换好衣服拉开帘子的那一刻，你愣住了——你看过她很多次，但从来没有像现在这样认真地看着她。你脱口而出「好看」，然后赶紧假装在低头看手机","[F] 女生帮男生挑了一套搭配，踮脚帮他整理衬衫领口。指尖无意间划过他的锁骨，两个人都停了一秒。你闻到他的洗衣粉味道，和想象中不太一样，但很好闻","[both] 签约当晚各自回家，躺在床上盯着天花板。不约而同地拿起手机给对方发了同一句话：「合作愉快，明天见。」然后对着屏幕笑了很久","[both] 排练牵手：从生疏地虚握到自然地十指相扣，要求保持这个姿势做其他事5分钟。你们尝试用一只手喝水、玩手机、翻包——慢慢忘了这是在排练","[M] 男生从背后环住女生的腰，下巴搁在她肩上排练「恩爱姿势」。你闻到她头发的味道，感觉她的背贴着你胸口微微起伏。说好保持30秒不笑场，但谁也没计时","[F] 女生练习用撒娇的语气叫男生的昵称。「哥哥」「宝贝」「亲爱的」一个个试过去，每叫一声就往他面前凑近一寸，直到他耳朵红透才算过关","[both] 模拟「偶遇熟人」即兴场景：你们在咖啡厅假装偶遇朋友，即兴演出热恋情侣的日常对话，至少要撑1分钟不许笑场。但最后还是破功了，你倒在她肩膀上笑得直不起腰","[M] 男生公主抱女生走10步。你发现她比想象中轻，她发现你比想象中稳。放下时她没有马上松手，手臂还勾着你的脖子","[F] 女生坐在男生腿上自拍一张「甜蜜合照」，发朋友圈仅对方可见。你绞尽脑汁想了一句足够腻的配文发出去，然后把脸埋在手机后面不敢看他","[M] 男生带女生「回家见父母」（模拟场景）。饭桌上你全程护着她——帮她挡酒、夹菜、打圆场。你的手在桌下握着她的，手心紧张得出汗，但一直没放开","[F] 女生在「家长」面前表演贤惠——主动站起来帮忙收拾碗筷去洗。男生跟到厨房说要帮忙，结果两个人在水池边玩水嬉闹差点打碎盘子，赶紧假装什么都没发生","[both] 晚宴结束，「家长」安排两人睡同一间房。你们对视一眼同时脸红，然后异口同声地说「好的」。关上门后靠着门板沉默了三秒，谁也不知道该先迈哪条腿","[M] 男生主动抱了地铺的被子铺在地上，把床让给女生。但犹豫了一下又多拿了一床被子铺在旁边，小声说：「你要是半夜觉得冷……可以叫我」","[F] 女生关了灯，裹着被子躺了一会儿，轻声说：「我有点冷。」停顿了一下又说：「合约里……没写不能一起睡吧？」——这是你们第一次提起合约时双方都带着笑意","[both] 两个人背对背躺在一张床上，中间隔着一个拳头的距离。安静到能听见彼此的呼吸和心跳。谁也没有开口，但你感觉到她在慢慢往后挪，一寸一寸地","[both] 黑暗中不知道是谁先转过身来的，也不知道是谁的手先碰到了谁的手。触碰的一瞬间两个人都没缩回去——合约的边界在这一刻正式作废了","[M] 男生开始每天接女生下班/放学，每次都带一杯她爱喝的奶茶。每次都说是「合约要求的男友职责」，但你到得越来越早，买的也越来越用心","[F] 女生开始给男生送午餐/夜宵，说是「合约女友的义务」。但你每次都多做了菜，还专门学了他提过一次喜欢吃的红烧肉。你不想承认，但你就是想看他吃到时眼睛亮起来的样子","[both] 一起逛超市买菜。在货架间打闹嬉笑时不小心撞到了别人，两人赶紧鞠躬道歉，然后默契地装成真情侣说「抱歉抱歉，我们在热恋中脑子不好使」——说完躲在货架后面偷笑了一分钟","[M] 男生陪女生看她喜欢的剧。你嘴上说对这种剧不感兴趣，但看到第三集时手已经自然地搭上了她的肩膀，第五集时她已经靠在你怀里了。你低头看她，突然觉得这好像已经不是演技了","[F] 女生陪男生看球赛。你对足球一窍不通，但靠在他肩膀上看他兴奋的样子也觉得挺开心。不知不觉睡着了，迷迷糊糊感觉他关了电视，低头看了你很久——你没有睁眼，因为你想让这一刻再久一点","[both] 你们翻看手机里这段时间的合照。「这张在咖啡厅」「这张在超市」「这张是我偷拍的你」——每一张都在笑，而且每一张笑得都很真。翻着翻着两个人都不说话了，因为谁也没法再说「这是演的」","[M] 合约到期的前一天。男生送女生到楼下，分别时他没有走。你深吸了一口气，把那句排练了一整天的话说出来：「合约明天就到期了……但我可以真的追你吗？」声音比想象中稳，心跳比想象中快","[F] 女生没有回答。你踮起脚尖吻了他——轻轻的，只有一两秒。退开之后你说：「违约了，但违约金我不付，因为你也想要。」你的声音在发抖，但你没有后悔","[both] 初吻后两个人坐在楼梯间聊了一整夜。从「你什么时候开始当真的」聊到「我第一面就觉得你好看」，从暧昧的笑聊到沉默的对视。天快亮时你发现你们的手不知道什么时候又握在一起了","[M] 男生重新起草了一份新合约。没有期限，没有边界条款。你在最下面亲笔写了一行新条款：「真心条款：上面所有条款都由真心决定，不作假、不撤回、不限时。」你把纸推到她面前时手指微微发抖","[F] 女生看完新合约，没说话。你拿起笔，把原来那份旧合约从她手里抽走，撕成两半。然后在新合约背面只写了一行字：「无限期，无条件，我愿意。甲方（签）——」写完了印上一个唇印，推回去时眼睛亮晶晶的","[both] 那一夜你们用身体语言重新「签约」。没有人再提合约，没有人再提边界，也没有人再说「这是演的了」。结束后她趴在你胸口用手指画圈，你抓住她的手放到嘴边亲了一下。窗外天快亮了，但谁也不想睡","[M] 早晨迷迷糊糊半梦半醒间，男生把怀里的人搂紧了一点，闭着眼睛说了一句「我爱你」。说完自己都没意识到，翻个身又睡着了——但怀里的人醒了，把这句话存进了心里最安全的地方","[F] 女生假装没听到那句梦呓。但起床后在浴室的镜子上用唇膏画了一颗爱心，下面写着「我也爱你」。然后快速擦掉，在男生进卫生间之前假装什么都没发生","[both] 周末整理东西时翻出了那张皱巴巴的旧合约。你们并排坐在地板上一条条念出来：「第四条：牵手需经双方同意」「第七条：不得占用对方休息时间」——念到一半两个人都笑了，因为这些条款一条都没遵守","[M] 男生靠过去亲了一下她的额头，然后问：「如果没有那份合约，你还会喜欢我吗？」","[F] 女生靠在他怀里想了想，反问：「如果没有那份合约，你敢不敢追我？」两个人都笑了，然后同时说：「会，敢，只是需要一张纸来壮胆」","[both] 你把那半张旧合约夹进随身带的书里，对方看到后笑你「这都什么年代了还留着」——但对方那半张也一直放在钱包夹层","[both] 你们把合约当成游戏重玩一遍：轮流念一条，然后承认自己已经违反了哪一条","[both] 对方在旧手机里翻出当年那份《契约情侣协议》的草稿照片，纸上有一行被划掉的话：「如果假戏成真呢」——划掉的那道笔痕很深","[both] 你们为「要不要把合约裱起来」吵了一架，最后谁也没再提裱的事，那张纸仍旧折着搁在原处","[both] 对方在朋友圈下面评论了一句「我们签过合同」，你回「早解约了」——你们有两套说辞，每次都不一样","[both] 对方提议再加一条「任何一方说停就停」，你把它写成了家里的常设条款：这条后来真的救过你们一次","[both] 你们把「按合同来」变成了日常用语：洗碗的时候谁都不肯动，最后靠抽签解决","[both] 对方翻出当年那份分工清单——谁洗碗、谁拖地、谁先道歉，列了整整两页，如今一条都没执行","[both] 某个下雨的晚上，你们把两半合约拼在一起，胶带粘不牢，最后干脆用胶带把两张桌子粘在了一起","[both] 对方突然提议「再签一次」，你问「这次是合同还是承诺」，对方说「合同能写，承诺写不了」","[both] 你提议把旧合约扔掉，对方没反对，只是把自己那半张也放进你手里：「一起扔」——你们最后还是没扔"],
+  "public-eyes": ["[both][Q] 你曾经在公共场合有过性幻想吗？在什么地方？","[both][Q] 你能接受在阳台上不拉窗帘做爱吗？","[both][Q] 你有没有在试衣间里自慰过？","[both][Q] 你觉得在户外哪里做爱最刺激？","[M][Q] 你幻想过在停车场把对方按在车上后入吗？","[F][Q] 你幻想过在深夜的公园长椅上被对方撩起裙子吗？","[both][Q] 你对在车内做爱有什么特别的幻想吗？","[both][Q] 你有没有在公共厕所里做过爱？感觉如何？","[both][Q] 你愿意穿着性感内衣在酒店走廊走一圈吗？","[both][Q] 你曾经在海边裸泳过吗？","[M][Q] 你最想在哪种公共场所看到对方裸露？","[F][Q] 你最想在哪种公共场所裸露给对方看？","[both][Q] 如果让你选一个地方偷偷做爱，你会选哪里？","[both][Q] 你对在电影院里边看电影边被摸有什么看法？","[both][Q] 你有穿着情趣内衣在车里坐过吗？","[both][Q] 你能接受在野外全裸吗？","[both][Q] 你最想尝试但还没试过的户外露出地点是哪里？","[both][Q] 你曾经在阳台上口交过吗？什么感觉？","[both][Q] 你幻想过在电梯里做爱，突然有人进来吗？","[M][Q] 你想过带对方去露天的温泉池里做爱吗？","[F][Q] 你想过和对方在露天的温泉池里做爱吗？","[both][Q] 你对在教室里做爱有什么幻想？","[both][Q] 你有没有在办公室的玻璃窗前做过？","[both][Q] 你被陌生人看到过性器官吗？在哪里？","[M][Q] 你希望对方穿多短的裙子跟你出门？","[F][Q] 你愿意为对方穿真空吊带逛商场吗？","[both][Q] 你幻想过在公交车上被陌生人摸吗？","[both][Q] 你最想在哪种天气下野外做爱？","[both][Q] 你能接受在楼顶天台上做爱吗？","[both][Q] 你试过在露营帐篷里做爱吗？","[both][Q] 你有在公共场合高潮过吗？怎么掩饰的？","[both][Q] 你对在图书馆的书架间做爱有什么幻想？","[M][Q] 你幻想过让对方穿着开裆丝袜在公园散步吗？","[F][Q] 你幻想过对方让你穿着开裆丝袜在公园散步吗？","[both][Q] 你曾经在KTV包厢里做过吗？","[both][Q] 你愿意在摩天轮转到最高点时露出身体吗？","[both][Q] 你对在体育场的看台上做爱有兴趣吗？","[both][Q] 你幻想过在婚礼现场偷偷和伴侣做爱吗？","[M][Q] 你想过让对方在夜晚的巷子里给你口交吗？","[F][Q] 你想过在夜晚的巷子里给对方口交吗？","[both][Q] 你最大胆的一次户外性爱是在哪里发生的？","[both][Q] 你有没有故意让人偷看你们做爱？","[both][Q] 你幻想过在音乐节的人群中偷偷做爱吗？","[both][Q] 你愿意在白天人流较多的天桥上露出吗？","[both][Q] 你对在消防通道里做爱有什么看法？","[both][Q] 你有没有在行驶的火车上做过爱？","[both][Q] 你幻想过在透明的景观电梯里全裸吗？","[both][Q] 你能接受在沙滩上当众做爱吗？","[both][Q] 你曾经在野外被陌生人撞见过吗？","[M][Q] 你想过把对方的裸照设成手机壁纸在公共场合亮屏吗？","[F][Q] 你想过对方把你裸照设成壁纸在公共场合亮屏吗？","[both][Q] 你能接受远程遥控跳蛋在公共场合高潮吗？","[both][Q] 你幻想过在警察局附近做爱吗？","[both][Q] 你对在教堂或庙宇里偷偷做爱有什么想法？","[both][Q] 你试过在公交末班车的后排做爱吗？","[both][Q] 你幻想过在机场的母婴室里快速做爱吗？","[both][Q] 你喜欢不穿内衣出门吗？什么感觉？","[M][Q] 对方穿哪种衣服让你最有在公共场合扒掉对方的冲动？","[F][Q] 对方穿哪种衣服让你想在公共场合被对方脱掉？","[both][Q] 你有没有在公共泳池的淋浴间里做过色色的事？","[both][Q] 你能接受在雨中的车里全裸等雨停吗？","[both][Q] 你对在医院的病房里做爱有幻想吗？","[both][Q] 你最想在哪一栋摩天大楼的窗边做爱？","[both][Q] 你幻想过在大学宿舍的公共洗衣房里做爱吗？","[both][Q] 你愿意在漆黑的电影院里给对方用手弄出来吗？","[M][Q] 你想过在商场的安全通道里让对方跪着口交吗？","[F][Q] 你想过在商场的安全通道里跪下给对方口交吗？","[both][Q] 你能接受在公共厕所的隔间里做爱吗？","[both][Q] 你试过在出租车上偷偷摸对方吗？","[both][Q] 你对在法院或政府大楼里做爱有什么看法？","[both][Q] 你幻想过在游乐园的鬼屋里一边害怕一边做吗？","[both][Q] 你愿意在闹市区的自助拍照亭里全裸拍一张吗？","[both][Q] 你有没有幻想过在行驶的摩托车后座上做爱？","[both][Q] 你对在潜水艇或飞机驾驶舱里做爱有想象吗？","[both][Q] 你喜欢隔着衣服在公共场合被摸吗？","[both][Q] 你有没有在餐厅桌下用脚挑逗过对方？","[M][Q] 对方穿比基尼时你最想在多少人面前占有对方？","[F][Q] 穿比基尼时你想对方在多少人面前把你带走？","[both][Q] 你能接受在夜晚的操场上裸奔一圈吗？","[both][Q] 你对在装修中的毛坯房里做爱有什么幻想？","[both][Q] 你幻想过在宠物店的玻璃橱窗前被后入吗？","[both][Q] 你愿意在开着视频通话时偷偷露出身体吗？","[both][Q] 你最想在哪种公共交通工具上做爱？","[both][Q] 你有没有在健身房更衣室里自慰过？","[both][Q] 你试过在高层酒店的落地窗前站着做吗？","[both][Q] 你幻想过在阅兵仪式或大型集会上偷偷做爱吗？","[both][Q] 你能接受在透明的圆球帐篷里过夜并被外面看见吗？","[both][Q] 你愿意在裸体海滩上做爱被围观吗？","[both][Q] 你有没有幻想过在电视直播的体育场中央做爱？","[both][Q] 你对在正在上课的教室里偷偷做爱有什么感觉？","[both][Q] 你想过在朋友聚会的阳台上趁没人注意快速插入吗？","[both][Q] 你幻想过在医院病床上被探望时偷偷做爱吗？","[both][Q] 你有没有穿过透明上衣出门？反应如何？","[both][Q] 你觉得在停车场里车震最安全的姿势是什么？","[both][Q] 你愿意在深夜无人的地铁站台上做爱吗？","[both][Q] 你试过在自动扶梯上偷偷摸对方屁股吗？","[both][Q] 你能接受在公共厕所被要求全裸走出去吗？","[both][Q] 你幻想过在军事禁区或未开放区域里裸体拍照吗？","[both][Q] 你想过在航天飞机或太空站里做爱的可能性吗？","[both] 现在走到窗边，把窗帘拉开一半，站10秒","[both] 在阳台或窗边脱下外套，只穿内衣站一会儿","[both] 不穿内衣去楼下倒垃圾或取快递","[F] 穿最短的裙子，不穿安全裤，去便利店买东西","[M] 只穿一条紧身内裤，在酒店走廊里走个来回","[both] 在车内脱掉上衣，保持3分钟","[both] 在电影院后排，把手伸进对方裤子里摸一会儿","[both] 在餐厅桌下，用脚碰触对方的大腿根部","[M] 在车库或停车场，让对方坐在车头盖上撩起裙子","[F] 在车库或停车场，坐在车头盖上撩起裙子给对方看","[both] 一起在夜晚的阳台上裸体拥抱1分钟","[both] 在KTV包厢里，坐在对方腿上扭动1分钟","[both] 在试衣间里，让对方进来并悄悄接吻","[both] 在公共厕所隔间里，互相手淫但不许出声","[both] 在夜晚的公园长椅上，坐到对方腿上假装盖着外套","[both] 在阳台或天台，不拉窗帘，让对方给你口交1分钟","[M] 在楼梯间里，让对方扶着扶手，从后面进入2分钟","[F] 在楼梯间里，扶着扶手，让对方从后面进入2分钟","[both] 打开酒店窗户，面对窗外做爱，只能用手遮住关键部位","[both] 在车内做爱，车停在路灯下或较亮的地方","[both] 在野外（山林/海边）找一处隐蔽但仍有风险的地方做爱","[both] 在天桥上，对方真空穿着短裙，对方站在身后环抱抚摸","[both] 在消防通道里快速做爱，结束前不能出来","[F] 在夜晚的公交站牌下，脱下内裤交给对方","[M] 在夜晚的公交站牌下，让对方脱下内裤交给你","[both] 在摩天轮转到最高点时，掀开上衣或露出下体","[both] 在夜晚的操场上裸奔半圈（保证私密安全）","[both] 在废弃建筑或烂尾楼里，全裸拍照一张","[M] 在郊外让对方全身只穿你的衬衫，光着腿走一段路","[F] 在郊外全身只穿对方的衬衫，光着腿走一段路","[both] 在楼顶天台，脱下内裤挂在栏杆上，保持5分钟","[both] 在深夜的马路边，把对方压在广告牌上接吻抚摸","[both] 在自动扶梯上，一人站上一级，后面的人伸手摸前面的人","[both] 在公共场合，用对方的外套盖住自己的腿，底下偷偷给对方手淫","[both] 在图书馆的角落，面对面贴着，用书本遮挡悄悄接吻","[both] 在白天人流较少的公园里，找隐蔽处全裸5分钟","[both] 在透明景观电梯里，从背后撩起裙子或短裤","[both] 在深夜无人的沙滩上，全裸做爱直到一方高潮","[M] 让对方真空穿雨衣，在雨中的巷子里给你口交","[F] 真空穿雨衣，在雨中的巷子里给对方口交","[both] 在露营地，趁其他人睡着，在帐篷外做爱","[both] 在公共露天温泉里，用手偷偷让对方高潮","[both] 在阳台上全裸站着，让对方拍照（背景能看出是室外）","[M] 让对方在夜晚的马路中间脱下内裤，你在一旁放哨","[F] 在夜晚的马路中间脱下内裤，对方帮你放哨","[both] 在车上做爱时，故意摇下车窗的一部分","[both] 在教堂或寺庙后面的角落，偷偷全裸跪着","[both] 在午夜的地铁站厕所里做爱，结束前不出声","[both] 在游乐园鬼屋的黑暗角落，迅速露出性器官给对方看","[both] 穿着浴袍或大衣，在酒店走廊里快速打开再合上","[both] 在海边用浴巾遮挡，脱下泳衣再穿上","[both] 在车内，只穿内衣裤，开过一段有路灯的路","[both] 在夜晚的公交后排，背对对方坐上去，用大衣盖住","[M] 在乡间小路，让对方趴在车头，你从后面进入","[F] 在乡间小路，趴在车头，让对方从后面进入","[both] 在商场安全通道里，脱下上衣拥抱1分钟","[both] 在夜晚的大学教学楼走廊里，贴着墙壁做爱","[both] 在废弃的铁轨旁，全身只穿对方的一件衣物拍照","[both] 在桥上的人行道上，对方趴在栏杆上，对方从后面贴着","[both] 在电影院最后一排，替对方口交至少1分钟","[both] 在公共厕所的残疾人隔间里，互相抚慰到高潮","[both] 在健身房更衣室的隔间里，一起洗澡互相抹沐浴露","[both] 在无人的建筑工地顶层，全裸拍摄一组剪影","[both] 在白天拉上薄纱窗帘的落地窗前，面对窗外后入","[both] 在酒店的消防楼梯间里，全裸从一层走到上一层","[both] 在夜晚的森林里，用绳索轻轻绑住对方固定在树上然后口交","[both] 在自助拍照亭里，撩起衣服拍一张不露脸的照片","[both] 在高速路服务区的停车场角落，快速做爱","[both] 在夜晚的码头或栈桥上，全裸跳入水中再上来","[both] 在废弃厂房里，让对方向你身上倒冷水，然后做爱取暖","[both] 穿着性感内衣在落地窗前站1分钟，不开灯","[both] 在小区花园里，互相用极低的声音说今晚想做的位置","[both] 在夜晚的水族馆（如果可以进入）幕墙前做爱","[both] 在民宿的露天浴池里边泡边做，不能完全潜入水里","[M] 让对方在公交车站的长椅上，穿着短裙真空坐着张开腿","[F] 在公交车站的长椅上，真空穿短裙坐着并微微张开腿","[both] 在商场的大镜子前，整理衣服时故意露出内衣","[both] 在电梯里，只有你们两人时，迅速接吻并摸一把私处","[both] 在夜晚的篮球场，挂在对方身上，双腿夹腰","[both] 在无人的露天剧场舞台上，全裸表演一段独角戏","[both] 在过江轮渡的甲板边缘，趁没人注意偷偷做爱","[both] 在油菜花田或麦田里，只露出上半身，下半身交合","[both] 在立交桥下的阴影里，全裸背对车流方向站着","[M] 让对方裸体穿上你的长风衣，系好腰带，在夜晚街头散步10分钟","[F] 裸体穿上对方的长风衣，系好腰带，在夜晚街头散步10分钟","[both] 在公共男厕的小便池前（无人时）让对方给自己手淫","[both] 在酒店的旋转门里快速摸一下对方下面","[both] 在夜晚的菜市场摊位上，偷偷后入","[both] 在天文馆的球幕影院里，趁黑暗互相爱抚","[both] 在夜晚的学校升旗台上，全裸站立，面对旗杆","[both] 在地下车库的监控盲区（需确认）全裸车震","[both] 在浅水海滩上，下半身泡在水里做爱，假装在游泳","[both] 在野外的瀑布下，全裸淋水，互相清洗身体","[both] 在海边只穿丁字裤或超小比基尼散步10分钟","[both] 在夜晚的过街天桥上，对方弯腰假装系鞋带，对方从后面贴近","[both] 在楼宇间的通风井或夹缝里，站着互相手淫","[both] 在未完工的毛坯高层，选一个没有玻璃的窗框边做爱"],
+  "living-room": ["[both] 在沙发上面对面跨坐，互相抚摸大腿内侧1分钟。","[both] 在客厅地毯上用狗的姿势趴好，让对方后入缓慢抽插1分钟。","[both] 拉开客厅窗帘，光着身子贴在窗户上做爱10下。","[both] 在客厅让对方用遥控器轻轻拍你的屁股三下。","[both] 双手被领带绑在身后，跪在客厅地板上为对方口交1分钟。","[M] 把对方推倒在沙发上，用抱枕垫高对方的臀部，然后进入对方。","[F] 骑在对方身上在沙发上自己动，让对方不许帮忙。","[both] 在客厅茶几上M字开腿，让对方用冰棍挑逗你的私处。","[both] 在客厅玄关处模拟外卖小哥闯入强奸戏码2分钟。","[both] 关掉灯，只靠触觉在沙发上互相爱抚直到一方求饶。","[both] 面对面侧躺，互相用手让对方高潮。","[both] 在床上用枕头垫高腰部，让对方深度进入并保持30秒不动。","[both] 用床单把手脚分别绑在床柱上，蒙眼用羽毛/手指挑逗全身5分钟。","[both] 在床上趴好，让对方用皮带轻抽你屁股10下。","[both] 戴上眼罩和耳塞，完全不知情下被对方用不同物体刺激身体。","[M] 从背后抱着对方，让对方趴在床上，你从后面缓慢进入。","[F] 用你的长发轻扫对方的全身，然后帮对方口交直到对方硬。","[both] 在床头贴一张纸，写下今晚对方必须完成的三个任务。","[both] 在卧室窗台上做爱，前胸贴着玻璃，保持窗帘全开。","[both] 互相给对方拍摄5张私房照，拍完交换看然后删掉。","[both] 一起淋浴，互相涂抹沐浴露并重点清洗私处。","[both] 在浴缸里面对面坐下，让对方进入，不许用手支撑。","[M] 让对方坐在洗手台上，你站着进入，可以看镜子。","[F] 在镜子上留下你的口红印，然后让对方把你按在镜子上操。","[both] 用花洒的冷热水交替冲击对方敏感部位，每30秒切换一次。","[both] 在浴室模拟被偷窥者闯入，你被捂住嘴后入。","[both] 跪在浴室地板上为对方口交，直到TA喊停。","[both] 在浴缸里被绑住双脚，对方用莲蓬头水柱持续刺激你的下体直到高潮。","[both] 互相擦干身体，每擦一个部位就亲一下。","[both] 只穿围裙在厨房给对方口交。","[both] 在料理台上让对方后入，每抽插一下就说一个菜名。","[both] 用巧克力酱在对方身上画出敏感区，然后舔干净。","[both] 用打蛋器或木勺轻轻拍打对方屁股5下。","[both] 双手被围裙绑在身后，跪在厨房地板上等待投喂。","[M] 把对方抱上厨房中岛，用嘴喂对方吃水果，然后进入。","[F] 用冰块含在嘴里为对方口交，冷热交替。","[both] 在厨房里戴上宠物项圈，被牵着爬行一圈。","[both] 打开厨房窗户，在窗边做爱，小声呻吟但不要被发现。","[both] 把奶油喷在对方胸部/腹部，然后舔食。","[both] 在阳台只穿内衣拥抱1分钟，如果没人看见。","[both] 晚上在阳台全裸后入，保持安静但动作不停。","[both] 站在落地窗前，双手举高贴玻璃，让对方从后面抚摸全身。","[both] 在阳台用皮带轻轻抽打对方暴露的臀部3下。","[both] 在窗边手淫给对方看，同时看着窗外的世界。","[both] 在衣帽间里热吻30秒，手不能闲着。","[both] 让对方用领带把你绑在挂衣杆上，玩弄2分钟。","[both] 在储物间脱光，仅用纸箱遮挡，模拟被囚禁。","[both] 在衣帽间地上铺毯子，69互舔直到高潮。","[both] 在储藏室用绳子简单龟甲缚，然后拍一张私密照。","[both] 模拟刚刚下班，一进门就被按在墙上强吻。","[both] 在玄关脱光所有衣服，迎接对方回家。","[both] 把门留一条缝，在门后做爱，叫出声可能被邻居听见。","[both] 在门口跪着给对方脱鞋，然后舔脚。","[both] 在鞋柜上M字开腿，让对方站着你蹲着口交。","[both] 书桌下偷偷口交，保持面部自然。","[both] 假装在开会，让对方在桌下用手指让你高潮。","[both] 一边接工作电话一边让对方后入，不能发出异常声音。","[both] 双手被数据线绑在椅子扶手上，让对方用笔尖挑逗。","[both] 在办公椅上面对面坐，缓慢研磨直到双方都受不了。","[both] 在楼梯上女上位，每上一级台阶就深坐一次。","[both] 裸体从楼梯上一步步爬下来，对方在底部等你口交。","[both] 双手被丝巾绑在楼梯扶手上，站着被玩弄5分钟。","[both] 在楼梯转角处热吻并互摸，随时准备被\"发现\"。","[both] 在楼梯上后入，每抽插一次就用皮带轻打屁股一下。","[both] 双人瑜伽姿势，面对面搂抱，下面结合不动，保持1分钟。","[both] 用瑜伽拉伸带绑住脚踝，分开双腿被玩弄。","[both] 在瑜伽球上被绑住双手，对方在后面推球并抽插。","[both] 运动后互相舔对方身上的汗珠。","[both] 在跑步机上慢走，对方在你身后爱抚，直到你求对方停下跑步机。","[both] 在车后座模拟车震，窗帘拉上但车可以晃。","[both] 在地下室用铁链（或绳子）拴住脖子，像狗一样爬。","[both] 在地下室用低温蜡烛滴在对方背上，写一个淫词。","[both] 被关在地下室小黑屋，只留一个洞让对方玩弄你任意部位。","[both] 在车库墙上留下手印，站着被后入。","[both] 用丝巾蒙眼，对方引导你走遍家里每个房间，每到一个房间就亲热1分钟。","[both] 在家里布置一条\"指令之路\"，每个房间贴一个任务，走完一圈。","[both] 全裸被戴上手铐脚镣，在家爬行并被拍照（仅限私藏）。","[both] 用枕头搭建一个小堡垒，在里面爱抚直到一方想出来。","[both] 选一部A片，模仿里面一个家庭场景的姿势。","[both] 在家开着手机录像，记录下你们从进门到高潮的全过程（看完即删）。","[both] 给对方戴上宠物项圈，牵着在家走一圈，每到一个新房间换个称呼。","[both] 用家用电器的遥控器（比如空调遥控器）假装控制对方，说\"震动\"就动，说\"暂停\"就停。","[both] 模拟家里进贼，被蒙面人制服并侵犯（设定安全词）。","[both] 用家里的枕头/被子堆一个巢，像动物一样在上面交配。","[both] 交换一件贴身衣物（内裤/内衣），穿在对方身上继续游戏。","[both] 在全家每个镜子前都亲热一次，看着镜中的自己。","[both] 在家门口地毯下塞一个跳蛋，打开后去玄关捡起来并使用。","[M] 把对方抱起来边走边操，从客厅走到卧室不能掉。","[F] 用你的脚在对方身上游走，从脸到关键部位。","[both] 用保鲜膜（安全预留呼吸）轻轻缠绕身体，体验束缚感。","[both] 在家裸体用餐，只能用嘴互相喂食，掉在身上就舔掉。","[both] 在对方做日常家务（如洗碗）时，从背后抱住抚摸并进入。","[both] 互相给对方挑选今晚睡觉穿的\"衣服\"，必须完全服从对方的选择。","[both] 让对方向你的家人/朋友打一个普通电话，同时在后面慢速做爱，不能露馅。","[both][Q] 在客厅沙发上，你最想对对方做什么？","[both][Q] 你有没有幻想过在客厅地毯上来一次？","[both][Q] 你敢不敢在客厅窗帘拉开的情况下做爱？","[both][Q] 如果对方让你在客厅裸体爬一圈，你会害羞吗？","[both][Q] 你幻想过在客厅落地窗前被邻居看到吗？","[M][Q] 你最喜欢对方在客厅沙发上用什么姿势？","[F][Q] 你想过在客厅茶几上被对方推倒吗？","[both][Q] 你愿意被命令在客厅地板上自慰吗？","[both][Q] 把你绑在客厅的单人沙发上有兴趣吗？","[both][Q] 你幻想过在客厅被入室抢劫者强暴的戏码吗？","[both][Q] 在床上你最想尝试的新姿势是什么？","[both][Q] 你更喜欢早晨还是深夜在床上亲密？","[both][Q] 你自慰的时候最常幻想在床上被怎么弄？","[both][Q] 你想过在床上被蒙眼然后被未知物品挑逗吗？","[both][Q] 你接受被绑在床柱上，完全被动地任对方玩多久？","[M][Q] 你喜欢对方在床上穿什么？还是什么都不穿？","[F][Q] 你最喜欢对方在床上对你说什么脏话？","[both][Q] 如果对方把你铐在床头，你最想让对方做什么？","[both][Q] 你愿意被对方掐着脖子按在床上操吗？","[both][Q] 你有没有在床底藏过情趣用品？是什么？","[both][Q] 你幻想过在淋浴的时候做爱吗？","[both][Q] 你觉得一起泡澡浪漫还是色情？","[both][Q] 你会在浴室用花洒自慰吗？频率多高？","[both][Q] 如果对方在浴室让你跪下舔对方，你会照做吗？","[both][Q] 你想尝试在浴缸里被绑住双手然后被操吗？","[M][Q] 你喜欢偷看对方洗澡吗？哪个部位最吸引你？","[F][Q] 你享受被对方涂沐浴露的感觉吗？摸哪里最舒服？","[both][Q] 你幻想过在浴室被摄像头偷拍然后被威胁吗？","[both][Q] 你想过在浴室镜子上写满淫语然后被按在镜子上操吗？","[both][Q] 你觉得厨房的料理台可以用来做什么色色的事？","[both][Q] 你试过在厨房一边做饭一边被摸吗？","[both][Q] 如果对方在厨房用围裙蒙住你的眼睛，你会期待什么？","[both][Q] 你幻想过在厨房被用食物（巧克力酱/奶油）涂抹身体然后被舔吗？","[M][Q] 你幻想过对方只穿围裙在厨房给你口交吗？","[F][Q] 你幻想过被对方抱上料理台操吗？","[both][Q] 你敢不敢在厨房地上趴着学狗叫等主人喂食？","[both][Q] 你愿意被对方用擀面杖拍打屁股吗？几下？","[both][Q] 你想过在厨房窗户边做爱，让楼对面的人可能看到吗？","[both][Q] 你最喜欢哪种食物在性爱中出现？（奶油/果冻/冰块等）","[both][Q] 你敢在阳台裸体哪怕一分钟吗？","[both][Q] 你幻想过在阳台上被后入，看着楼下人来人往吗？","[both][Q] 如果对方把你按在窗户上，让你胸贴着玻璃，你怕被看到吗？","[both][Q] 你有没有在窗边自慰给外面的世界看过？","[both][Q] 你觉得在阳台做爱最刺激的时刻是什么？","[both][Q] 你想过在衣帽间里藏着偷情吗？","[both][Q] 如果对方把你关在储藏室半小时，只给你一个跳蛋，你会做什么？","[both][Q] 你幻想过在衣帽间被陌生人闯入然后被强暴吗？","[both][Q] 你会不会用对方的领带/丝巾把自己绑在衣帽杆上？","[both][Q] 你想在储藏室被吊起来轻微鞭打吗？","[both][Q] 你幻想过对方一进门就把你按在门上亲吗？","[both][Q] 你敢在玄关全身脱光迎接对方回家吗？","[both][Q] 如果对方把你拴在门口当\"看门狗\"，你会兴奋吗？","[both][Q] 你想过快递员/外卖小哥从门缝看到你不堪的样子吗？","[both][Q] 你更喜欢在门后亲热还是被推倒在鞋柜上？","[both][Q] 你有没有在书桌下给对方口交的幻想？","[both][Q] 如果对方让你在书桌前裸体办公，你能专心吗？","[both][Q] 你幻想过在视频会议时对方在桌下玩弄你吗？","[both][Q] 你想过在书架上被压着从后面进入吗？","[both][Q] 你能接受在书桌被皮带抽打作为不乖的惩罚吗？","[both][Q] 你幻想过在楼梯上被对方从后面进入吗？","[both][Q] 你敢在楼梯上裸体爬行吗？","[both][Q] 想不想在楼梯间被绑起来，邻居经过时可能听到声音？","[both][Q] 你更喜欢在上面还是下面的时候多些？","[both][Q] 你有没有在瑜伽垫上做过春梦？","[both][Q] 如果对方在瑜伽球上操你，你觉得平衡得了吗？","[both][Q] 想不想被绑在跑步机上被玩弄？","[both][Q] 你觉得锻炼后满身汗直接做爱性感吗？","[both][Q] 你想过在地下车库的车上做爱吗？（即使在家）","[both][Q] 你幻想过在地下室被囚禁并被调教吗？","[both][Q] 如果在地下室让你戴上项圈爬行，你愿意吗？","[both][Q] 你能接受在地下室被吊铐并滴蜡吗？","[both][Q] 在家里你最想尝试却还没做过的地点是哪里？","[both][Q] 你有没有趁对方洗澡时偷用过对方的内衣自慰？","[both][Q] 你愿意在家里24小时全天裸体接受对方的命令吗？","[both][Q] 你幻想过我们家被一群陌生人闯入并轮奸你吗？","[both][Q] 你最想让对方用哪个家具用品打你？（皮带/遥控器/数据线等）","[both][Q] 你最喜欢的家庭性爱前戏是什么？","[both][Q] 你有没有悄悄希望我们的性生活被家里摄像头录下来？","[both][Q] 在家的哪个角落你觉得最有罪恶感但也最刺激？","[both][Q] 如果对方让你在对方身上用食物写字然后舔掉，你会写什么？","[both][Q] 你能接受在家被用夹子夹遍全身吗？夹哪里？","[M][Q] 你有没有试过在对方做家务时从后面偷袭对方？","[F][Q] 你有没有在做家务时故意撅屁股勾引对方？","[both][Q] 你幻想过在家里组织一场小型性爱派对吗？","[both][Q] 你觉得家里最色情的灯光是什么颜色？","[both][Q] 你愿意在家当对方的性奴一整天吗？具体想做什么？","[both][Q] 你想过被对方用胶带封嘴然后绑在椅子上随意玩弄吗？","[both][Q] 你最喜欢被对方在家里的哪个地方亲吻全身？","[both][Q] 你有没有过在家里跟人打电话时偷偷做爱的经历？","[both][Q] 用一句话形容你理想中的\"家庭色情夜晚\"是什么样？","[both][Q] 如果对方用遥控跳蛋控制你，你最想让对方在家里哪个公共区域开启？"],
+  "deep-confession": ["[both][Q] 你最不为人知的一个秘密是什么？","[both][Q] 你曾经因为嫉妒做过什么不理智的事？","[both][Q] 你有没有在我们关系中假装过快乐？","[both][Q] 你曾经对别人动心过吗？哪怕一瞬间","[M][Q] 你有没有对比过对方和你的前任？","[F][Q] 你有没有在心里拿对方和别人比较过？","[both][Q] 你觉得你做过的哪件事最让对方失望？","[both][Q] 你对我们关系最大的不安是什么？","[both][Q] 你有没有隐瞒过对方什么事？","[both][Q] 你觉得自己在感情中最自私的时刻是什么？","[both][Q] 你有没有和身边的人讨论过我们的私密问题？","[both][Q] 你有没有曾经因为安全感缺失而做过伤害关系的事？","[both][Q] 你最深层的恐惧是什么？","[both][Q] 你有没有隐瞒过对方至今没说的？","[both][Q] 如果你可以改变我们之间的一个决定，会是什么？","[both][Q] 你觉得真正的爱情到最后是什么？","[both][Q] 你有没有想过没有遇见对方的人生会怎样？","[both][Q] 你最不希望对方知道的关于你的一件事是什么？","[both][Q] 你觉得我们之间的信任有没有裂缝？","[both][Q] 你曾经在情绪崩溃的时候最想找谁？为什么不是找对方？","[both][Q] 如果明天是世界末日，你最想和对方做什么？","[M][Q] 你最怕对方发现你的哪一面？","[F][Q] 你最不想让对方知道的你的阴暗面是什么？","[M][Q] 你有没有拿对方的身材跟前任比较过？","[F][Q] 你有没有拿对方的技术跟前任比较过？","[both][Q] 你有没有在网上跟别人暧昧过？","[both][Q] 你有没有在洗澡的时候想过别人？","[both][Q] 你觉得你们之间的性生活频率够吗？你想增加还是减少？","[both][Q] 你有没有因为对方性表现不好而失望过？","[both][Q] 你曾经背着自己的伴侣做过什么不该做的事？","[both][Q] 你最不想让对方知道的性经历是什么？","[M][Q] 你有没有在心里把对方和你妈比较过？","[F][Q] 你有没有拿对方和你的爸比较过？","[both][Q] 你曾经因为性方面的原因想过跟对方分手吗？","[both][Q] 你有没有做过对不起对方的事但是没说出来？","[both][Q] 如果对方坦白一个秘密，你最不希望听到的是什么？","[both][Q] 你觉得你们之间谁更可能先出轨？为什么？","[both][Q] 你有没有偷看过对方的手机？","[both][Q] 你有没有对对方撒过谎说你是第一次？","[both][Q] 你有没有假装不想做爱但其实很想要？","[both][Q] 你有没有偷偷查过如何取悦对方的性技巧？","[both][Q] 你有没有因为对方技术不好而失望过？","[M][Q] 你有没有偷偷羡慕过别人伴侣的身材更好？","[F][Q] 你有没有偷偷羡慕过别人伴侣更浪漫？","[both][Q] 你有没有在朋友圈偷偷视奸过前任？","[both][Q] 你有没有在暗地里跟别人吐槽过你们的性生活质量？","[both][Q] 你有没有趁对方出差/不在的时候跟别人暧昧过？","[both][Q] 你有没有幻想过离婚或分手的场景？","[M][Q] 你有没有在结婚后还跟别的女人撩骚过？","[F][Q] 你有没有在结婚后还跟别的男人撩骚过？","[both][Q] 你有没有因为对方的性表现不够好而在朋友面前抱怨过？","[both][Q] 你心里有没有一个\"如果TA不是这样就好了\"的愿望？","[both][Q] 你有没有瞒着对方做过什么越界的事？","[both][Q] 你曾经最想跟对方分手的那一刻是因为什么？","[both][Q] 你有没有在性爱之后觉得空虚或者后悔过？","[both][Q] 你有没有跟闺蜜/兄弟讲过你们床上的细节？讲了多少？","[both][Q] 你有没有觉得对方在床上太保守？想要什么改变？","[both][Q] 你有没有幻想过跟对方的朋友发生关系？","[both][Q] 你有没有在对方不知情的情况下用过TA的东西自慰？","[both][Q] 你有没有在感情中撒过关于性经历的弥天大谎？","[both][Q] 你有没有背地里跟别人说过你和对方性生活不和谐？","[both][Q] 你有没有觉得被对方在性方面利用过？","[both][Q] 你有没有因为害怕伤害对方而不敢说出你的真实欲望？","[both][Q] 你觉得你们之间的性生活是出于爱还是出于义务？","[both][Q] 你有没有偷过对方的东西作为纪念品？","[both][Q] 你有没有在社交软件上偷偷关注过让TA不高兴的人？","[both][Q] 你有没有因为性方面的原因哭过？","[both][Q] 你有没有在亲密关系中说出口之后立刻后悔的话？","[both][Q] 如果你可以重来一次你们的关系，你会改变什么？","[both][Q] 你手机里有没有一个对方绝对不能看的隐私内容？是什么？","[both][Q] 你有没有在和前任联系的时候对对方撒过谎？","[both][Q] 你心里有没有一个\"如果TA知道了肯定会离开我\"的秘密？","[both][Q] 你曾经为了和对方在一起牺牲了什么？这段关系真的让你快乐吗？","[both][Q] 如果明天会死，你最后悔没和对方一起做的一件事是什么？","[both][Q] 你有没有怀疑过对方不够爱你？是什么举动让你这么想？","[M][Q] 你有没有在心里觉得对方不如你的某一任女友？哪方面？","[F][Q] 你有没有在缺钱/无助的时候想过去找前男友帮忙？","[both][Q] 你对对方隐瞒过最大的事情是什么？（除了出轨）","[both][Q] 你有没有背着对方借过钱/欠过债？","[both][Q] 如果让你用一句话总结我们关系的真相，会是什么？","[both][Q] 你上一次为别人心动是什么时候？因为什么？","[both][Q] 你有没有觉得对方在某些方面配不上你？","[both][Q] 你偷看过对方的哪些聊天记录？发现了什么？","[both][Q] 你做过最后悔的一次关于我们关系的决定是什么？","[both][Q] 你有没有和对方的朋友/闺蜜私下吐槽过我们的床事？","[both][Q] 你觉得自己在这段关系里付出更多还是索取更多？","[both][Q] 你有没有觉得我们的性生活已经变成了例行公事？","[both] 写下你平时不敢说的一句话，给对方看","[both] 看着对方的眼睛，说一个你从未告诉TA的真心话","[both] 把手机最近的一个聊天记录拿给对方看","[both] 给对方看你的相册最近10张照片","[both] 给对方写一封100字的信，当场朗读","[both] 坦白一件你从没告诉过任何人的事","[both] 让对方翻看你最私密的一个聊天记录","[both] 把你通讯录里一个让TA好奇的人的事说清楚","[both] 闭上眼睛说出你对这段关系最真实的三句话","[both] 把你们的故事讲给一个陌生人听","[both] 做一个改变关系的承诺，写在纸上签字按手印","[both] 坦白你最想改变对方的一个性习惯","[both] 告诉对方你心里最真实的性需求","[both] 说出你做过的最羞耻的一件事","[both] 打开你的手机浏览器无痕模式给对方看","[both] 坦白一个你一直在伪装的事","[both] 把你们之间最不敢谈的话题摆到桌面上谈3分钟","[both] 给对方看聊天记录里最暧昧的一个对话","[both] 坦白一个你一直不敢承认的关于你身体的秘密","[both] 说一件你希望对方改变但你一直不敢说的事","[both] 打开你的购物/搜索记录，跟对方解释最羞耻的三个词","[both] 告诉对方你内心深处最大的一个不安全感","[both] 把你和别人的暧昧聊天记录翻出来给对方看（如果有）","[both] 坦白你最叛逆的一次经历","[both] 把你最色情的搜索记录给对方看并解释","[both] 给对方看你心里最脆弱的一面，不设防地哭出来","[both] 坦白你藏在心里最深的那个秘密，不管多羞耻","[both] 打开你的相册最近删除/隐藏相册给对方看","[both] 坦白你最自卑的一个身体部位和原因","[both] 把你和异性的聊天记录在对方监督下翻一遍","[both] 告诉对方你心里最害怕的一件事","[both] 让对方扮演你最怕的角色，直面你的恐惧","[both] 坦白一个关于你原生家庭的秘密","[both] 把手机交给对方一整天","[both] 向对方坦白你最恨自己的一点","[both] 把你的手机解锁，让对方任意查看一个你不想被看到的 APP 内容","[both] 给对方念出你最近一周的搜索记录，并解释每一条","[both] 写一张\"原谅卡\"给对方，上面写\"我原谅你曾经对我做过的 XX 事\"，然后签名","[both] 把你的购物记录里最羞耻的一笔（如情趣用品、特殊书籍）展示并解释","[both] 现在发消息给你曾经心动过的人，说\"我已经遇到了更好的人，祝你幸福\"然后删除","[both] 把你偷偷记下的关于对方的不满清单写出来，逐条念给TA听","[both] 打开你聊天记录里和闺蜜/兄弟吐槽对方的那些话，当面读一段","[both] 坦白一个你从没说过的小癖好，然后让对方现在就配合你完成","[both] 写下你觉得这段关系里最不公平的一件事，互相交换阅读","[both] 拿出双方所有银行卡和支付软件，核对一下对方不知道的开销","[both] 各自写下最想让对方戒掉的一个习惯，签上名，贴在冰箱上","[both] 如果你有秘密日记，现在读一页你觉得最能伤害对方的内容（安全前提下）"],
+  "beyond-the-line": ["[both][Q] 你有过的最疯狂的一次性幻想是什么？","[both][Q] 你曾经对不该动心的人动过心吗？","[both][Q] 你觉得精神出轨和肉体出轨哪个更严重？","[both][Q] 你幻想过的多人场景是什么样的？","[both][Q] 你对NTR题材是什么态度？有什么幻想吗？","[both][Q] 你曾经对同性别的人产生过好奇/幻想吗？","[both][Q] 你最大胆的一次性经历是什么？","[both][Q] 你有没有在亲密时幻想过别的场景来增加刺激？","[both][Q] 如果没有任何社会约束，你最想体验什么？","[both][Q] 你觉得关系中最禁忌的话题是什么？","[both][Q] 你对暴露/偷窥类的幻想有什么看法？","[both][Q] 你愿意为了关系突破到什么程度的禁忌？","[both][Q] 你有没有对非人类角色产生过性幻想？","[M][Q] 你有没有想过看对方跟别人做爱？","[both][Q] 你幻想过3P吗？是两男一女还是两女一男？","[both][Q] 你对换偶游戏是什么态度？好奇吗？","[both][Q] 你幻想过在公共场合被偷窥或偷窥别人吗？","[both][Q] 你有没有幻想过被陌生人操/操陌生人？","[both][Q] 你对BDSM俱乐部或性派对感兴趣吗？","[both][Q] 你幻想过在别人面前做爱让别人看吗？","[both][Q] 你有没有幻想过跟明星/主播发生关系？","[both][Q] 你想过在对方睡着的时候偷偷做吗？","[both][Q] 你最黑暗的一个性幻想是什么？说出来","[both][Q] 你对VR色情/虚拟性爱体验过吗？想试试吗？","[both][Q] 你有没有在网上直播过自己的私密时刻？","[both][Q] 你幻想过和自己的idol/偶像发生关系吗？","[both][Q] 你接受在性爱中使用药物/酒精来助兴吗？","[both][Q] 你最不能接受的性行为是什么？为什么？","[both][Q] 你幻想过卖淫/被包养吗？为什么？","[both][Q] 你好奇过同性的性爱是什么感觉吗？","[both][Q] 你对淫妻/换夫题材有什么看法？幻想过吗？","[both][Q] 你有没有幻想过在婚礼当天跟别人做爱？","[both][Q] 你幻想过被对方卖给别人享用吗？","[both][Q] 你有没有幻想过跟AI/机器人做爱？","[both][Q] 如果对方变成异性一天，你最想跟TA做什么？","[both][Q] 你幻想过在公众演讲或舞台上当众做爱吗？","[both][Q] 如果法律和道德都不存在，你最想对对方做的三件事是什么？","[both][Q] 你心中最不能接受的性癖好是什么？为什么？","[both] 说出你内心最黑暗的一个欲望","[both] 给对方看你搜索记录里最羞耻的一个关键词","[both] 在对方耳边说出你最禁忌的一个幻想（对方同意的前提下）","[both] 写下你最想看对方做的一件事（即使知道可能不会被允许）","[both] 打开手机相册最下面的10张照片给对方看","[both] 坦白一个你从来没有告诉过任何人的性幻想","[both] 在安全的前提下，做一件你们从未做过的大胆的事","[both] 用一个词定义一个你想突破但还没说的界限","[both] 打开你们的浏览历史记录，交换手机看最羞耻的5条","[both] 说出你内心深处最禁忌的一个欲望，对方不能评判","[both] 打开摄像头对着自己自慰，让对方看着你","[both] 用对方的手机给对方的朋友发一条暧昧消息，然后撤回","[both] 在阳台/窗边做爱，不拉窗帘，开着灯","[both] 对着镜子做爱，看着彼此的眼睛","[both] 交换手机24小时，不能删任何东西","[both] 在你常去的社交平台发一条隐晦的性暗示动态","[both] 在车里做爱（保证安全私密的前提下）","[both] 在楼梯间/楼道里接吻抚摸（注意安全）","[both] 用第三视角的文字描述对方最私密的部位","[both] 打开交友软件，让对方帮你跟陌生人调情","[both] 在野外/天台做爱（确保私密安全的前提下）","[both] 用第三方的视角看着对方自慰（视频录像回放）","[both] 给对方画一张你的裸体自画像","[both] 用外语说最色情的话给对方听","[both] 在对方身上用口红写下你的名字","[both] 用第三人的身份跟你调情5分钟","[both] 在商场的试衣间里接吻抚摸（注意安全）","[both] 用变声软件给对方打电话说色情内容","[both] 在阳台/窗边自慰给对方看","[both] 现在一起去成人用品店，每人选一个你最想试的玩具，当场买回来用","[both] 打开匿名聊天软件，假装自己是单身，跟陌生人调情5分钟，给对方看","[both] 在对方的社交账号上发一张你的性感部位特写（不露脸），保留一小时","[both] 如果条件允许，今晚去天体海滩或裸体温泉，享受全裸的时光","[both] 把你的姓名和号码写在对方大腿内侧，像标记一样，一天不能擦掉","[both] 驾车到郊外，找一个没人的地方，全裸在车前盖上做爱","[both] 写下一份\"性爱愿望清单\"，列出你们想一起完成的10件最疯狂的事","[both] 现在开始，你们是彼此的一个\"出租情人\"，用最职业的态度互相服务","[both] 让对方在你身体任何一个部位留下一个永久可见的痕迹（如咬痕、淤青），不许遮掩","[both] 今晚睡觉时，你们要裸体相拥，但是全程不许有任何性行为，只感受体温","[both] 如果你有人格面具，现在切换到你最黑暗的那个人格，和对方相处一小时"],
+  "three-way": ["[both][Q] 你有没有幻想过在亲密时旁边有第三个人在观看？","[both][Q] 如果我们的性爱能被另一个人实时观看（安全私密），你会更兴奋还是紧张？","[both][Q] 你更喜欢幻想两男一女还是两女一男的3P场景？","[both][Q] 你觉得精神上的\"被分享\"和肉体上的\"被分享\"哪个更让你受不了？","[M][Q] 如果你的伴侣提出想看你跟另一个女人做爱，你会怎么想？","[F][Q] 如果你的伴侣提出想看你跟另一个男人做爱，你会怎么想？","[both][Q] 你有没有在性幻想里出现过\"某个我们共同的朋友\"？","[both][Q] 你觉得和一个有伴侣的人偷情，刺激感会更强吗？","[both][Q] 你对对方最可能产生\"吃醋\"的第三者类型是什么样的？","[both][Q] 你曾经暗中羡慕过某个朋友和对方的伴侣有更开放的性生活吗？","[M][Q] 如果对方同意，你会想尝试跟对方和对方的闺蜜同时暧昧吗？","[F][Q] 如果对方同意，你会想尝试跟对方和对方最好的朋友一起暧昧吗？","[both][Q] 你觉得第三者话题是你绝对不能碰的底线，还是可以只停留在幻想里？","[both][Q] 你有没有在现实中对某个\"不该碰\"的人产生过性幻想？是谁？（可以不具名）","[both][Q] 如果有一天你发现对方在偷偷和别人网恋但没见面，你会怎么做？","[both][Q] 你觉得精神出轨和约炮一夜情，哪个更让你难以接受？","[both][Q] 你有没有幻想过在伴侣的注视下和另一个人亲吻？","[M][Q] 如果对方跟你说对方想看你和别的女人亲热，你会答应吗？条件是什么？","[F][Q] 如果对方跟你说对方想看你和别的男人亲热，你会答应吗？底线在哪里？","[both][Q] 你更害怕\"我的身体被第三者触碰\"还是\"我的心有一部分给了别人\"？","[both][Q] 你有没有一个名单，是我们如果永远不吵架你就会幻想一起3P的人？","[M][Q] 你对\"绿帽幻想\"了解多少？你觉得自己是哪种心理角色？","[F][Q] 你对\"红杏出墙\"的幻想是更偏情感还是偏肉体？","[both][Q] 如果安全（无病、不怀孕、不被人知），你会想要体验一次跟陌生人的一夜情吗？","[both][Q] 你觉得在一段长期关系中，偶尔和同一个人\"共享\"伴侣会增强还是摧毁信任？","[both][Q] 你有没有在网上搜索过\"换偶\"或\"open relationship\"的经历分享？","[both][Q] 如果条件允许，你愿意去成人派对里只看、不参与吗？","[both][Q] 你上一次性幻想里，除了对方还有别人吗？","[both][Q] 你相信\"床上可以分享，床下只属于彼此\"这种关系模式吗？","[both][Q] 如果对方坦白某个晚上梦到了和别人做爱，你会吃醋还是觉得刺激？","[both][Q] 你曾经在不告诉对方的情况下，和第三者有越界行为吗？哪怕只是线上文字性爱。","[both][Q] 你最想\"借用\"哪个现实中认识的人，作为我们性关系里的短暂第三者？","[both][Q] 如果对方同意，你会去和同一个人定期发生关系并向对方汇报吗？","[both][Q] 你在性爱时有没有故意叫错名字来增加刺激的冲动？","[M][Q] 如果对方真的想尝试\"分享\"你给另一个女人一晚，你最担心什么？","[F][Q] 如果对方真的想把你\"借\"给一个你也有好感的男性朋友一晚，你的第一反应是什么？","[both][Q] 你幻想过的\"背叛快感\"具体是怎样一个场景？","[both][Q] 你有没有安排过或者认真考虑过\"三人约会\"并发生关系？","[both][Q] 你对那种\"伴侣蒙着眼睛，由陌生人爱抚\"的成人游戏有什么看法？","[both][Q] 如果你的伴侣突然说\"我昨晚和一个人暧昧了，你想听细节吗？\"，你会想知道吗？","[both][Q] 你有没有偷偷联系过某个朋友，只是为了确认对方对你也有欲望？","[M][Q] 如果对方让你全程观看对方被别的男人弄到高潮，你是会硬还是想打人？","[F][Q] 如果对方让你看着对方跟别的女人接吻然后继续做爱，你觉得你是会享受还是崩溃？","[both][Q] 你幻想过的3P里，更倾向于两个都为你服务，还是你服务两个人？","[both][Q] 你愿不愿意跟对方一起去看成人俱乐部，只看不参加，看看别人怎么玩？","[both][Q] 如果对方说可以原谅你一次逢场作戏的身体出轨，但要知道每个细节，你会利用这个许可吗？","[both][Q] 你心里有没有一个\"黑名单\"：绝对不希望这个人成为我们关系中的第三者？是谁？","[both][Q] 你有没有幻想过在婚礼当天，跟伴郎/伴娘偷偷搞事情？","[both][Q] 你对\"双性恋3P\"（双方都是双性恋，引入同性和异性）有好奇心吗？","[both][Q] 如果安全词都可以定，你最想突破的\"第三者界限\"是什么？","[both] 闭上眼睛，由对方描述一个\"你和一个陌生人在你面前亲热\"的画面，持续1分钟，你只能听不能打断。","[both] 互相用手机搜索一张你觉得\"可以做第三者\"的陌生人照片，给对方看并解释为什么。","[both] 在耳边用最诱惑的声音说出一个你幻想过可以和谁一起共享伴侣的名字（可以是虚构）。","[both] 给对方看你最想拉入三人关系的一个名人的照片，并说出你想分配给对方的角色。","[M] 让对方坐在你腿上，你对着镜子说：\"如果我们现在邀请另一个人来欣赏你，你希望他碰你哪里？\"","[F] 让对方躺下，你趴在对方耳边，用最甜的声音说：\"如果今晚我多叫了一个人，你会先保护我还是先享受？\"","[both] 一起创建一份\"如果可以\"的第三者名单，写下3个绝对可以的明星，给对方看。","[both] 用手机录一段10秒的语音，描述一个假想的\"被第三者看穿\"的场景，放给对方听。","[both] 彼此给对方的朋友圈选一个朋友，用对方的口吻发一条模糊暧昧的消息，不越界但要让人想入非非，然后立刻撤回。","[both] 把对方的双手按在墙上，凑近嘴唇说：\"如果你现在在和我对象偷情，你会怎么求我别停？\"","[both] 模仿一个情景：你现在是酒店房门外的\"第三者\"，对着门缝说话，勾引正在里面的对方。","[M] 让对方坐在你面前，你假装打电话给一个朋友，用隐晦的语言赞美对方，最后说\"可惜她现在只想跟你试试\"。","[F] 当对方平躺时，你跨在对方身上，假装房间有第三个人在场，对那个\"隐形人\"说：\"你想过来摸他吗？问他同不同意。\"","[both] 用一张纸画出你想象中的\"三人躺姿示意图\"，标出谁在哪里，给对方看。","[both] 让对方蒙住你的眼睛，然后你在黑暗中对对方坦白：\"如果这时有另一双手开始碰我，我希望那是谁。\"","[M] 当着对方的面，用对方手机里的聊天软件给一个你最\"怀疑\"的异性发一句\"她在床上真的很厉害，你羡慕吗？\"，发完立即撤回。","[F] 用对方的手机给对方的好兄弟发一条\"我女朋友今天说想看你……\"，发送前让对方决定撤不撤回。","[both] 角色扮演：一人演\"在外有别人\"，一人演\"被瞒着的那位\"；前者坦白刚刚和修水管的小哥调情了，后者的反应必须即兴。","[both] 脱掉一件衣服，拿给对方，对方可以用这件衣服捆绑你的手腕1分钟，期间你要说一句\"你可以再叫一个人来欺负我\"。","[both] 在窗边拥抱30秒，小声对着窗外说一句挑逗第三者的话，比如\"你是下一个被邀请的吗？\"。","[both] 现在开始5分钟，你们俩之间的所有对话都必须以\"如果你朋友在场……\"开头，并完成自然的色情对话。","[both] 用口红在对方身上写下\"可共享\"三个字，然后亲吻那个位置10秒。","[both] 蒙上对方的眼睛，在对方耳边轻声描绘一个\"第三人正在靠近的脚步声\"，直到对方呼吸变快。","[both] 模仿拍摄AV的感觉：你对着镜头（手机）自我介绍，并说\"今天我要和我对方/对方以及一个神秘来宾一起……\"。","[both] 让对方把一条丝巾塞进你嘴里，你被捂住嘴时要说出一句\"我想看他/她上你\"。","[both] 在安全前提下，让对方用手铐或丝巾把你双手扣在背后，然后对方打电话给一个想象中的第三者，说\"货到了，你要验吗？\"","[M] 让对方趴在床上，你假装用手机拍摄，然后一边轻拍对方屁股一边说：\"看镜头，说你想让谁接替我打完这一场。\"","[F] 让对方平躺，你坐在对方脸上，拿出手机假装直播，说：\"家人们，今天我家男人又被我送给谁了，你们猜。\"","[both] 一起看一部3P题材的AV（可选真实或动画），同步说出你们喜欢的片段，并讨论如果换成我们会怎样。","[both] 蒙眼全裸躺在被窝里，让对方用不同质地的物品碰你，你每猜错一次就要说一句\"希望现在换人来碰我\"。","[both] 打开你们的社交媒体共同好友列表，抽签一个人，然后互相耳语如果这个人现在加入我们会怎么样。","[both] 写一张\"一次性使用券\"，上面写\"可兑换和一个陌生人的调情（必须在对方在场时使用）\"，签上名交给对方。","[both] 让对方把你按在镜子上，你对着镜子里的自己说：\"要是这时候我闺蜜/兄弟推门进来，我就请你留下。\"","[both] 在浴室里，让对方用莲蓬头在你背上写字，写一个对方幻想过的第三者名字的拼音首字母，等你猜出来。","[both] 模仿双人口交的视角：一方躺在床上，头悬在床沿外，另一方站在床边，假装还有第三个人在指导动作。","[both] 蒙住对方的眼睛，用两个不同的声音轮流跟对方调情，一个是你的，一个是你假装的\"第三者\"。","[both] 让你们俩的手机都开着免提，互相打通然后放在枕头两边，做爱时故意发出声音，假装直播给电话那头的人听。","[both] 全裸时，互相给对方拍一张背面照，然后让对方选定一个朋友，把照片发过去只显示2秒就撤回。","[M] 把对方双手反绑，用嘴从对方身后蹭着对方的耳朵说：\"如果我现在叫一个兄弟进来一起使用你，你会恨我还是更湿？\"","[F] 用丝巾绑住对方的一只手在床头，你跨在对方身上轻咬对方胸口说：\"这个角度，你只能看我和别人了。\"","[both] 在安全前提下，用假阳具或按摩棒，由对方控制，角色扮演成\"是我们请来的专业男优/女优\"。","[both] 把今天使用的安全套（空包装）故意丢在显眼处，然后拍照发给你们的共同好友，问\"你觉得是几个人用的？\"，随后赶紧解释是玩笑。","[both] 让对方用你的手机，在记事本里写下\"三人协议\"，条款任意，但必须包含安全词和边缘行为。","[both] 一起在深夜阳台上，小声轮流说出你希望谁是下一个进你们卧室的人，每说一个就脱一件衣服。","[both] 现在起10分钟内，你们的性爱必须假装是偷情，而对方的伴侣随时可能回来，你要用台词不断强调这个\"第三人\"。","[both] 用冰和温水交替刺激对方身体，同时描述一个\"冰冷陌生人\"和一个\"热情熟人\"如何争夺你的使用权。","[both] 在安全私密环境下，蒙眼+双手轻绑，然后让对方在你耳边播放一段你们自己录的呻吟声，说\"这是昨天我们邀请的人留下的\"。","[both] 玩完这一轮后，你们各自匿名写下一个关于第三者的秘密，交换看完后可以选择当场销毁或保留。","[both] 跪在地毯上，由对方用颈链牵引，然后对方说：\"如果你表现得够骚，也许我下周会带一个客人来评价你。\""],
+  "loose-tongue": ["[both][Q] 你最想听对方说的一句脏话是什么？","[both][Q] 你觉得脏话在性爱中会增加快感吗？","[both][Q] 你更喜欢对方说温柔的情话还是下流的脏话？","[both][Q] 对方第一次说脏话的时候你是什么反应？","[both][Q] 你觉得脏话应该在什么时候说最刺激？","[both][Q] 你最想被对方叫哪个下流的称呼？","[M][Q] 你最想听对方叫你什么？","[F][Q] 你最想让对方叫你什么？","[both][Q] 你在床上说过最脏的一句话是什么？","[both][Q] 你有没有因为对方说脏话而瞬间湿了/硬了？","[M][Q] 对方说什么脏话最能让你失控？","[F][Q] 对方说什么脏话最能让你腿软？","[both][Q] 你更喜欢被骂\"骚货\"还是被叫\"宝贝\"？","[both][Q] 你觉得脏话应该提前沟通还是即兴发挥？","[both][Q] 你偷学过什么新的 dirty talk 想用在对方身上？","[M][Q] 你最想听对方在高潮时喊什么？","[F][Q] 你最想听对方在射精时说什么？","[both][Q] 你曾经因为对方说了一句脏话而直接高潮吗？","[both][Q] 你幻想过哪种方言说脏话最带感？","[both][Q] 如果有一天对方不再说脏话，你会失望吗？","[both][Q] 你最想让对方一边操你一边说什么？","[both][Q] 你幻想过被对方用脏话羞辱吗？到什么程度？","[M][Q] 你最想骂对方什么脏话来助兴？","[both][Q] 你最想被对方用什么语调说脏话（命令/撒娇/威胁）？","[both][Q] 你曾经偷偷录下过对方说脏话的声音吗？","[both][Q] 你觉得说脏话时带英文还是中文更性感？","[both][Q] 你自慰时会幻想对方说什么脏话？","[both][Q] 你心中最完美的 dirty talk 场景是什么？","[M][Q] 你最想让对方用嘴帮你的时候说什么？","[F][Q] 你最想让对方在口交时说什么？","[both][Q] 你愿意尝试24小时只能用脏话沟通吗？","[both][Q] 你有没有在公共场合偷偷发过很脏的语音给TA？","[both][Q] 你更喜欢对方说\"操死你\"还是\"好爽\"？","[both][Q] 你觉得最高级的 dirty talk 应该包含什么元素？","[both][Q] 你幻想过被对方用脏话命令做各种羞耻动作吗？","[both][Q] 你曾经因为说脏话太投入而真的把自己说生气过吗？","[both][Q] 你最想听对方在你耳边用气声说哪三个字？","[both][Q] 你觉得我们之间 dirty talk 最大的障碍是什么？","[both][Q] 你想让对方在操你的时候怎么形容对方的鸡吧/你的逼？","[both][Q] 你愿意在床上被对方骂\"母狗/公狗\"吗？","[both][Q] 你幻想过被对方一边打屁股一边逼你说脏话吗？","[both][Q] 你最想让对方在你体内射精的时候说什么下流话？","[both][Q] 你愿意尝试在角色扮演中使用极端的羞辱性脏话吗？","[M][Q] 你最想让对方跪着骂自己是什么？","[F][Q] 你最想跪着骂自己什么给对方听？","[both][Q] 你幻想过在朋友/家人旁边用气声说脏话偷偷挑逗吗？","[both][Q] 如果对方把我们的 dirty talk 录下来，你最想回听哪一句？","[both][Q] 你心中最禁忌最脏的那句话是什么？现在说出来","[both] 用你最性感的声音说一句\"我是你的小骚货\"","[both] 看着对方的眼睛，轻声说\"我好想被你操\"","[both] 用耳语说\"你把我弄湿了/硬了\"","[both] 用最无辜的表情说最骚的话\"哥哥/姐姐，我想要\"","[both] 在对方耳边用气声说\"操我\"","[both] 用dirty talk描述对方身体的三个部位","[both] 扮演外卖小哥/小姐姐，用脏话调戏对方一分钟","[M] 用下流的语气命令对方跪下","[F] 跪下对对方说\"求求你给我\"","[both] 用最低沉的嗓音说\"今晚你是我的性奴\"","[both] 模仿老板对下属的语气，用脏话提出一个性要求","[both] 发一条语音给对方，全程用脏话表达你此刻的欲望","[both] 在对方耳边连说三句不同的脏话，一句比一句更狠","[M] 用脏话夸对方的身体，不能重复","[F] 用脏话夸对方的能力，不能重复","[both] 用最慢的语速说\"我要把你操到下不来床\"","[both] 边摸自己边说\"我受不了了，快来操我\"","[both] 用方言说一段你最想干的龌龊事","[both] 用脏话给对方起一个今晚专属的昵称，并叫出来","[both] 对着镜子里的自己说\"我是个小淫娃/大色狼\"","[both] 在床上用脏话指挥对方换一个你最喜欢的姿势","[both] 给对方发一条纯脏话的语音，至少包含5句不同内容","[both] 角色扮演妓女/嫖客，从谈价格到服务全程用脏话","[M] 用脏话命令对方自慰给你看","[F] 用脏话命令对方脱下裤子","[both] 在对方高潮时，你只能说脏话，不能有正常词汇","[both] 把对方绑住，用脏话进行10分钟的感官描述挑逗","[both] 用外语说一段 dirty talk，然后再翻译成中文","[M] 边打对方屁股边用脏话报数，每一下都说一个不同的字","[F] 边被打屁股边用脏话求饶","[both] 在对方耳边不间断地说脏话，直到TA求你停下","[both] 用脏话写一封100字的小作文，然后读给对方听","[both] 用脏话描述你们上一次做爱的全过程","[both] 播放自己录的一段 dirty talk，然后现场模仿改进","[both] 用脏话给对方讲一个自己编的黄色笑话","[both] 假扮第一次约炮，用最下流的脏话互相勾引","[both] 在爱爱时全程只允许用脏话沟通，不能说一句正常的话","[both] 用脏话命令对方帮你做一件平时不敢提的事","[both] 给对方发一段你自慰时的实时脏话语音","[both] 用脏话形容你希望被射在哪个部位","[both] 在公共场合（如车里/楼道）压低声音说极度下流的脏话","[both] 扮演主人/奴隶，用脏话下指令并必须照做","[both] 跪着用脏话忏悔你对TA有过的下流幻想","[M] 命令对方边给你口交边用脏话羞辱自己","[F] 边给对方口交边用脏话羞辱自己","[both] 把对方骂到哭，然后再用温柔脏话哄（安全前提下）","[both] 用脏话全程直播你高潮的过程（文字或语音）","[both] 在父母/朋友可能随时进来的边缘情况下，用气声说脏话调情","[both] 一起观看一部 porn，用脏话同步配音解说","[both] 用最脏最侮辱的话骂对方，但事后要道歉并拥抱"],
+  "changed-hands": ["[M][Q] 你有没有在脑海中幻想过对方跟别人亲热的画面？","[F][Q] 你有没有察觉到对方可能有点\"绿帽\"倾向？什么细节让你这么觉得？","[both][Q] 第一次接触到\"绿帽\"或\"淫妻\"这个概念是什么时候？当时什么反应？","[M][Q] 你最喜欢幻想对方和什么类型的人在一起？","[F][Q] 如果对方说想看你跟别人调情，你会觉得兴奋还是冒犯？","[both][Q] 你们之间有没有为\"绿帽幻想\"这件事认真聊过一次？","[M][Q] 你觉得是精神上的\"被夺走感\"更刺激，还是肉体上的画面更刺激？","[F][Q] 如果对方希望你打扮得更性感去吸引别人目光，你愿意吗？","[both][Q] 你觉得这种幻想对你们的关系是加分还是减分？","[M][Q] 你更希望对方是主动去找别人，还是被动被勾引？","[both][Q] 你们身边有没有哪对朋友，让你觉得\"他们可能也在玩这个\"？","[M][Q] 你最想让对方穿什么样的衣服去赴别人的约？","[F][Q] 如果对方告诉你\"今晚你可以不用回来\"，你第一反应是什么？","[both][Q] 你们有没有在公共场合偷偷扮演过\"陌生男女\"的角色？","[M][Q] 你有没有偷偷比较过自己和那个\"幻想中第三者\"的差距？","[M][Q] 你有没有真正策划过让这件事发生的步骤？","[F][Q] 如果对方要你详细描述和别人亲热的细节，你愿意说到什么程度？","[both][Q] 你们有没有因为讨论这个幻想而发生过激烈的争吵？","[M][Q] 你最不能接受对方跟别人发生什么行为？底线在哪里？","[F][Q] 你觉得对方允许这件事，是因为爱你还是因为不够在乎你？","[both][Q] 如果真的要实践，你更倾向找一个陌生人还是认识的人？","[M][Q] 你享受的是\"被羞辱\"的感觉，还是\"她很快乐\"的感觉？","[F][Q] 如果有一天你真的和别人上床了，你觉得对方事后会后悔吗？","[both][Q] 你们是否设定过安全词或规则，防止幻想失控？","[M][Q] 你有没有想过，自己是否只是喜欢\"看\"，还是也愿意让对方看你和别人？","[F][Q] 你愿意让对方帮你挑选\"约会对象\"吗？","[M][Q] 你内心最深处的终极绿帽幻想场景是什么样的？请完整描述。","[F][Q] 你有没有偷偷想过，如果和对方最好的兄弟发生关系，对方会是什么表情？","[both][Q] 如果有一天你们实践了，你希望对方全程录像给你看吗？","[M][Q] 你愿意在对方和别人亲热的时候被绑在一边看吗？","[F][Q] 你愿意在和对方亲热的时候，打电话给\"绿帽方\"实时描述吗？","[both][Q] 你们有没有谈论过\"怀孕风险\"或者\"故意让人误会孩子是谁的\"这种极端幻想？","[M][Q] 你幻想过对方成为别人的\"长期情人\"而不是一夜情吗？","[F][Q] 如果对方让你在锁骨或腰上纹一个象征\"共享\"的小纹身，你接受吗？","[both][Q] 你们的关系中，绿帽幻想是调味剂还是已经变成了主要性唤起方式？","[M][Q] 你有没有偷偷注册过交友软件，假装是对方去跟人聊天？","[F][Q] 你听到对方说\"今晚把你借给别人\"的时候，身体会有感觉吗？","[both][Q] 你们是否有意识地收集过\"观众\"或\"单男\"的照片来一起挑选？","[M][Q] 你更希望亲眼目睹，还是事后听对方复述细节？","[both][Q] 你们是否认真考虑过\"三人行\"或\"换偶\"来作为绿帽幻想的进阶？","[M][Q] 你有没有幻想过对方跟别人生一个孩子，然后你们一起养？","[F][Q] 你有没有幻想过在你们结婚纪念日那天，和另一个人度过？","[both][Q] 你觉得这个幻想最终的极限在哪里？有什么是绝对不能碰的？","[M][Q] 你更希望对方告诉你那个男人比你厉害，还是不如你？","[F][Q] 如果对方让你评价\"第三者\"的身体，你敢诚实说吗？","[both][Q] 你们有没有一起看过绿帽题材的影片？最喜欢的剧情是什么？","[M][Q] 你有没有想过把对方\"出租\"给陌生人一个小时？","[F][Q] 你愿不愿意让对方把你的照片发到某个成人社区，标明\"共享伴侣\"？","[both][Q] 你是否有过\"也许只有当他真正失去我时才会更爱我\"的这种扭曲测试念头？","[both][Q] 如果给你一个绝对安全且无人知道的机会，你愿意让你们的绿帽幻想成真一次吗？","[F] 走到窗边，假装楼下有个帅哥在看你，对对方微微一笑","[M] 用语言描述一下你今天看到的对方身上最吸引别人目光的一个部位","[F] 让对方帮你选一套明天出门穿的衣服，必须是对方觉得\"有点危险\"的","[M] 现在打电话给一个你们共同的朋友，让对方跟对方随便聊几句，你在一旁听着","[F] 当着对方的面，给通讯录里一个异性发一条\"今天有点想你\"的短信，然后撤回","[M] 闭上眼睛，让对方详细描述一段对方过去和别人最刺激的一次经历（真实或虚构）","[F] 用最诱人的语气对对方说：\"今晚我想去酒吧，看看能钓到谁。\"","[M] 在对方耳边用嫉妒又兴奋的语气说：\"如果别人碰你这里，我会疯掉。\"","[both] 一起拍一张照片，一方摆出\"有秘密\"的表情，另一方负责\"假装不知道\"","[F] 在对方面前试穿三套不同风格的内衣，让对方选一套\"最适合穿去约会\"的","[M] 对对方说一句：\"如果你是别人的对方，我现在就会……\"并补完这句话","[F] 用口红在对方的衬衫领口内侧画一个唇印，然后让对方保留到明天","[both] 面对面坐着，一方扮演\"刚和别人约会回来\"，另一方扮演\"在家等着的人\"，即兴对话2分钟","[M] 用你的手指，沿着对方身体的线条虚画一个\"假想第三者\"会触碰的轨迹","[F] 用第三人称口吻，给对方发一条语音：\"对方今晚可能不回去了。\"","[F] 穿上对方最希望你\"穿出去\"的那套衣服，在屋里走一圈，接受对方的审视","[M] 现在帮对方注册一个虚拟账号，取一个勾引意味的名字，让对方用这个身份跟你聊天10分钟","[F] 让对方把你的照片（不露脸）发到一个成人论坛上，看10条评论后删除","[M] 坐在角落，看对方独自和一个你认识的人视频通话5分钟，你不能出声","[F] 用绳子把对方的双手轻轻绑在椅子后面，然后一边抚摸对方一边讲一个\"别人的故事\"","[M] 现在开始半小时内，你只能用\"客人\"的身份称呼对方，对方叫你\"主人\"以外的一切称呼","[F] 让对方帮你刮掉某处体毛，然后告诉对方\"这是为了方便别人欣赏\"","[M] 把对方今天的内衣装进一个信封封好，上面写一个你们共同幻想的人名，收起来","[F] 用手机录一段呻吟声，存成对方的闹铃或来电铃声，不许告诉对方具体内容","[M] 现在打开成人网站，让对方挑选一个男优，然后你模仿那个男优的动作对待对方","[F] 用眼罩蒙住对方的眼睛，让对方想象你现在正被别人触碰，并用语言引导对方","[both] 面对面自慰，但必须全程看着对方的眼睛，并想象房间里还有第三个人在看","[M] 让对方用另一个男人的名字叫你三次，期间你照常和对方亲热","[F] 现在穿上对方最爱的情趣内衣，然后给一个异性朋友发一句模棱两可的语音消息","[M] 在对方手机里建一个加密相册，命名为\"旅馆\"，放一张对方最性感的照片进去","[both] 模拟一次\"单男面试\"：一方做面试官问问题，另一方扮演单男回答，要尽量进入角色","[F] 在一张纸条上写：\"今晚我属于除了你以外的男人\"，塞进对方的钱包","[M] 把对方的一条项链或发圈藏起来，告诉对方\"你让那个人拿走了\"","[F] 让对方用口红在你的大腿内侧画一道线，说\"这条线以上就是别人的地盘\"","[M] 现在跪在对方面前，用恳求的语气说：\"求你，今晚别让我一个人睡。\"","[F] 让对方给你的手机设一个新的解锁指纹，并开玩笑说\"方便别人检查\"","[M] 用眼罩蒙住自己，让对方扮演\"回家之后发现你在等她的情人\"，即兴演一段","[both] 一起站在镜子前，对方负责描述\"别人\"会怎么欣赏对方的身体，你只能在旁边听","[F] 在你们下次社交聚会上，穿一件对方指定的\"危险\"衣服，但全程只当着对方的面调整","[M] 写一封\"分手信\"给对方，但信的内容其实是\"我允许你自由\"，让对方朗读后烧掉","[both] 现在搜索并收藏三个你们觉得可以发展为\"单男\"的潜在人选资料","[F] 让对方用皮尺测量你的胸围、腰围、臀围，并记录在手机备忘录里，命名为\"简历\"","[M] 写出你认为对方身上最有\"分享价值\"的三个点，念给对方听","[both] 互相协助给对方穿戴整齐，然后对方出门在走廊站一分钟（确保安全），另一人通过猫眼偷看","[F] 让对方用你的手机发一条仅一人可见的朋友圈：\"准备好了，等你。\"","[M] 你们亲热时，让对方突然推开你说：\"他比你更懂我\"，然后观察你的反应再继续","[both] 今晚睡觉时，在中间放一个枕头，说这是\"留给那个人的位置\"","[F] 让对方用笔在你手腕上画一条细细的链子，说这是\"共享手铐\"","[M] 现在打开你们的合照，让对方用修图软件把另一个男人的脸P在你旁边，你看完反应","[both] 向彼此坦白：如果必须选一个现实认识的人来开启这个幻想，那个人会是谁？"],
+  "swapped-night": ["[both][Q] 你最早什么时候听说过\"换偶\"这个概念？第一反应是什么？","[both][Q] 如果用好奇程度1-10打分，你对交换的幻想有几分？","[both][Q] 你觉得交换最吸引你的点是什么？新鲜感、刺激还是别的？","[both][Q] 你看过交换题材的影片或小说吗？印象最深的是什么？","[both][Q] 你觉得我们之间谁更可能先提出想尝试交换？","[both][Q] 你更想尝试和陌生人交换，还是和认识的朋友交换？为什么？","[M][Q] 你想象过对方跟别的男人在一起的画面吗？是嫉妒还是兴奋？","[F][Q] 你想象过对方跟别的女人在一起的画面吗？你心里是什么感觉？","[both][Q] 你觉得交换和出轨的本质区别在哪里？","[both][Q] 如果一辈子只能选择一次交换体验，你会选现在还是未来某天？","[both][Q] 你有没有在脑海中物色过现实中可能适合交换的对象？是谁？","[both][Q] 你觉得交换会对我们的感情产生什么影响？正面还是负面？","[both][Q] 你最害怕交换后出现什么情况？吃醋、比较还是感情变淡？","[both][Q] 如果有交换的机会，你想在同一空间还是分开房间进行？","[both][Q] 你能接受对方在交换中和别人接吻吗？还是只能接受生理行为？","[M][Q] 如果对方交换后告诉对方比你厉害，你会怎么想？","[F][Q] 如果对方交换后表现得更满足，你会觉得自己不够好吗？","[both][Q] 你认为交换中最重要的是信任、规则还是事后沟通？","[both][Q] 你有没有幻想过交换时自己被\"冷落\"在一边观看的场景？","[both][Q] 如果交换后一方不想再试，另一方还想要，你觉得该怎么办？","[both][Q] 你内心最深处的换偶幻想是什么样的？完整描述一下过程。","[both][Q] 你愿意和另一对夫妻长期固定交换吗？还是更想要一次性刺激？","[both][Q] 你对交换中\"双龙一凤\"或\"双凤一龙\"的场景有幻想吗？","[both][Q] 你认为交换是否可能引发真正的情感转移？如果发生了你怎么办？","[both][Q] 你敢不敢在交换前坦白自己内心最阴暗的占有欲？","[M][Q] 你幻想过看着对方被另一个男人操到高潮时你的反应吗？","[F][Q] 你幻想过看着对方进入另一个女人身体时你的感觉吗？","[both][Q] 如果交换对象是我们都认识的朋友，事后如何面对日常相处？","[both][Q] 你有没有偷偷幻想过和自己的某个亲戚交换伴侣？","[both][Q] 你对\"绿帽癖\"或\"NTR\"和交换的边界怎么看？你更偏向哪个？","[both][Q] 你希望对方在交换中全程戴套，还是可以在某些情况下不用？","[both][Q] 你最想体验却还没跟对方说出口的一个交换细节是什么？","[M][Q] 你更想让别的男人看到对方淫荡的样子，还是想让对方看到你调教别的女人？","[F][Q] 你更想让别的女人享受对方的服务，还是想让别的男人见识你的魅力？","[both][Q] 如果交换中对方和别人产生了一点暧昧眼神，你能容忍吗？","[both][Q] 交换后第一次恢复我们自己的性生活时，你会觉得怪吗？","[both][Q] 你有没有想过交换可能带来的法律或健康风险？","[both][Q] 你愿意在交换前和对方签署一份心理契约吗？写什么？","[both][Q] 如果在交换中对方突然说\"我爱你\"你会立刻停止吗？","[both][Q] 你幻想过被对方亲手交给另一个人，像一件礼物一样吗？","[both][Q] 你最想让我们和哪一对现实中的夫妻一起共度一晚？","[both][Q] 如果交换必须是完全匿名的（戴面具），你愿意吗？","[both][Q] 你幻想过交换后四个人躺在同一张床上聊刚才的感受吗？","[both][Q] 你觉得交换中最容易吃醋的环节是什么？前戏、高潮还是事后温存？","[both][Q] 你会不会因为交换而产生\"报复性\"的念头，比如找更好的对象？","[both][Q] 你相信我们在交换后还能维持现在的亲密感吗？","[both][Q] 如果对方和你交换的对象事后成了朋友，你能接受吗？","[both][Q] 你幻想过交换怀孕或让对方怀孕的情节吗？虽然是禁忌。","[both][Q] 如果对方说\"我愿意尝试一次交换\"，你第一句话会说什么？","[both][Q] 你对交换俱乐部的环境有什么幻想？灯光、音乐、流程是怎样的？","[both] 闭上眼睛，想象我们和另一对夫妻共处一室，描述你看到的画面","[both] 给对方看你手机里你认为最适合用来\"撩\"别人的一张照片","[both] 用社交软件的情侣匹配功能，一起浏览附近的人，猜测谁最合适","[both] 互相给对方写一段\"交换宣言\"，就像你要向另一对介绍你的伴侣","[both] 一起搜索交换社区的网站或论坛，看5分钟然后交流感受","[M] 让对方假装是别人的伴侣，你第一次见到对方，开始搭讪","[F] 让对方假装是别人的伴侣，你第一次见到对方，展现你的魅力","[both] 写下你心目中理想交换对象的三个特质，交换纸条","[both] 角色扮演10分钟：我们是在换偶俱乐部认识的新人，互相试探底线","[both] 蒙上眼睛，让对方向你形容TA想看你被另一个人怎样触碰","[both] 在对方耳边详细描述一个你幻想的3P场景，要有另一位主角的细节","[both] 交换手机10分钟，翻看对方相册，找一张你认为最适合\"分享\"的照片","[both] 假装你现在正被另一个人触碰，向你的伴侣实时汇报你的感觉","[M] 用第三人称讲述一个故事：你的伴侣在别人怀里，而你在一旁看着","[F] 用第三人称讲述一个故事：你的伴侣在别人身上，而你在一旁观看","[both] 把你的伴侣介绍给一个朋友认识，用最暧昧的语气夸TA的床上优点（注意边界）","[both] 在社交软件上和异性（真人）聊一句不暴露身份但略带挑逗的话","[both] 一起拟定一份\"交换规则清单\"，必须包含安全词、允许动作和禁止动作","[both] 现在起1小时内，用\"如果我们和别人做…\"开头说每一句话","[both] 上网寻找一个真实的换偶俱乐部地点，把地址展示给对方看","[both] 蒙眼摸对方的身体，想象这是别人的伴侣，5分钟后说出你和\"陌生人\"亲密的感觉","[both] 用另一个人的名字称呼你的伴侣，持续本轮游戏直到TA喊停","[M] 让对方给你戴上一顶\"绿帽子\"（可以是实物或指代），然后对方赞美你","[F] 给对方戴上一条特别的项链，象征你是对方的\"私有物\"，然后对方命令你一些事","[both] 对视30秒，想象此时你的伴侣正在和别人接吻，描述你的真实感受","[both] 用手机搜索附近的情侣酒店，选一间你们认为适合交换的房间，讨论布置","[both] 脱掉上衣，在对方身上留下一个\"记号\"（口红印/吻痕），说这是为别人留的","[both] 一起拍一张看似亲密但故意留出\"第三/四人位置\"的合照","[both] 假装给交换对象写一封情书，但实际是写给自己的伴侣，最后揭露真相","[both] 在对方的注视下，自慰并叫出另一个虚构的名字（不要用真人的名字）","[M] 让对方站在镜子前，你从后面抱着对方，耳语说\"我要看别人这样对你\"","[F] 从后面抱着对方，对着镜子说\"我要让别人也看到你这样\"","[both] 以\"交换后我们第一次回家\"为情境，模拟进家门、换鞋、坐下对视的场景","[both] 互相为对方挑选一套你认为适合穿去交换约会的服装，摆在床上展示","[both] 用枕头蒙住脸，假装这是别人，然后和伴侣做爱（过程中可以喊\"陌生人\"的名字）","[both] 写一个关于我们第一次交换的详细时间表，从见面到结束，精确到分钟","[both] 在夜色中打开窗户，对着外面轻声说一个你们幻想交换的对象名字（只说名字，无具体信息）","[both] 互相用口红/眉笔在对方手心画一个符号，代表你们愿意被\"标记\"","[both] 给对方读一段你在网上找到的交换经历分享，语气要真实","[both] 模拟交换结束后的\"复盘\"对话：假装刚结束，互相交流你觉得对方伴侣哪里最吸引你","[both] 在对方身上喷一点陌生的香水/古龙水，让气味像是别人的","[both] 拍一张虚化背景的自拍，配文\"在等另一对有趣的灵魂\"，给对方看但先不发","[both] 将你的内衣/内裤丢进一个不透明的袋子里，闭眼抽取，如果是对方的就穿上一小时","[both] 在房间里放两把椅子相对，你坐一把，让对方坐另一把，假装你们是和另一对在面对面交谈","[both] 在对方不注意时打开手机录音，开始说一段\"交换幻想告白\"，结束后一起听","[both] 在阳台上裸体背对背站立，想象楼外有人正在看着你们并猜测你们的关系","[both] 一起浏览一个安全的成人玩具网站，挑选一款你们认为适合交换时用的玩具","[both] 互相用棉绳在手腕上绑一个活结，象征暂时的\"归属转移\"，保持15分钟","[both] 用双手蒙住对方眼睛一分钟，在耳边低语你对交换最真实的期待"],
+  "seductive-wife": ["[F][Q] 你幻想过在对方面前被别的男人抚摸吗？","[F][Q] 你偷偷自慰时，脑子里最常出现的是谁？","[F][Q] 你觉得自己在性爱上最淫荡的一面是什么？","[F][Q] 你会不会故意穿得很骚出门，想被陌生男人看？","[F][Q] 你曾经对着外卖小哥/快递员有过性幻想吗？","[M][Q] 你觉得对方什么时候最像个荡妇？","[M][Q] 你享受对方在外面被人盯着看的感觉吗？","[both][Q] 你们之间谁更常提起3P/多人的幻想？","[F][Q] 你衣柜里哪套内衣是你专门用来勾引别人的？","[F][Q] 你有没有偷偷在网上跟别人聊骚？聊什么内容？","[F][Q] 你觉得自己身体最淫荡的部位是哪里？","[F][Q] 你曾经在公共场合故意走光吗？","[F][Q] 你有没有幻想过在对方同事/朋友面前走光？","[F][Q] 你更喜欢被对方操，还是幻想被陌生人操？","[F][Q] 你觉得自己的小穴对男人的吸引力有多大？","[M][Q] 你愿意让对方穿着情趣内衣去参加聚会吗？","[M][Q] 你曾经偷偷拍过对方的骚照分享给谁？","[F][Q] 你玩过多少次假装醉酒让对方朋友送你回家？","[F][Q] 你在健身房看到肌肉男会不会流水？","[F][Q] 你上班时会不会故意勾引男同事？","[F][Q] 你自慰时最喜欢幻想的场景是什么？","[F][Q] 你有没有在对方睡着时偷偷摸过对方的朋友？","[M][Q] 你幻想过让对方去当裸模吗？","[F][Q] 如果对方允许你找一夜情，你最想找哪种类型的男人？","[F][Q] 你愿意把你的裸照发给陌生男人评价吗？","[F][Q] 你最喜欢被男人怎么称呼？\"骚货\"\"母狗\"还是\"宝贝\"？","[F][Q] 你真的出轨过吗？如果有，是跟谁？","[F][Q] 你曾经在对方不知道的情况下和别人开过房吗？","[F][Q] 你有没有给对方戴过绿帽子但至今没说？","[F][Q] 你幻想过被一群男人轮流操吗？最多幻想过几个人？","[F][Q] 你最喜欢被操哪个洞？屁眼还是小穴？","[F][Q] 你有没有带着跳蛋出门过？在什么场合？","[F][Q] 你愿意为了刺激和陌生男人视频裸聊吗？","[F][Q] 你曾经幻想过被对方的上司/领导操吗？","[F][Q] 你在性爱上最羞耻的一次经历是什么？","[F][Q] 你更喜欢被内射还是被射在脸上？","[F][Q] 你有没有在公共厕所里自慰过？","[F][Q] 你幻想过在对方面前被别的男人操到高潮吗？","[F][Q] 你希望对方帮你找男人来操你吗？","[M][Q] 你愿意让对方去约单男并回来告诉你细节吗？","[M][Q] 你曾经在对方不知情的情况下幻想过对方被轮奸吗？","[F][Q] 你偷偷藏过多少性玩具？最喜欢哪一个？","[F][Q] 你曾经在阳台上裸体给陌生人看过吗？","[F][Q] 你觉得自己的嘴巴、小穴和屁眼哪个更欠操？","[F][Q] 你有没有在KTV里跟人乱摸过？","[F][Q] 你愿意喝下对方的精液吗？吞过别人的吗？","[F][Q] 你曾经幻想过被人包养当性奴吗？","[F][Q] 你更喜欢粗暴的被操还是温柔的被舔？","[F][Q] 你曾经在对方打电话时偷偷操自己吗？","[F][Q] 你看过最多人的群P幻想是多少人？","[F][Q] 你愿意让对方把你借给对方的朋友用一晚吗？","[F][Q] 你最想被什么样的陌生男人破肛？描述一下。","[F][Q] 你幻想过在婚礼上当着宾客的面被操吗？","[F][Q] 你愿意怀孕后还被别的男人操吗？","[F][Q] 你愿意被卖到妓院当一天真正的妓女吗？","[F][Q] 你最深的黑暗欲望是什么？哪怕说出来会吓到对方。","[F][Q] 你曾经想过让对方结扎，然后随便被人内射吗？","[F][Q] 你愿意全身被陌生人精液覆盖吗？","[F][Q] 你幻想过在监狱里被犯人轮奸吗？","[F][Q] 你愿意把自己绑在公共厕所里被陌生男人随便使用吗？","[F][Q] 你有没有想过让对方看着你被黑人双插？","[F][Q] 你最想被操到用什么话求饶？","[F][Q] 你愿意每天不穿内裤生活，随时准备被操吗？","[F][Q] 你曾经用水果/蔬菜自慰过吗？最喜欢什么？","[F][Q] 你愿意被全身剃光，然后被当做性玩具展出吗？","[F][Q] 你幻想过在直播平台上被万人视奸吗？","[F][Q] 你最想被怎样彻底羞辱成一只母狗？","[F][Q] 你有没有想过让对方和对方的哥们一起操你？","[F][Q] 你幻想过被操到昏厥再被操醒吗？","[F][Q] 如果你变成了一个真正的性玩具，你希望被怎么使用？","[F] 把上衣撩到胸口以上，保持1分钟。","[F] 当着对方的面，用最骚的姿势脱掉内裤。","[F] 给你最好的闺蜜发一条消息：\"我对方昨晚操得我下不了床\"。","[F] 在镜子前用手指慢慢插自己的嘴，看着镜子。","[M] 把对方的胸罩脱掉，让对方只穿一件透点的上衣在屋里走一圈。","[F] 用嘴解开对方的皮带，不能用手。","[F] 对着窗户把裙子撩起来，露出内裤，停留10秒。","[F] 让对方拍一张你的屁股特写，发给对方最铁的兄弟。","[F] 在对方耳边用最骚的语气说：\"爸爸，我的小穴想你了。\"","[F] 只穿围裙在厨房里转一圈，假装做饭。","[F] 给一个陌生男人发一条语音：\"你猜我现在穿着什么？\"","[F] 趴在沙发上，撅起屁股，让对方用手掌拍三下。","[F] 用口红在对方胸口写上\"属于荡妇\"。","[F] 把跳蛋塞进内裤，让对方用遥控器，在屋里走三圈。","[F] 在对方面前慢慢把手指伸进内裤，再抽出来舔干净。","[F] 打电话给10086客服，用最嗲的声音问：\"我需要特殊服务，有吗？\"","[F] 穿上你最高的高跟鞋，在对方面前走猫步。","[M] 让对方坐在你脸上，让对方自己动。","[F] 把内裤脱下来，戴在对方头上当帽子，持续一整轮。","[F] 用舌头舔对方的乳头，直到对方推开你为止。","[F] 让对方挑一条对方最喜欢的你的内裤，你当着对方面穿上。","[F] 在阳台/窗边脱掉上衣，用手挡住胸，坚持20秒。","[F] 给对方口交，但对方不能碰你，你要全程自己来。","[M] 把对方扛起来，让对方腿夹着你的腰，坚持1分钟。","[F] 在自己胸上挤一点巧克力酱，叫对方来舔干净。","[F] 裸体跪在对方面前，双手背后，说\"请使用我\"。","[F] 让对方用绳子把你的双手绑在床头，蒙上眼睛，然后让对方离开房间2分钟。","[F] 在车库里（确保安全）全裸，让对方给你拍一张照片。","[F] 带着遥控跳蛋去便利店，让对方控制，买一瓶水再回来。","[M] 用对方的内裤塞住对方的嘴，坚持5分钟。","[F] 跪着从房间爬到卫生间，让对方骑在你背上。","[F] 让对方在你大腿内侧写下\"公共厕所\"。","[F] 全裸，面对镜子自己分开小穴，说三遍\"这里欢迎所有鸡巴\"。","[F] 在对方面前用假阳具插自己，必须插到高潮。","[F] 用对方的精液或你的爱液涂在嘴唇上当口红。","[F] 在阳台上穿着透明睡衣给对方口交，不能让邻居发现。","[F] 让对方假装是你老板，你跪着求对方别开除你，然后给对方口交。","[F] 脱光全身，只穿围裙给对方炒个蛋，期间必须翘臀。","[F] 让对方把你眼睛蒙上，在屋里藏一个跳蛋，你找到后当场塞进去。","[F] 给一个陌生号码（对方选的）发短信：\"我对方不行，你能来操我吗？\"然后撤回。","[F] 让对方给你灌肠，然后你憋着直到对方说可以释放。","[F] 坐在对方身上自己动，但每十下就要说一句\"我是你的母狗\"。","[F] 让对方用皮带轻轻抽你屁股，每抽一下你就要说\"谢谢主人\"。","[F] 在你家门口全裸，开门拿外卖（确保安全，可以只伸手）。","[F] 让对方给你戴上狗链，牵着你在屋里爬三圈。","[F] 在对方面前表演你最拿手的自慰，但要让对方用手机录像。","[F] 让对方把所有门窗打开，然后你在客厅全裸，停留2分钟。","[F] 当着对方的面，在视频里勾引一个你们共同的朋友（发消息不露脸）。","[F] 全身只穿一双网袜，让对方用冰在你身上画一幅地图。","[F] 让对方帮你录一段视频，你对着镜头说自己是免费的公共精厕。","[F] 在安全的环境下，让对方和对方的朋友（或假阳具）一起操你双插。","[F] 夜里全裸站在窗前，打开灯，对着外面慢慢自慰。","[F] 让对方把你绑在椅子上，然后在你面前假裝叫小姐上门服务。","[F] 在车里全裸，让对方开车到一个人多的地方停下，你在车里口交。","[F] 让对方把你的裸照发到某个成人论坛上（可以只发不露脸），看评论。","[F] 在野外全裸，让对方用树枝轻轻抽打你的屁股三下。","[F] 在对方的注视下，和另外一个人（或假阳具）做爱，然后描述感觉。","[F] 让对方给你滴低温蜡烛在乳房和腹部，你忍住不能躲。","[F] 蒙眼，对方找一件尖銳物輕輕划过你全身，你猜是什么。","[F] 写一份\"卖身契\"，让对方签字，你按手印，内容是完全服从24小时。","[F] 让对方把你全裸带到楼道里（注意安全），你跪着给对方口交30秒。","[F] 用夹子夹在你的阴唇上，然后让对方弹拨夹子。","[F] 让对方给你戴上眼罩和耳塞，把你当成性玩具随意使用10分钟。","[F] 在对方的注视下，自己扩肛给对方看，用肛塞保持5分钟。","[F] 让对方带你到公共厕所（最好偏僻），你在隔间全裸待1分钟。","[F] 让对方用手机同步播放你的裸体给附近的人（蓝牙/投屏），只持续30秒。","[F] 全裸，让对方在你全身写上\"肉便器\"，然后你保持这个状态做完一整轮游戏。","[F] 在对方面前，用啤酒瓶或类似物体插自己，直到你高潮。","[F] 让对方把你的双手吊起来（安全绳），你只能用嘴为对方服务。","[F] 今夜睡觉时，必须赤裸且保持腿张开，让对方随时可以操你。"],
+  "first-feelings": ["[both][Q] 你第一次对对方心动是什么时候？","[both][Q] 和对方在一起最开心的一件事是什么？","[both][Q] 你最喜欢对方身上的哪个特质？","[both][Q] 第一次约会前你紧张吗？","[both][Q] 你最喜欢我们一起去的哪个地方？","[both][Q] 你觉得对方什么时候最可爱？","[both][Q] 你第一次牵对方的手是什么感觉？","[both][Q] 如果用一个词形容对方，你会用什么？","[both][Q] 你觉得我们之间最有默契的一件事是什么？","[both][Q] 你更想要早安吻还是晚安吻？","[both][Q] 你收藏过我们之间的哪张照片？","[both][Q] 你觉得对方是更感性还是更理性的人？","[M][Q] 你觉得对方穿什么颜色最好看？","[F][Q] 你觉得对方做什么表情最可爱？","[both][Q] 我们之间你最不想失去的是什么？","[both][Q] 你理想中的周末约会是什么样？","[both][Q] 你最喜欢对方穿哪件衣服？为什么？","[both][Q] 你觉得对方最迷人的小习惯是什么？","[both][Q] 你回忆一下，我们之间最安静但是最幸福的一个瞬间","[M][Q] 对方哭的时候你第一反应是什么？","[F][Q] 对方累的时候你一般怎么做？","[both][Q] 你有没有偷偷学过对方喜欢的某样东西？","[both][Q] 你觉得我们什么时候最般配？","[both][Q] 你最喜欢我们之间哪一个小秘密？","[both][Q] 你觉得和对方在一起后你最大的变化是什么？","[both][Q] 你什么时候最想紧紧抱住对方？","[M][Q] 对方什么时候看起来最美？素颜还是化妆？","[F][Q] 对方穿什么衣服你觉得最帅？","[both][Q] 你曾经在梦里完整地和对方过完了一生，那个梦里我们是什么结局？","[M][Q] 对方让你最想成家的一刻是什么时候？","[F][Q] 对方做过的哪件事让你觉得这个男人值得托付？","[both] 给对方一个真诚的拥抱，持续10秒","[both] 闭上眼睛，让对方在你手心画一个图案，猜是什么","[both] 用三句话夸对方，不能重复","[both] 模仿一个可爱的小动物的叫声","[both] 做10个深蹲，一边做一边说对方最棒","[both] 给对方的备注改成你最想叫的昵称","[both] 和对方自拍一张搞怪合照","[both] 重现你们第一次见面时的自我介绍","[both] 用方言说一句我爱你","[both] 用手机录一段10秒的语音描述对方今天的样子","[both] 对对方说一句你最想说的情话","[both] 给对方梳头发1分钟","[both] 一起哼一首你们共同喜欢的歌","[both] 给对方一个背后抱，贴紧10秒","[both] 用额头抵着对方的额头，闭眼不说话15秒","[M] 把对方抱到床上，轻轻盖好被子","[F] 给对方系领带/围巾","[both] 面对面坐着，手牵手看对方的眼睛1分钟","[both] 说三个对方让你心动的瞬间","[both] 给对方唱一首情歌，不管跑不跑调","[both] 现在打电话给你们的父母，让他们说一句祝福你们的话","[both] 为对方写一首三行情诗，当场念出来","[both] 闭着眼睛让对方牵着你走一段路，完全信任"],
+  "slow-warmth": ["[both][Q] 你觉得我们之间谁更离不开谁？","[M][Q] 对方做的哪件小事让你瞬间觉得很幸福？","[F][Q] 对方什么时候让你觉得被完全宠着？","[both][Q] 如果用一个场景形容你们的关系，会是什么？","[both][Q] 你觉得对方最不懂你的一点是什么？","[both][Q] 你觉得我们在一起之后你改变最大的是什么？","[both][Q] 你偷偷幻想过我们的未来是什么样吗？","[M][Q] 对方最让你心动的一个小习惯是什么？","[F][Q] 对方做过的最让你感动的一件事是什么？","[both][Q] 你曾经因为对方做的哪件事，偷偷觉得特别幸福？","[both][Q] 你觉得我们之间最浪漫的记忆是什么？","[M][Q] 对方什么时候让你觉得做男人真好？","[F][Q] 对方什么时候让你觉得做女人真好？","[both][Q] 如果有一个按钮可以重置我们的关系，你会按吗？","[both][Q] 你觉得我们的爱能打败什么困难？","[both][Q] 你觉得我们最合拍的瞬间是什么？","[both][Q] 你偷偷给对方起过什么昵称？","[both][Q] 你更想要浪漫的约会还是日常的陪伴？","[both][Q] 如果让你选一个瞬间永远停留，你会选我们在一起的哪个片段？","[M][Q] 你有没有偷偷想过和对方生一个孩子？孩子像谁更好？","[F][Q] 你希望对方求婚的场合是什么样的？","[both] 和对方对视20秒，不许笑","[both] 在对方耳边说一句最肉麻的情话","[both] 重现你们第一次接吻的场景","[both] 用嘴喂对方吃一个小零食","[both] 给你最好的朋友发一条消息夸你的另一半","[both] 把手机壁纸换成对方的照片用一天","[F] 坐在对方腿上，用撒娇的语气说一个要求","[M] 公主抱对方，坚持10秒","[both] 一起淋浴，你帮我我帮你洗","[both] 今晚睡觉只穿内衣/内裤抱着睡","[both] 和对方一起做一个未来的约定","[both] 在对方耳边说一句你最肉麻的真心话","[both] 帮对方吹头发","[both] 在对方脖子上种一颗草莓","[both] 一起翻出手机里最早的一张合照，重现那个姿势拍一张新的","[both] 互相喂对方吃完一口水果，全程不许用手","[both] 把你最珍贵的个人物品送给对方作为信物保管一周","[both][Q] 我们俩在一起的时候，谁先开口的次数更多？对方主动的时候你在想什么？","[both][Q] 对方如果有一天什么事都要先问过你，你会觉得被需要还是压力大？"],
+  "hidden-heart": ["[both][Q] 如果我们之间发生最大的矛盾会是因为什么？","[both][Q] 你觉得你在感情中最大的缺点是是什么？","[both][Q] 你有没有曾经因为对方的某句话而偷偷难过？","[M][Q] 你做过最让对方失望的一件事是什么？","[both][Q] 你觉得维持我们关系最关键的因素是什么？","[both][Q] 你曾经在朋友面前炫耀过我们的什么？","[both][Q] 如果有一天我们异地了，你觉得我们能撑多久？","[both][Q] 你有多少次因为太爱对方而害怕过？","[both][Q] 你觉得我们在哪种情况下最容易吵架？怎么避免？","[M][Q] 你有没有因为工作忙而忽略过对方的感受？","[F][Q] 你有没有因为情绪化而说过伤对方的话？","[both][Q] 你曾经为对方做过最勇敢的事是什么？","[both][Q] 你觉得我们之间最需要改善的是什么？","[both][Q] 你有没有哪一刻觉得\"就是这个人了\"，确定要共度余生？","[both][Q] 你为对方放弃过什么重要的东西吗？后悔过吗？","[both][Q] 你觉得我们之间最接近分手的瞬间是因为什么？","[both][Q] 如果有一天对方失忆了，你会用什么方式让对方重新爱上你？","[both][Q] 你有没有嫉妒过对方和别人的关系？哪怕只是友情？","[both][Q] 如果我们的父母坚决反对我们在一起，你会怎么选？","[both] 闭上眼睛，让对方向你表白，不能笑场","[both] 用对方的手机发一条朋友圈夸TA","[both] 写下你最想对对方说但一直没说的话","[both] 给对方按摩10分钟","[both] 即兴跳一支舞，让对方当观众打分","[M] 用深情的语气朗读一段对方选的台词","[F] 给对方画一幅肖像画，不管画成什么样","[both] 一起泡澡，面对面对话5分钟","[both] 写一封信给对方，等孩子长大了再看","[both] 今晚点一份外卖，吃之前先喂对方一口","[both] 一起计划一次未来的旅行，具体到每个细节","[both] 给对方写一首情诗，当场朗诵","[both] 把你觉得最能代表你们的歌设为铃声，用外放听一遍","[both] 现在就去纹身店，让对方给你选一个小小的情侣纹身图案（纹身贴也可）","[M] 跪下来重新求婚一次，即使已经结婚","[F] 穿上你最美的裙子，为对方跳一支专属的舞","[both] 用你们的照片和故事，临时做一个3分钟的短视频发朋友圈","[both] 立刻订一间好酒店，今晚抛下所有事情只属于两个人","[both][Q] 你有没有过明明很在意、却故意说「我没事」的时候？","[both][Q] 吵架之后你是不是更希望对方先来抱你，而不是先跟你讲道理？"],
+  "flame-probe": ["[both][Q] 你最想和对方一起做但还没做的事是什么？","[both][Q] 你觉得对方什么时候最性感？","[both][Q] 你第一次梦到对方是什么内容？","[both][Q] 你最想让对方为你做的一件事是什么？","[both][Q] 你觉得我们之间谁更主动？","[M][Q] 对方最吸引你的身体部位是哪里？","[F][Q] 对方什么时候让你觉得最有魅力？","[both][Q] 你偷偷观察过对方睡觉的样子吗？","[both][Q] 哪次约会让你觉得最心动？","[both][Q] 你最喜欢对方穿什么风格的衣服？","[M][Q] 对方的胸是什么罩杯？你喜欢吗？","[F][Q] 对方的鸡吧有多长？你满意吗？","[M][Q] 对方下面紧不紧？第一次进去的感觉还记得吗？","[F][Q] 对方硬起来的时候有多粗？你能完全吞进去吗？","[both][Q] 你喜欢多长多粗的鸡吧？为什么？","[F][Q] 你见过除了对方之外的人的大鸡吧吗？在哪里？","[both][Q] 你自慰的频率是多久一次？最近一次是什么时候？","[F][Q] 你自慰的时候喜欢用手指还是用玩具？","[M][Q] 你自慰的时候脑子里想的是对方还是别的？","[both][Q] 你有没有一边洗澡一边自慰过？","[both][Q] 你上厕所的时候对方进来你会尴尬吗？","[both][Q] 你有没有偷偷闻过对方穿过的内裤？","[M][Q] 对方的下面是什么味道的？你喜欢吗？","[F][Q] 对方的精液是什么味道的？你喜欢吗？","[both][Q] 你有没有趁对方睡着的时候偷偷摸过TA？","[both][Q] 你觉得你们之间谁在床上的需求更大？","[M][Q] 你有没有偷偷看过对方的购物记录里有没有情趣用品？","[F][Q] 你有没有偷偷搜过怎么让对方更持久/更硬？","[both][Q] 你觉得对方的下面好看吗？你仔细看过吗？","[both][Q] 你第一次看到对方裸体的时候内心在想什么？","[M][Q] 对方的乳头是什么颜色的？你喜欢吗？","[F][Q] 对方的龟头是什么形状的？你喜欢吗？","[both][Q] 你觉得在做爱的时候哪个动作最让你发笑？","[both][Q] 你第一次看A片是什么时候？当时是什么反应？","[M][Q] 你最爱对方穿哪一套内衣？描述一下细节","[F][Q] 对方给你口的时候你最享受哪个动作？","[both][Q] 你觉得我们之间谁在床上更会玩？对方还有哪些潜力没开发？","[both] 和对方十指相扣，对视30秒","[both] 在对方脖子上轻轻留下一个吻痕","[both] 用最撩人的语气在对方耳边说今晚你想做什么","[both] 闭上眼睛让对方触碰你全身，猜碰的是哪里","[M] 用你的手测量对方的腰围","[F] 用手指从对方的手滑到肩膀","[both] 跳一支慢舞，越贴越近那种","[M] 掀起对方的上衣，亲吻对方的脖子10秒","[F] 把手伸进对方的裤子里，隔着内裤摸对方10秒","[both] 脱掉对方的上衣，拥抱10秒，肌肤贴着肌肤","[M] 脱掉对方的上衣，把乳房压到落地窗上，从后面抱着对方","[F] 从后面抱着对方，把手伸进对方的内裤里","[both] 跟着一首慢歌跳舞，每10秒亲一次","[M] 让对方坐在你的大腿上，面朝着你，坚持1分钟","[F] 坐在对方的大腿上面朝着对方，坚持1分钟","[both] 脱掉对方的下半身衣物，隔着内裤用嘴挑逗30秒","[both] 彼此抚摸对方的大腿内侧，直到有人受不了","[both] 互相脱掉对方的一只袜子，用嘴","[both] 把对方的双手放在你身上最敏感的地方","[both] 互相在身上抹润肤露，每个角落都要抹到","[both] 脱掉内衣裤，用外裤/裙子遮住，保持一整轮","[both] 让对方隔着裤子摸你的私处1分钟","[both] 互相脱掉对方的上衣，然后用舌尖在对方锁骨上写自己的名字","[M] 把对方抱到床上，像剥糖果一样慢慢脱掉对方的衣服，每脱一件亲一下","[F] 用你的脚趾夹着冰块放进对方的内裤里，然后用舌头把它找出来","[both] 互相用舌尖在对方肚脐上画圈，直到有人受不了叫停","[M][Q] 你最想听对方在床上对你说什么下流话？","[F][Q] 你最想听对方在床上对你说什么羞耻的话？","[both][Q] 做爱时你最常说的骚话是哪一句？","[both][Q] 对方说什么骚话会让你立刻湿/硬？","[M][Q] 你最喜欢对方用哪种语气叫床？详细描述","[F][Q] 对方喘粗气说\"我要操死你\"的时候你什么感觉？","[both][Q] 用一句话让对方立刻想要你，你会说什么？","[M][Q] 对方舔你乳头时在你耳边说骚话，你最想听到什么？","[F][Q] 对方在你耳边低吼\"我的精液全射给你\"你湿不湿？","[both][Q] 对方在你耳边呼着热气说\"我要你\"的时候你第一反应是什么？","[M][Q] 对方一边扭腰一边说\"操深点，再深点\"你能忍住吗？","[F][Q] 对方从后面操你时咬着耳朵说\"你的逼好紧\"你夹得会不会更紧？","[both][Q] 如果只能用一个字来形容你们做爱的感觉，你会用什么？","[M][Q] 对方骑在你身上自己动的时候说\"对方的鸡巴好大\"你是不是更硬了？","[F][Q] 对方把你腿扛在肩上操你时说\"这逼真他妈紧\"你爱听吗？","[both][Q] 做爱时你说过\"再快点\"吗？对方听到后通常什么反应？","[M][Q] 对方一边被操一边回头对你浪叫\"对方操我\"时你的动力会增加多少？","[F][Q] 对方狠狠操你时命令你\"叫大声点\"你是不是就忍不住叫出来了？","[both][Q] 你更喜欢被叫\"亲爱的\"还是\"小骚货\"？为什么？","[M][Q] 对方舔遍你全身然后抬头说\"现在我可以吃掉你吗\"你能坚持多久？","[F][Q] 对方一边扣弄你的逼一边问\"想不想要鸡巴\"你是不是只能哭着点头？","[both][Q] 做完爱后对方在你耳边说\"刚才你真棒\"你心里什么感受？","[M][Q] 对方高潮后瘫软地说\"被你操晕了\"你是不是特别有成就感？","[F][Q] 对方射完后还留在里面抱着你说\"你是我的\"这句话让你幸福吗？","[both][Q] 用一句不超过10个字的话让对方马上想脱你衣服，你会说什么？","[M][Q] 对方咬着嘴唇对你勾手指说\"过来操我\"，你几秒能进入状态？","[F][Q] 对方把你按在墙上粗喘着说\"现在就想要你\"你下面有没有反应？","[both][Q] 突然在公共场合对方给你发一条色情语音，你最想听到什么？","[M][Q] 对方晚上钻进被窝摸你，在你耳边呼气说\"睡不着，想吃鸡巴\"你怎么办？","[F][Q] 对方深夜从背后抱住你，硬邦邦地顶着你说\"对方，我想了\"你通常怎么回应？","[both][Q] 你更喜欢温柔缠绵时的耳边情话还是猛烈抽插时的脏话？","[M][Q] 对方穿着情趣内衣走出来说\"今晚我是你的礼物\"你是不是拆礼物的手都在抖？","[F][Q] 对方洗完澡只围浴巾出来对你说\"过来，帮我擦干\"你是不是心跳加速？","[both] 用你最骚的语气在对方耳边说\"我要你，现在就要\"","[M] 把对方的手放在你的裤裆上，说\"这都是你害的\"","[F] 用最无辜的表情问对方\"你想不想要我的小嘴？\"","[both] 给对方发一条语音：\"我现在满脑子都是你，衣服已经湿了\"","[M] 从背后抱住对方，用硬着的地方顶住对方，低语\"感觉到没，它想你了\"","[F] 跨坐在对方腿上，磨蹭着说\"对方，我下面好痒，帮我看看嘛\"","[both] 贴着对方耳朵用气声说\"你的身体是我的，今晚我要用遍每一个地方\"","[M] 把对方按在墙上，一只手掐腰一只手解对方扣子，说\"现在你逃不掉了\"","[F] 躺在床上对对方勾勾手指，用最骚的音调说\"过来，吃奶\"","[both] 洗澡时从后面抹沐浴露，用下体蹭对方，说\"顺便帮我洗洗这里\"","[M] 早上用嘴把对方弄醒，对方睁眼时你含着乳头含糊说\"早安，甜点\"","[F] 对方睡午觉时钻进被子用嘴含住，对方惊醒后你说\"嘘，继续睡，我玩我的\"","[both] 看电影时把手伸进对方裤子里，贴着耳朵说\"别出声，好好享受\"","[M] 在厨房做饭时从后面突然掀起对方的裙子，说\"先吃你，再吃饭\"","[F] 对方打游戏时蹲下去拉开对方裤子，说\"你玩你的，我玩我的\"","[both] 互相用嘴喂酒，喂完后说\"用你的嘴帮我消毒\"","[M] 让对方用胸部夹住你的脸，说\"闷死在你奶里我也愿意\"","[F] 骑在对方脸上，扶着对方的头说\"好好舔，舔爽了有奖励\"","[both] 一天之内互相只能用性器官称呼对方，比如\"小逼去倒水\"\"鸡巴想吃什么\"","[M] 给对方发微信：\"报告对方，鸡巴现在硬得难受，申请处理\"，等对方回复","[F] 给对方发短信：\"警报，小穴已泛滥成灾，急需大禹治水\"","[both] 做爱结束后必须说一句真心实意的下流赞美，比如\"刚才你的逼快把我吸干了\"","[M] 射完后不要拔出来，趴在对方身上喘着说\"让我再感受一会儿，太舒服了\"","[F] 高潮后紧紧夹住对方说\"别动，让它留在里面陪我一会\"","[both] 明天在对方手机备忘录里留一段最骚的语音，文件名\"想我时点开\"","[M] 在对方包里偷偷塞一条你的内裤和字条：\"晚上穿着它来找我\"","[F] 在对方钱包里放一张你的胸贴，背面写\"凭此券可换实物，24小时有效\"","[both] 下次吵架，冷战期间忽然给对方发一张自己抚摸私处的照片（不露脸），配文\"再生气这里就没人管了\"","[M] 对方生气不理你时，从背后抱住摸对方，说\"气可以生，但逼不能饿着\"","[F] 对方冷战时，你洗完澡只穿围裙出来做早饭，故意弯腰，对方看你时你说\"看什么看，还没原谅你呢\""],
+  "flame-daily": ["[both][Q] 你内心最深处的性幻想是什么？","[both][Q] 你最想在什么地方尝试亲密？","[both][Q] 你最喜欢的前戏方式是什么？","[both][Q] 你觉得我们之间的亲密生活最需要改进什么？","[M][Q] 对方在床上做什么会让你瞬间失控？","[F][Q] 对方在床上做什么让你最有感觉？","[both][Q] 你有没有在亲密的时候幻想过不同的场景？","[both][Q] 你最想尝试但我们还没试过的姿势是什么？","[both][Q] 如果只能用一个词形容我们的亲密度，你会用什么？","[both][Q] 你觉得激情和陪伴哪个对我们更重要？","[both][Q] 你是否想过在商场试衣间跟对方/对方做爱？","[both][Q] 你最喜欢被操的姿势是什么？为什么？","[M][Q] 你最想把精液射在对方身体的哪个部位？","[F][Q] 你最喜欢精液射在脸上还是里面？还是都不喜欢？","[both][Q] 你做过爱之后喜欢抱着对方还是各睡各的？","[F][Q] 你有没有假装过高潮？为什么？","[M][Q] 你有没有担心过自己不够大/不够持久？","[both][Q] 你最喜欢的片是什么类型的？","[both][Q] 你看片的时候会代入自己吗？代入的是哪一方？","[F][Q] 你有没有想过被对方操到求饶？","[M][Q] 你有没有想过把对方操到求饶？","[both][Q] 你最敏感的部位是哪里？怎么摸最舒服？","[both][Q] 你有没有在做爱的时候走神过？想的是什么？","[both][Q] 你最喜欢被口交还是帮对方口交？","[M][Q] 对方给你口交的时候你最享受哪个瞬间？","[F][Q] 你给对方口交的时候会故意用舌尖挑逗吗？","[both][Q] 你有没有在网上跟人裸聊/视频色情过？","[both][Q] 你有没有拿自己的身材和AV演员比较过？","[M][Q] 你有没有量过自己的尺寸？有多少厘米？","[F][Q] 你有没有偷偷量过自己的胸围/下面的尺寸？","[both][Q] 你曾经因为性需求没有被满足而生过气吗？","[both][Q] 你有没有对对方提出过被拒绝的性要求？是什么？","[both][Q] 你幻想过被绑起来操吗？","[both][Q] 你有没有在约会前刻意打扮过自己的私处？","[M][Q] 对方给你口交的时候你是享受还是想快点射？","[F][Q] 你给对方口交的时候有没有偷偷觉得累？","[both][Q] 你觉得你们多久做一次爱才算正常？","[both][Q] 你觉得对方在床上的技巧可以打几分？满分10分","[both][Q] 你有没有幻想过在电影院/车里/电梯里做？","[both][Q] 你最喜欢对方哪个体位？为什么？","[both][Q] 你有没有幻想过在公厕/更衣室做爱？","[both][Q] 你更喜欢被舔还是舔对方？","[both][Q] 你觉得自己在床上的表现能打几分？为什么？","[both][Q] 你有没有幻想过在酒店里做爱和在家里做爱哪种更刺激？","[both][Q] 你有没有试过在做爱的时候录像？想试吗？","[both][Q] 你觉得做爱之前最浪漫的前戏是什么？","[both][Q] 你最长多久没有做爱？当时怎么解决的？","[both][Q] 你有没有在和对方做爱的时候幻想过另一个人？是谁？","[both][Q] 你最想让对方在床上叫你什么？脏一点也没关系","[both][Q] 你有没有偷偷给自己买过情趣玩具？用过几次？","[M][Q] 你射精量最大的一次是因为什么？射在了哪里？","[F][Q] 你高潮最强烈的一次是被怎么操的？描述一下过程","[both][Q] 你最长的一次性爱前戏进行了多久？怎么玩的？","[both][Q] 你有没有在用玩具的时候被对方撞见过？","[both][Q] 你有没有因为对方的性能力/技巧而偷偷想过出轨？","[both] 给对方做一次全身按摩，只用手掌和手指","[both] 发一条暧昧语音给TA","[both] 从现在开始10分钟内，只能用手势表达想说的","[both] 用冰（或冰块）在对方手臂上画一个图案","[both] 蒙住对方的眼睛，用嘴唇触碰TA三个不同的地方","[both] 在对方耳边说出你此刻最想对TA做的事","[F] 把对方推到墙边，壁咚对方","[M] 把对方横抱起来走一圈","[M] 拉着对方的手，引导对方握住你的鸡吧","[F] 跪在对方面前，用嘴隔着裤子亲吻对方的鸡吧位置","[both] 关掉灯，只靠触觉找到对方最敏感的地方并挑逗1分钟","[M] 让对方坐在你脸上，用嘴服务对方2分钟","[F] 坐在对方脸上，让对方用嘴服务你2分钟","[both] 一起看一部A片，模仿里面的一个姿势","[both] 用身体互相摩擦直到一个人忍不住出声","[F] 把沐浴露涂在胸部，让对方帮你洗","[M] 把沐浴露涂在鸡吧上，让对方帮你洗","[both] 全裸互相给对方涂身体乳/油","[M] 把对方抱到镜子前面从后面进入","[F] 面对镜子让对方从后面进入你，看着镜子里的自己","[both] 69姿势互相口交，谁先高潮谁输","[M] 在对方面前自慰直到快射了然后让对方帮你口射","[F] 在对方面前自慰让对方看着你","[both] 用对方的精液/爱液在身上画一个爱心","[M] 让对方骑在你的脸上直到对方高潮","[F] 骑在对方脸上直到你高潮","[both] 用舌头帮对方全身洗个澡（除了性器官）","[both] 用舌头在对方的锁骨上画圈","[M] 把对方的双腿扛在肩上，从正面进入","[F] 把你的双腿扛在对方肩上","[both] 用跳蛋/手指让对方高潮，不能直接性交","[both] 把冰块含在嘴里然后给对方口交","[both] 用枕巾蒙住对方的眼睛，用舌头挑逗TA的全身","[both] 你在上面自己动，让对方看着你","[M] 让对方给你乳交，你在上面看着对方的胸","[F] 用你的胸给对方乳交，让对方看着","[both] 做爱的时候全程不许出声，谁出声谁输了","[both] 蒙住对方的眼睛，用你的私密部位磨蹭对方的全身，但不能插入","[both] 现在去浴室，用沐浴露给对方全身打泡沫，然后互相蹭干净","[M] 让对方给你打手枪，你闭着眼睛想象是对方最好的闺蜜在帮你","[F] 让对方给你口交，但你要把手伸下去摸着对方的头控制节奏","[both] 用枕头垫高臀部，让对方从后面进入，你同时自己抚摸阴蒂","[both] 一起看一部色情片，看到高潮片段时就暂停，然后模仿里面的动作","[M] 让对方坐在你脸上，你给对方口交直到对方腿软","[F] 骑在对方脸上，让对方为你服务，你抓住床头控制力度","[both] 在镜子前做爱，一边做一边描述镜子里的你们在干什么","[both] 今天整个晚上，你们都要保持身体接触，即使吃饭上厕所也要一只手牵着","[both][Q] 做爱时你说过最脏的一句话是什么？","[M][Q] 你最想对对方说却一直不敢说的淫荡句子是什么？","[F][Q] 你最想对对方喊却不好意思喊的下流称呼是什么？","[both][Q] 你被操到神志不清时嘴里会蹦出什么话？","[M][Q] 对方被你操得求饶的时候说的哪句话让你最硬？","[F][Q] 对方让你叫对方爸爸然后狠狠操你的时候你脑子在想什么？","[both][Q] 你最喜欢在做爱时被骂还是被夸？具体怎么骂/夸最让你兴奋？","[M][Q] 对方一边帮你口交一边抬头说\"主人操我的嘴\"的时候你有多爽？","[F][Q] 对方插到最深时说\"操到子宫了\"你的身体有什么反应？","[both][Q] 做爱时你最爱用什么词来形容对方的生殖器？","[M][Q] 对方高潮时哭着喊你名字说\"被你操死了\"你是什么心理？","[F][Q] 对方一边射精一边吼\"全给你\"的时候你希望自己怎么回应？","[both][Q] 你喜欢在做爱时描述正在发生的动作吗？比如\"我在操你的小骚逼\"这种？","[M][Q] 对方求你射进对方嘴里的时候说\"射给我吃\"你多久会缴械？","[F][Q] 对方让你说\"我是你的专属肉便器\"的时候你内心真的这么想吗？","[both][Q] 你幻想过在公众场合偷偷在对方耳边说最下流的话吗？是什么？","[M][Q] 对方高潮失控时喊你爸爸/主人，你内心有多满足？","[F][Q] 对方用低沉的声音说\"我要操你一整晚\"的时候你腿软吗？","[both][Q] 你最喜欢在性爱中被形容成什么？比如\"性感的小野猫\"还是\"下贱的母狗\"？","[M][Q] 对方高潮痉挛时无意识喊出的淫词浪语是不是比平时更让你疯狂？","[F][Q] 对方快射精时一边加速一边低吼\"操死你个小骚逼\"你是不是也会跟着高潮？","[both][Q] 你有没有在做爱时因为对方一句骚话直接高潮了？是哪一句？","[M][Q] 对方突然在你耳边说\"我想给你生孩子\"这种话会让你更硬还是有点怕？","[F][Q] 对方一边操你一边说\"以后每天都操你\"你是不是连心都湿了？","[both][Q] 做爱时你最爱用什么拟声词？比如\"噗嗤\"\"咕叽\"还是其他？","[M][Q] 对方被你操得一直说\"不行了不行了\"你是会停下来还是操得更狠？","[F][Q] 对方让你喊对方大鸡巴时，你喊的时候是什么心理？兴奋还是羞耻？","[both][Q] 你觉得用\"操\"和\"做爱\"哪个词更让你兴奋？为什么？","[M][Q] 对方高潮时喷射在你身上并大叫\"被你操尿了\"你是自豪还是惊讶？","[F][Q] 对方深喉时按着你的头低吼\"全吞下去\"你配合着想的是什么？","[both][Q] 你最怀念的某一次性爱中对方说的哪句话让你记忆犹新？","[M][Q] 对方一边亲你喉结一边说\"对方今天辛苦了，晚上我好好犒劳你\"你期待吗？","[F][Q] 对方出差前夜把你操到凌晨，最后说\"接下来一周的份今晚先预支了\"你什么心情？","[both] 做爱时全程只能用脏话交流，每句话必须带\"操\"或\"逼\"","[M] 一边操对方一边详细描述对方的逼有多紧多湿，不停口","[F] 被操的时候大声喊出你鸡巴有多粗、捅得多深，不许停","[both] 做爱前先用下流话预热5分钟：互相说最脏的性幻想","[M] 一边让对方口交一边用脏话指导对方：舔蛋、吞深、别用牙","[F] 给对方口交时每隔几秒停下来淫叫\"好好吃，主人\"","[both] 后入式时，被操的人必须回头把舌吻伸进去，同时说\"操深点\"","[M] 操对方时要求对方数数，每插一下就喊一个数，插到100下才可以换姿势","[F] 女上位时边扭边抓自己胸部，浪叫\"对方看我的奶在晃，喜欢吗\"","[both] 在镜子前做爱，看着彼此说\"你看你被我操的样子多骚\"","[M] 让对方趴在落地窗上，你从后面操，逼对方说\"外面的人会看到我的逼被操\"","[F] 对着镜子张开腿自慰，回头对对方说\"你信不信我光用手指就能把自己玩喷\"","[both] 性爱时打开手机录音，结束后一起听刚才的淫叫和脏话","[M] 把对方高潮时的淫叫设成闹钟铃声，明天早上当着对方的面响","[F] 录一段只有呼吸和床响的音频发给对方，配文\"猜猜我在干嘛\"","[both] 互相用舌头舔遍对方，每舔一处就说\"这里是我的\"\"这里也是我的\"","[M] 舔对方后背时忽然咬住肩膀，低吼\"给你盖个章，你跑不掉了\"","[F] 在对方身上种草莓，边种边说\"这个印子三天消不掉，看你怎么出门\"","[both] 做爱时给对方讲一个自己编的最下流的黄色笑话，笑场就从头再来","[M] 一边操对方一边给对方讲你以前看过的A片里最刺激的桥段","[F] 被操时给对方描述一个你幻想过的出轨场景（仅限幻想），看对方反应","[both] 洗完澡后互相给对方擦身，每擦一处就说一个那里的下流昵称","[M] 给对方穿你的衬衫，里面真空，推倒在床说\"现在我要好好检查我的东西\"","[F] 穿上对方的白衬衫只系一颗扣子，坐在床边缓缓打开腿说\"先生，您的文件掉了\"","[both] 给对方点外卖，备注里写暗语\"多放辣，辣到对方受不了为止\"暗示今晚火热","[M] 送对方花时卡片写：\"比花更美的是你高潮时的表情\"","[F] 给对方寄快递，盒子里只有一条丁字裤和一张房卡","[both] 做爱时问对方：\"说，你最喜欢我身体的哪个洞？\"并让对方诚实回答","[M] 操对方时突然停下来，拔出问\"想不想要？说出来，想要什么？\"直到对方求饶","[F] 把对方快弄射时用手堵住龟头，说\"不说点好听的就不给射\""],
+  "desire-abyss": ["[both][Q] 你最想玩但我们还没试过的情趣玩法是什么？","[both][Q] 你在亲密时最敏感的敏感带是哪里？","[both][Q] 你曾幻想过的三人行对象是谁？","[both][Q] 你对使用情趣玩具有什么看法？","[M][Q] 你最喜欢对方穿什么内衣？","[F][Q] 你最喜欢对方用什么方式挑逗你？","[both][Q] 你有没有幻想过在公共场合亲密？","[both][Q] 你最大的性幻想场景是什么？详细描述一下","[both][Q] 如果今晚没有任何限制，你最想怎么操/被操？","[M][Q] 你想过让对方给你乳交吗？","[F][Q] 你想过用你的胸给对方乳交吗？","[both][Q] 你有没有幻想过车震？具体在什么车上？","[both][Q] 你最长的一次做爱是多长时间？最短呢？","[both][Q] 你试过在浴缸里做爱吗？感觉怎么样？","[both][Q] 你更喜欢开灯做爱还是关灯？为什么？","[both][Q] 你喜欢被对方看着自慰吗？","[F][Q] 你高潮的时候是什么感觉？对方知道吗？","[M][Q] 你射精的时候脑子里最后想的是什么？","[both][Q] 你自慰的时候看片吗？看什么类型的？","[both][Q] 你有没有幻想过被对方的朋友/同事勾引？","[both][Q] 你试过用情趣用品吗？最想试什么？","[both][Q] 你高潮的时候脑子里会出现什么画面？","[M][Q] 你射完还想继续操对方吗？还是想睡觉？","[F][Q] 你高潮之后还想被对方继续操吗？","[both][Q] 如果有一天对方说想尝试同性性爱，你能接受吗？","[both][Q] 你有没有趁对方不在的时候用过TA的私人物品自慰？","[M][Q] 你幻想过射在对方嘴里让对方吞下去吗？","[F][Q] 你愿意吞下对方的精液吗？试过吗？感觉如何？","[both][Q] 你幻想过做爱的时候被偷拍吗？","[both][Q] 你幻想过在多人面前做爱吗？多少人？","[both][Q] 你试过在经期做爱吗？感觉怎么样？","[both][Q] 你幻想过在婚礼/宴会等场合偷偷做爱吗？","[both][Q] 你觉得你身体哪个部位最性感？对方最喜欢你哪里？","[both][Q] 你做过最疯狂的一次性爱是在哪里？发生了什么？","[both][Q] 你幻想过被陌生人强奸然后发现很爽的情节吗？","[both][Q] 你最想尝试的多人性爱场景是几个男人几个女人？描述一下你的角色","[both][Q] 你有没有在网上匿名发过自己的裸照或视频？","[M][Q] 对方给你口交的时候你有没有想过按着对方的头射在喉咙里？","[F][Q] 你最想让对方射在你身体的哪个地方？有没有试过吞下去？","[both][Q] 你能否接受和对方一起拍性爱视频？愿意拍到什么尺度？","[both][Q] 如果让你选一个人加入我们的性爱，你会选谁？为什么？","[both][Q] 你偷偷搜索过哪些你觉得很变态的性癖关键词？","[both] 脱掉对方的一件衣服，不能用手","[both] 用对方的手机给TA自己发一条火辣的短信","[both] 蒙上眼睛，让对方用食物喂你","[both] 现在起10分钟内，对方说的每句话你都要用亲亲回应","[both] 拍一张只给对方看的性感照片","[M] 单膝跪地，用最性感的声音对对方说一句情话","[F] 用你的长发撩对方的脸，持续20秒","[M] 拉着对方的手，让对方给你手淫直到你射出来","[F] 给对方口交2分钟，对方喊停才能停","[M] 从后面抱着对方在窗台做爱，拉开窗帘，让对方把乳房压在落地窗上","[both] 在浴室面对面做爱，对方出力，对方数数","[both] 用对方的身体当画板，用舌头在上面画一个图案","[both] 互相口交直到两个人都高潮","[both] 在对方身上留下一个吻痕，位置有对方指定","[both] 让对方在你身体任何部位射精/被射精","[F] 骑在对方身上，主动上下运动1分钟","[M] 让对方骑在你身上，你在下面顶对方1分钟","[both] 到阳台上裸体拥抱1分钟","[both] 互相拍一张裸照给对方永久保存","[M] 把对方的双手按在头顶，从正面进入对方，看着对方的眼睛操","[F] 让对方把你的双手按在头顶，从正面进入你","[both] 做爱的时候全程说 dirty talk，不能停","[M] 射在对方胸上然后用手机拍下来当场删掉","[F] 让对方射在你胸上","[both] 用跳蛋/按摩棒让对方高潮，只能用玩具","[both] 一起洗澡的时候互相给对方涂满沐浴露然后蹭到高潮","[both] 把精液/爱液涂在对方嘴唇上当口红","[both] 让对方面对面坐在你身上，自己动","[both] 在对方的注视下吞下精液/爱液","[M] 在对方体内射精后，用嘴帮对方清理","[F] 让对方在你体内射精后，你用嘴帮对方清理","[both] 一边做爱一边让对方给你讲一个色情故事","[both] 让对方/对方把手指插进你的后面","[both] 把跳蛋塞入后用遥控器，让对方决定什么时候开","[both] 做爱的时候开着免提跟朋友聊天（不暴露在做爱）","[both] 用脚尖挑逗对方的性器官直到对方受不了","[both] 打开手机录像，相互给对方口交，录下来回看（看完可删）","[both] 在离窗户最近的地方做爱，不拉窗帘，让月亮和城市看着你们","[M] 射在对方脸上，然后温柔地帮对方擦掉并亲吻对方的额头","[F] 让对方射在你胸上，然后你把精液当护肤品涂抹在胸口","[both] 把跳蛋放入体内，遥控器交给对方，去楼下便利店买套套再回来","[both] 现在去车里，开到无人的地方，在后座做爱直到两个人都高潮","[M] 让对方给你乳交，用乳房夹着你的阴茎，你看着对方慢慢动","[F] 用你的乳房给对方乳交，可以加一点润滑液，看着对方享受的表情","[both][Q] 你幻想过的最羞耻的dirty talk对话是什么？请完整演一遍","[M][Q] 你最想让对方用什么淫荡的名字称呼你的鸡巴？","[F][Q] 你最想让对方用什么下流的词语形容你的逼？","[both][Q] 你在高潮前最后一刻通常会吼出什么话？","[both][Q] 你幻想过的最完整的淫荡角色扮演对话是什么？详细描述","[M][Q] 你最想让对方用哪种极下流的方式描述自己的逼正在被你操？","[F][Q] 你最想让对方详细描述精液射进你子宫的画面，对方会怎么说？","[both][Q] 你幻想过的最脏的dirty talk里包含了哪些禁忌词语？","[M][Q] 对方完全变成你的性奴时，你会让对方说什么下贱的话？","[F][Q] 对方把你绑起来调教的时候，你最想对方命令你说什么？","[both][Q] 你最大胆的性爱粗口是结合了什么角色或场景？详细说出来","[M][Q] 对方让你把幻想的最下流的话当着对方的面全部说一遍，你会说什么？","[F][Q] 对方让你用最脏的话形容自己高潮时的逼，你怎么说？","[both][Q] 你最想用哪种方言或外语说下流话？为什么会让你更兴奋？","[M][Q] 对方告诉你\"我的逼只给你一个人操\"这句话让你有多强的占有欲？","[F][Q] 对方一边揉你的阴蒂一边说\"这个敏感的小豆豆只有我能碰\"你是什么感觉？","[both][Q] 如果要求你在做爱时全程直播式解说自己的感受，你会怎么说？","[M][Q] 让对方用最淫荡的方式求你把精液射在对方的脸上，对方会怎么求？","[F][Q] 对方让你详细描述自己的逼被操得又红又肿的样子，你会说得多露骨？","[both][Q] 如果让你用最脏最直接的语言描述一次完整的性交过程，你会怎么描述？","[M][Q] 对方变成彻头彻尾的荡妇时会对你说什么最淫贱的话？","[F][Q] 对方化身野兽时在你耳边低吼的最原始、最赤裸的欲望话语是什么？","[both][Q] 你幻想的终极dirty talk是搭配什么BGM或环境说的？全部描述出来","[M][Q] 对方边自慰边对你骚喊\"看我的水全流给你了\"你受得了吗？","[F][Q] 对方一边用玩具折磨你一边说\"求我啊，求我就让你舒服\"你最后怎么求的？","[both][Q] 你们做爱时是否用过\"荡妇\"\"公狗\"之类极度贬义但双方都爽的称呼？","[M][Q] 让对方成为你的泄欲工具时，你会让对方用哪些话来彻底贬低自己来取悦你？","[F][Q] 对方要把你操成只知道高潮的母狗时，你最想听到对方说什么强势的话？","[both][Q] 你听过或幻想过的最无耻、最没底线的一句性爱脏话是什么？","[M][Q] 对方彻底沦为你的性玩具时，你会怎样用言语让对方觉得自己就是为你泄欲存在的？","[F][Q] 对方把你当母狗一样调教时，那些让你觉得自己下贱却兴奋到极点的命令是什么？","[both] 高潮时必须用最下流的话喊出对方的名字，比如\"XXX操死我了\"","[M] 射精前对着对方耳朵低吼\"老子要把精液全灌进你的骚子宫\"","[F] 让对方射在你嘴里，然后含着精液张开嘴说\"谢谢对方的牛奶\"","[both] 两人面对面坐着自慰，全程用淫词浪语描述自己的快感","[M] 把对方操到高潮后，掰开对方的腿看自己的精液流出来，说\"看，我的种在往外流\"","[F] 高潮后用手指沾着自己的爱液涂在对方嘴唇上，说\"尝尝自己的骚味\"","[both] 模仿AV台词做爱：一方说\"客人不可以这样\"，另一方回\"嘴上说不行身体倒很诚实\"","[M] 把对方翻来覆去换姿势，每个姿势都问\"操得你爽不爽？喜不喜欢对方的鸡巴？\"","[F] 全程叫对方爸爸，被操爽了就哭着喊\"爸爸饶了我，女儿要被操坏了\"","[both] 扮演强奸戏码：一方拼命反抗说\"不要\"，另一方说\"你越叫老子越兴奋\"，最后反转","[M] 把对方绑起来，一边用玩具折磨对方一边逼对方详细讲自己被前男友操的经历（如果允许）","[F] 让对方把你当充气娃娃一样用，全程不许说话不许主动，只用身体承受，结束时问\"主人对肉便器还满意吗\"","[both] 用视频记录一次完整的dirty talk做爱，只看一次然后一起删掉","[M] 让对方开着视频通话自慰给你看，全程用脏话指挥对方的动作","[F] 视频指挥对方手淫，快射时命令\"把摄像头对准鸡巴，射给我看\"","[both] 用口红在对方身上写满淫词，如\"骚逼\"\"公狗\"，然后操到字迹模糊","[M] 让对方握住你的鸡巴在龟头上画记号，说\"此物归XX所有，擅动者操死\"","[F] 让对方用记号笔在你大腿内侧写\"正\"字，每高潮一次写一笔","[both] 角色扮演嫖客妓女，妓女必须用最专业的骚话揽客，嫖客狠狠糟蹋","[M] 当对方的面给\"兄弟\"打电话（假装），一边操对方一边聊，对方不能出声但你可以说\"我在忙，有点喘\"","[F] 假装给闺蜜打电话，对方在后面操你，你必须稳住声音聊天，憋不住就娇喘一声假装咳嗽","[both] 整场性爱中，被动方只能回答\"是\"或\"谢谢\"，主动方必须不断羞辱，最后一起高潮","[M] 今晚对方是你的性奴，你说\"爬过来，用嘴替我脱鞋\"，然后完成后续指令","[F] 今晚你是对方的女王，命令对方跪下，用最傲慢的语气说\"我的脚趾也需要你的舌头侍奉\"","[both] 把一张你们性爱后的凌乱床照打印出来塞在枕头下，一星期后看谁先发现","[M] 在日历上标记\"操对方日\"，到那天必须让对方下不了床","[F] 用经期记录app设置\"受孕危险期\"，截图发对方配文\"这几天你要努力\"","[both] 角色互换：平时被动的人今天全程脏话主动，主动方只能娇喘服从","[M] 对方今天扮演女流氓，把你推倒骑上来，抓住你双手说\"别动，让老娘爽完再说\"","[F] 你扮演霸道女总裁，命令对方脱光躺平，拿着皮鞭轻抽说\"今晚我要看到你所有的本事\""],
+  "role-cast": ["[both][Q] 你最想让对方扮演什么角色？","[both][Q] 你觉得我们之间最适合哪种角色设定？","[both][Q] 你有没有幻想过我们是什么电影里的角色？","[M][Q] 你更想让对方扮演清纯系还是御姐系？","[F][Q] 你更想让对方扮演霸道总裁还是暖男？","[both][Q] 如果我们可以互换身份一天，你最想做什么？","[both][Q] 你幻想过的主仆设定是什么样的？","[both][Q] 你对角色扮演中的台词有偏好吗？","[both][Q] 你最想体验哪种禁忌身份的关系？","[both][Q] 你觉得角色扮演中最重要的是什么？","[both][Q] 你幻想过扮演嫖客和妓女的场景吗？","[both][Q] 你想让我叫你爸爸/主人，还是用平时的称呼？","[M][Q] 你更想让对方扮演清纯学生妹还是风骚女秘书？","[F][Q] 你更想让对方扮演霸道总裁还是温柔家教？","[both][Q] 你想过在角色扮演中被叫什么吗？爸爸/哥哥/主任/老师？","[both][Q] 如果要在朋友面前扮演陌生人搭讪，你会怎么演？","[both][Q] 你幻想过扮演被绑架者/劫匪的场景吗？","[both][Q] 你最想让对方穿上什么衣服/制服来勾引你？","[both][Q] 你觉得角色扮演必须要有台词还是动作更重要？","[both][Q] 你最想让对方扮演哪个电影或游戏里的角色和你做爱？","[M][Q] 你想让对方扮演被你抓住的女间谍然后逼供的情节吗？","[F][Q] 你想让对方扮演闯入你房间的窃贼然后被你制服的戏码吗？","[both][Q] 你希望角色扮演中对方完全入戏不笑场，还是可以偶尔破功？","[both][Q] 你愿意尝试历史人物扮演吗？比如埃及艳后与凯撒。","[both][Q] 你觉得角色扮演时说什么样的台词最能让你瞬间兴奋？","[both][Q] 你想让对方穿上制服然后把你当成犯罪嫌疑人审问吗？","[both] 用对方选的一种身份和语气对TA说一句话","[both] 模仿一个你觉得对方会喜欢的电影角色","[both] 用霸道总裁/小甜心的语气说一句我爱你","[both] 角色扮演5分钟：你是刚下班的老板，TA是新来的助理","[both] 角色扮演5分钟：你是医生，TA是病人","[both] 角色扮演5分钟：你是老师，TA是学生","[M] 扮演一个霸道总裁，命令对方做一件事","[F] 扮演一个撒娇的女友，用要求的口吻让对方满足你","[M] 扮演主人的角色，命令对方叫你主人","[F] 扮演奴隶的角色，跪下叫对方主人","[both] 角色扮演5分钟：你是嫖客，TA是妓女，谈好价钱开始服务","[both] 角色扮演5分钟：你是严格的健身教练，TA是偷懒的学员","[both] 角色扮演5分钟：你是黑帮老大，TA是被抓的小弟/小妞","[both] 角色扮演5分钟：你是变态粉丝，TA是你的偶像","[both] 角色扮演5分钟：你是交警，TA是违章女司机","[both] 角色扮演5分钟：修理工和寂寞主妇","[both] 角色扮演10分钟：你是严厉的军官，我是犯错的新兵，你要惩罚我","[both] 角色扮演15分钟：我是上门按摩师，你是独居的寂寞太太，剧情自己编","[M] 扮演一个衣冠禽兽的教授，对方是你的学生，你来\"辅导功课\"","[F] 扮演新来的女仆，不小心打碎了花瓶，请求主人原谅并接受惩罚","[both] 把对方当成你暗恋已久但不敢表白的人，现在借着酒劲终于表白并发生关系","[both] 你是一名服务生，我是喝醉的客人，你可以对我\"为所欲为\"但我不记得"],
+  "role-lost": ["[both][Q] 你幻想过师生/医患之类的角色设定吗？","[both][Q] 如果让你设计一个完整的角色扮演剧本，会是什么？","[both][Q] 你希望在角色扮演中被怎么称呼？","[both][Q] 你对制服诱惑有什么幻想？","[both][Q] 你最想让我穿上什么制服，然后操对方，或者反过来让对方操？","[both][Q] 你幻想的强奸戏码是什么样的？谁主动？","[both][Q] 你幻想过扮演性奴和主人的完整场景吗？","[both][Q] 你愿意在被下药/灌醉的假设下被为所欲为吗？","[both][Q] 你幻想过警察和犯人的角色扮演吗？","[both][Q] 你是否想尝试完整的\"养成\"剧情，比如你把对方从小调教成你想要的样子？","[both][Q] 你幻想过被卖到妓院然后被各种客人轮流使用的剧本吗？","[both][Q] 如果允许禁忌角色，你最想让对方扮演你的谁？比如继父、老师、学长？","[both][Q] 你想在扮演中被\"洗脑\"然后完全服从于对方吗？","[both][Q] 你幻想过自己被当成拍卖品，在众人面前被出价竞拍的场景吗？","[both] 角色扮演10分钟：你是客人，TA是特殊服务者","[both] 角色扮演10分钟：设定一个你们从未尝试过的禁忌关系","[both] 穿上对方指定的一种风格服装，扮演对应的角色","[both] 全程用第三人称称呼自己和对方，持续10分钟","[both] 角色扮演10分钟：你是面试官，TA是求职者，用性换取职位","[both] 穿上对方指定的角色服装，演完完整的一场戏","[both] 角色扮演15分钟：你是绑架犯，TA是人质，你可以提任何要求","[both] 角色扮演15分钟：在大学宿舍里偷情，怕被人发现那种感觉","[both] 角色扮演15分钟：你是主人，TA是被你囚禁的性奴","[both] 角色扮演20分钟：我是被你绑架的仇家女儿，你要审问我并得到你想要的情报","[both] 今晚的做爱变成一场\"交易\"：你是妓女/男妓，我是嫖客，谈好价格再开始","[both] 角色扮演：我是昏迷的病人，你是照顾我的护士，然后我醒来\"报答\"你","[both] 你们是初次约会的网友，从见面尴尬到干柴烈火，全程即兴演出来","[both] 角色扮演：我是被你抓住的盗贼，你要把我交给警察还是私下惩罚？你来决定","[both][Q] 你幻想过「被遥控」吗——身体还是自己的，但一举一动由另一个人在房间外面控制？","[both][Q] 你幻想过「交换」吗——两个人的性格、癖好、甚至身体全部换过来，谁都不能中途换回去？","[both][Q] 你幻想过「发情」吗——完全失去理智，只剩本能，被怎么用都行？","[both][Q] 你幻想过把整段戏「录下来」吗——全程不中断，谁都不能喊停，录完以后要反复看？","[both] 角色扮演20分钟：我是驯兽师，TA是刚被送来的人，从编号、到规矩、到服帖，一步一步训","[both] 角色扮演15分钟：交换身体——你用我的声音说我的台词，我用你的声音说我的台词，谁都不许笑场","[both] 角色扮演15分钟：我是被直播的那个人，镜头后面一直在下指令，弹幕滚得停不下来，我必须照做"],
+  "kink-list": ["[both][Q] 你更偏向主导还是顺从的一方？","[both][Q] 你对叫对方什么称呼有特别的偏好吗？","[both][Q] 你有没有幻想过被完全掌控的感觉？","[both][Q] 你想掌控对方还是被对方掌控？","[M][Q] 你在关系中更想要主导权还是平等？","[F][Q] 你愿意在什么时候把主导权交给对方？","[both][Q] 你想让对方在你的身体上写字吗？写什么？","[M][Q] 你更想打对方屁股还是让对方打你屁股？","[F][Q] 你更想被对方打屁股还是你打对方？","[both][Q] 你对露阴/展示身体部位有什么看法？","[both][Q] 你有没有在性爱中说过粗口？喜欢被说还是说别人？","[both][Q] 你愿意被对方用任何方式使用你的身体吗？","[M][Q] 你想过让对方叫你爸爸吗？在什么时候？","[F][Q] 你想过叫对方爸爸吗？在什么时候？","[both][Q] 你幻想过被在公共场所偷偷操控（遥控跳蛋等）吗？","[both][Q] 你愿意被对方用任何方式标记为你的人吗？","[both][Q] 你喜欢在性爱中被说脏话还是被夸？","[both][Q] 你幻想过被对方锁在笼子里吗？","[both][Q] 你更希望对方命令你做一些羞耻的事，还是粗暴地直接强迫你做？","[M][Q] 你想让对方舔你的脚吗？或者让你舔对方的脚？","[F][Q] 你愿意让对方把你当作家具使用吗？比如脚凳、烟灰缸？","[both][Q] 你喜欢被骂脏话还是被温柔羞辱？两者分别喜欢什么词？","[both][Q] 你有没有自慰的时候想过被对方完全控制身体、剥夺感官的场景？","[both][Q] 你希望对方在做爱时扇你耳光吗？多用力？","[both][Q] 你幻想过被对方关进笼子过夜吗？","[both] 用TA指定的称呼叫TA，持续一整轮","[M] 用命令的语气对对方说一句话","[F] 用服从的态度回答对方下一个问题","[both] 闭上眼睛，完全听从对方的指令做一件事","[both] 跪在对方面前保持30秒","[both] 脱光上衣，让对方面对面看着你30秒","[M] 命令对方跪下，抬头看着你","[F] 跪在对方面前，抬头看着对方","[both] 让对方在你大腿内侧用手指写一个字，猜是什么","[M] 命令对方摆出一个你最喜欢的姿势，不许动","[F] 摆出对方最喜欢的姿势跟对方求欢","[both] 用手指在对方全身画线条，直到对方说出最痒的地方","[M] 抓住对方的头发，轻轻地引导对方的头到你想要的位置","[F] 让对方抓住你的头发来引导你","[both] 让对方用丝袜/内裤塞进你的嘴里10分钟","[both] 被对方用皮带牵引着从客厅爬到卧室","[both] 让对方像狗一样趴在地上，用嘴把地上的衣服叼到床上","[M] 命令对方给你舔脚，从脚趾到脚背，直到你喊停","[F] 跪在对方面前，双手背在后面，用嘴解开对方的腰带","[both] 让被支配方用口接住支配方吐出的任何液体（水、酒等）","[both] 命令对方当着你面抚摸自己最隐秘的部位，同时描述感受","[both] 互相用皮带在对方手心轻轻抽三下，力度由对方规定","[both] 对着窗户，让对方从后面拽着你的头发操你，嘴里要说\"再深一点\""],
+  "kink-beyond": ["[both][Q] 你幻想过被捆绑吗？具体是怎样的场景？","[both][Q] 你对体罚类的调教有什么看法？","[both][Q] 你接受指令服从类的玩法吗？","[both][Q] 你最不能接受的一种调教方式是什么？","[both][Q] 你曾经在网上查过或幻想过的特殊玩法是什么？","[both][Q] 你觉得信任在调教中占多大比重？","[both][Q] 你幻想过被命令做一些羞耻的事吗？","[both][Q] 你对性玩具在调教中的使用持什么态度？","[both][Q] 你接受被命令公开自慰吗？","[both][Q] 你幻想过被用皮带/戒尺打吗？打在哪个部位？","[both][Q] 你对精液/体液的玩法接受度如何？","[both][Q] 你愿意被绑在床上被随意玩弄吗？","[both][Q] 你有没有想过在公共场合被偷偷指令做某事？","[both][Q] 你愿意让摄像头记录下你们调教的过程吗？","[both][Q] 你接受被绑着然后被陌生人观看吗？","[both][Q] 你对扣喉/唾液等体液交换玩法能接受到什么程度？","[both][Q] 你有没有幻想过被当作性玩具使用？","[both][Q] 你愿意接受身体留下印记（吻痕/齿痕/淤青）吗？在哪个部位？","[both][Q] 你对金丝雀/包养类的玩法有什么幻想？","[both][Q] 你愿意被对方当作公共物品使用吗？在什么范围内？","[both][Q] 你愿意在性爱中被扇耳光吗？轻还是重？","[both][Q] 你幻想过24/7全天候的主奴关系吗？","[both][Q] 你对24/7全天候主奴关系感兴趣吗？愿意试多久？","[both][Q] 你愿意被对方牵着项圈到户外（如小区花园）走一圈吗？","[both][Q] 如果让你设计一个调教合约，上面必须写的三条规矩是什么？","[both][Q] 你幻想过在调教中使用电击项圈吗？电到什么程度？","[both][Q] 有没有一种调教方式让你又怕又兴奋？是什么？","[both] 让对方用丝巾或领带蒙住你的眼睛","[both] 让对方绑住你的双手，持续5分钟","[both] 扮演顺从方，完成主导方提出的一个合理指令","[both] 在身上写一个对方指定的字或符号","[both] 趴在对方腿上保持惩罚姿势1分钟","[both] 用最羞耻的语气说出对方指定的一句话","[both] 脱光全身，站在对方面前1分钟任由对方打量","[M] 用皮带轻轻抽打对方的屁股三下","[F] 趴在对方腿上让对方打你屁股五下","[both] 让对方用绳索/领带绑住你的手腕和脚踝","[both] 在对方的注视下自慰直到高潮","[M] 拉着对方的手，让对方握住你的鸡吧，你教对方怎么让你最舒服","[F] 跪着用嘴帮对方口交，手背在后面","[both] 在对方的脖子上留下明显的吻痕","[both] 用你的牙齿轻轻咬遍对方的全身（不能真的用力）","[both] 在对方身上留下你的齿痕，位置TA选","[M] 命令对方跪下，张开嘴，你站在对方面前","[F] 跪下张开嘴，抬头看着对方等对方的下一步指令","[both] 让对方用绳子在你身上绑一个简单的龟甲缚","[both] 用你的精液/爱液在对方脸上画一笔","[both] 全程用\"是的主人/是的主人\"回答对方，持续5分钟","[both] 让对方用脚踩在你的背上/胸前","[both] 被对方用衣夹夹在乳头上（力度适中）","[both] 让对方在你身上用指甲划出TA想写的字","[both] 在对方的注视下，自己用手指插入自己的后面","[both] 在身上最羞耻的地方用马克笔写上\"母狗/公狗\"字样，保持到游戏结束","[both] 戴上项圈，被对方牵着在房间内爬三圈，每爬一步说一声\"谢谢主人\"","[M] 命令对方蹲在墙角，面壁自慰，你不说停对方不能停","[F] 让对方把你绑在椅子上，然后用跳蛋折磨你，直到你答应对方的一个要求","[both] 在被支配方的体内（阴道/肛门）塞入一个震动的跳蛋，去阳台站一分钟","[both] 让支配方用穿过的内裤塞进被支配方的嘴里，保持5分钟不许吐出来"],
+  "bond-first": ["[both][Q] 你对绑缚有什么看法？想尝试吗？","[both][Q] 你更想被蒙眼还是被绑手？","[both][Q] 你对轻度疼痛（打屁股等）是什么态度？","[both][Q] 你更想绑对方还是被对方绑？为什么？","[both][Q] 你愿意被蒙着眼让对方为所欲为吗？","[both][Q] 你对窒息/呼吸控制有什么看法？玩过吗？","[both][Q] 你接受被手铐/脚镣固定住吗？想象一下那个画面","[both][Q] 你觉得窒息/掐脖子在性爱中刺激吗？试过吗？","[both][Q] 你最多能承受被连续鞭打多少下？用什么工具？","[both][Q] 你喜欢被绑在什么材质上？麻绳、皮革还是金属手铐？","[both][Q] 你最想让对方在你身上滴蜡的敏感区域是哪里？","[both][Q] 你有过在束缚中达到干性高潮的经历吗？想不想试试？","[both][Q] 你更想当被绑的那个，还是绑人的那个？为什么？","[both] 用领带/丝巾蒙住眼睛3分钟","[both] 让对方用冰块在你手臂上画一个图案","[both] 趴下，让对方轻拍你的背部10下","[both] 蒙上眼睛，双手绑在背后，保持5分钟","[both] 让对方用领带蒙住你的眼睛，然后用羽毛/手指轻挑你的全身","[both] 让对方用冰在你全身滑动，每次停在你最敏感的地方5秒","[both] 双手被绑住，只用嘴帮对方脱掉上衣","[both] 跪在床上双手背后，让对方用口球/丝巾塞住你的嘴","[both] 被对方用领带牵着在房间里走一圈","[both] 蒙眼，让对方用不同的材质的物品（丝绸/皮革/羽毛/冰）触碰你","[both] 用领带或绳子将对方的双手绑在床头，然后用手抚摸全身直到TA求饶","[both] 把眼睛蒙上，耳朵用耳机放白噪音，然后让对方用不同温度的东西碰你","[both] 把冰块放进对方的肛门或阴道，直到融化完","[both] 让对方用木梳轻轻拍打你的屁股，每打一下你说一个自己的缺点","[both] 将对方四肢固定成大字形，然后用羽毛和冰块交替刺激敏感带","[both][Q] 绳结在皮肤上留个印子才算真的被绑过，你想要浅一点的还是明显到第二天还在的？","[both][Q] 被蒙住眼睛的时候，你更怕看不见，还是更怕听得太清楚？","[both][Q] 被绑住的时候，你是更怕自己动不了，还是更怕对方停下来不管你了？","[both][Q] 对方拿着绳子朝你走过来的时候，你第一个念头是「快点」还是「等等」？","[both] 让对方用丝巾蒙住你的眼睛并把你的嘴系住，然后在你耳边问一句你们之间的事，你只能点头或摇头回答","[both] 让对方用领带把你的手腕绑在背后，再把你的衬衫下摆塞进裤腰，让你只能小幅度地动，听着对方一步步靠近","[both] 让对方用细绳把你的五根手指一根根绑在椅子的栏杆上，你只能靠拇指和嘴唇去够对方放在桌上的东西"],
+  "bond-deep": ["[both][Q] 你幻想过被完全控制身体的感觉吗？","[both][Q] 你对感官剥夺（蒙眼/耳塞）感兴趣吗？","[both][Q] 你觉得BDSM中最需要的是什么？","[both][Q] 你对T/D/S/M哪种角色更认同？","[both][Q] 你最大的界限在哪里？什么绝对不能碰？","[both][Q] 你有没有尝试过轻度窒息或压迫感？","[both][Q] 你对蜡油/冰块等温度玩法感兴趣吗？","[both][Q] 你接受被绑住并用跳蛋/按摩棒玩弄吗？","[both][Q] 你对SP（打屁股/spanking）能接受到什么程度？","[both][Q] 你幻想过被固定在床架上完全不能动的场景吗？","[both][Q] 你知道自己的安全词是什么吗？如果没有，现在想一个","[both][Q] 你想尝试滴蜡吗？用低温蜡烛还是普通蜡烛？","[both][Q] 你愿意被固定在BDSM架/床上被随意玩弄多久？","[both][Q] 你有没有幻想过被吊起来？被绑在什么地方？","[both][Q] 你接受被强迫高潮（过度刺激）吗？","[both][Q] 你对电击/电流玩具了解多少？想试试吗？","[both][Q] 你觉得自己能承受多强的疼痛？从1到10打分","[both][Q] 你对悬挂捆绑感兴趣吗？如果保证安全愿意试吗？","[both][Q] 你愿意尝试真空床或木乃伊式的全身包裹吗？","[both][Q] 你幻想过被倒吊起来然后被任意操弄吗？","[both][Q] 你想尝试用胶带完全封住嘴巴和眼睛，仅靠触觉被玩弄吗？","[both][Q] 你有没有想过在束缚中加入低温或高温元素（如热蜡、冰块）？","[both][Q] 你想被绑在十字架上像耶稣一样被折磨吗？","[both][Q] 你幻想过在BDSM聚会上被当众调教吗？","[both] 让对方用绳子或丝巾绑住你的手腕5分钟","[both] 蒙上眼睛，让对方用羽毛/手指轻触你的全身","[both] 双手被绑的情况下完成对方的一个指令","[both] 让对方在你背上用指甲轻轻划出TA的名字","[both] 体验2分钟的全感官剥夺（蒙眼+戴耳塞）","[both] 让对方用冰在你锁骨上慢慢滑动","[both] 对方绑住你的手脚，蒙上眼睛，用冰在你身上随意滑动2分钟","[both] 用丝巾蒙眼，双手被绑，让对方用跳蛋挑逗你直到你求饶","[both] 让对方用低温蜡烛在你背上滴蜡3次","[both] 被绑在床上，让对方给你口交直到你高潮","[both] 对方每打你屁股一下，你就要用越来大声呻吟","[both] 被绑在椅子上，让对方用羽毛/手指挑逗你但不能高潮","[both] 眼睛被蒙住，让对方用不同的物品触碰你，猜是什么","[both] 用领带从后面勒住对方的脖子（轻轻的不用力），保持10秒","[both] 趴着被对方用皮带/手掌打屁股10下，每下都要数数","[both] 双手双脚被绑、蒙眼，被对方用冰和温水交替刺激身体5分钟","[both] 双手被吊起/绑在头顶，站着被对方玩弄","[both] 被绑住双腿分开固定，对方决定什么时候结束","[both] 在安全词的保障下，让对方突破你一个平时的底线","[both] 让对方用低温蜡烛在你身上滴蜡，你先选一个部位","[both] 将对方用龟甲缚绑好，然后放置30分钟，期间在面前自慰但不许碰TA","[both] 用低温蜡烛在对方后背滴出一个心形，然后拍照留念","[both] 双手被吊在门框上（脚可着地），蒙眼，让对方用皮鞭轻抽大腿内侧","[both] 蒙眼被束缚后，用振动棒刺激到边缘，但每次快高潮就停下，反复三次","[both] 用夹子夹住对方的乳头和阴蒂/龟头，然后用手指轻弹","[both] 尝试轻度窒息：用手轻压颈部侧边，同时进行后入式，每30秒松开","[both] 在安全词的保护下，进行一次\"审讯\"模拟，对方不招供就一直轻度折磨"],
+  "rhythm-control": ["[both] 先把衣服慢慢褪到肩头，让皮肤碰到微凉的空气。","[both] 跟着节拍，一下，一下，深呼吸。别急着进入状态。","[both] 把手放到你最想要被抚摸的地方。对方让你动，你才动。","[both] 跟住节拍，慢慢加快，感受自己开始发烫。","[both] 快一点。跟着节拍，不许慢下来。","[both] 对，就这样，让节奏带着你走。","[both] 停。现在，立刻，停住。","[both] 手离开。忍住，把那股冲动咽回去。","[both] 再来。比刚才更快，对方盯着你。","[both] 停住。又不许动了。","[both] 你很想要吧，但对方没说可以。深呼吸，把它压下去。","[both] 乖。做得很好，你。","[both] 现在把手松开，慢慢呼吸，让身体回到平静。","[both] 坐下，放松，把手放好。对方会告诉你每一步该怎么做。","[both] 开始。慢慢的，跟着节拍抚摸自己。","[both] 加速，不要因为舒服就偷懒。对方要你对对方诚实。","[both] 快。跟着对方给你的速度，靠近那个边缘。","[both] 停！手离开！","[both] 忍住，你。这是今晚第一次，不许交出去。","[both] 回到刚才的节奏。马上。","[both] 停住。又到边缘了。","[both] 对方正看着你。你要是敢擅自交代，今晚就到此为止。","[both] 放慢，感受每一拍，别逃开这种折磨。","[both] 第三次。停。","[both] 忍住。这是今晚最后一次寸止，撑过去，对方给你奖励。","[both] 做得很好，你。奖励你。","[both] 现在把手还给对方，轻轻深呼吸，感受自己的出色。","[both] 把衣服交给这个夜晚。深呼吸，让身体先冷下来。","[both] 慢慢开始，跟住节拍，从最浅的地方开始。","[both] 加速一点，让皮肤开始发烫。","[both] 快起来。什么都别想，交给对方。","[both] 停。悬在那里。","[both] 不许动。把冲动钉在原地，感受它在骨头里烧。","[both] 忍住，你。对方在看着你，别让对方失望。","[both] 重新开始，慢慢往上爬。像刚才那样听话。","[both] 冲。比刚才更快，这一次你更接近了。","[both] 停住。","[both] 你又要到边缘了，对吗？但对方还是没有说可以。","[both] 最后一次攀升。最高、最快的节奏。","[both] 现在，可以了。对方允许你了。","[both] 你是对方见过最听话的。今晚做得非常好。","[both][Q] 对方把节拍压到最慢，慢到每一次呼吸都听得见。对方问：此刻你想要它快一点，还是就这样慢着？","[both][Q] 对方停住不动，也不说停。对方要你回答：现在你最想被允许做的那一件事，是什么？说出来，对方照做。","[both][Q] 对方说「停」，你就真的停了。这一秒你在想什么？对方要你把刚才脑子里那句话原样讲出来。","[both][Q] 如果现在允许你换一个指令——不是换一个动作，是换掉对方控制你节奏的方式——你会换成什么？对方照做。","[both][Q] 对方数到一半忽然停住。对方要你回答：刚才那几秒里，第几秒最难熬？","[both][Q] 对方把手放上来，自己不动，只让你动。对方问：这样你更想要它替你动，还是更想要你自己动？","[both][Q] 对方说「快一点」，你就真的快了。对方要你回答：快起来的那一下，你心里是更爽了，还是更慌了？","[both][Q] 对方说「今晚不许交出去」。对方要你回答：这句话里，哪一个字最让你难受——是「今晚」，是「不许」，还是「交出去」？","[both][Q] 对方把节拍从快调回慢。对方问：慢下来之后，你反而更想要了，还是那股劲真的退了？","[both][Q] 对方忽然凑到你耳边说「乖」。对方要你回答：这一个字你想再听一次，还是想听对方换个别的词？","[both][Q] 对方数到三才放手，而且真的数到了三。对方要你回答：等到三的那一下，你心里是松了口气，还是后悔了？","[both][Q] 对方整个晚上只说了三个词：慢、停、走。对方要你回答：这三个词里，哪一个你听得最多？哪一个最难熬？","[both][Q] 对方问「还要不要」。对方要你回答：你要如实说，还是你想让对方猜？这两个答案今晚各会发生什么？","[both][Q] 对方把节奏整个交给你十秒。十秒到了，对方要你回答：刚才那十秒你用它做了什么？原本打算做的那件事，你做到第几步？"],
+  "role-lines": ["[both] 以「护士」的身份对对方说：进来了就坐。姓名、性别，先核对一下，别走错科室。","[both] 以「护士」的身份对对方说：嗯。今晚是我值班。对方预约的\"睡眠障碍\"，是吧？","[both] 以「护士」的身份对对方说：躺到那张床上去。躺平。先做个简单的查体，我看看对方哪里出了问题。","[both] 以「护士」的身份对对方说：裤子退下来，退到膝盖。","[both] 以「护士」的身份对对方说：站开腿。站好了，别晃。","[both] 以「护士」的身份对对方说：手别挡着。放身体两侧，别碰。","[both] 以「护士」的身份对对方说：把包皮翻起来，露出冠沟。对。先晾着，我看看。","[both] 以「护士」的身份对对方说：现在，开始用对方平时习惯的那个手，开始撸。","[both] 以「护士」的身份对对方说：就按对方平时怎么弄的怎么来，不用刻意快。我只看结果。","[both] 以「护士」的身份对对方说：对。就这样。保持这个速度，别停下来。","[both] 以「护士」的身份对对方说：……怎么撸了半天还没硬？","[both] 以「护士」的身份对对方说：速度有了，节奏不对。平时也是这么敷衍自己的？","[both] 以「护士」的身份对对方说：别停。接着来，我还没写记录。","[both] 以「护士」的身份对对方说：嗯。……这回上来了。有点慢，但上来了。手别松，保持。","[both] 以「护士」的身份对对方说：光是自己乱来，效率太低。接下来按我的节奏来。","[both] 以「护士」的身份对对方说：我说快，对方就快。我说慢，对方就慢。","[both] 以「护士」的身份对对方说：快。","[both] 以「护士」的身份对对方说：再快。对，这个力度才合格。","[both] 停。立刻停。","[both] 以「护士」的身份对对方说：临界值到了。擦干净，平躺，等它自己软下来。","[both] 忍着。这是正常流程，你不是第一个这样的病人。","[both] 以「护士」的身份对对方说：休息够了。再来一次，这次不许碰，用我说的方法。","[both] 以「护士」的身份对对方说：把手放回去。对，就刚才那个位置。","[both] 以「护士」的身份对对方说：开始。这次给我控制住，我数到三之前，不许到临界值。","[both] 一。二。","[both] 以「护士」的身份对对方说：……对方以为我会数到三？","[both] 忍着。今天你的\"阈值\"，由对方来定。对方不开口，就不许结束。","[both] 以「护士」的身份对对方说：看在配合度还可以的份上，今晚给对方开一针。","[both] 以「护士」的身份对对方说：给药方式特殊，得全程听医嘱。我说放，对方才许放。","[both] 以「护士」的身份对对方说：来，继续。跟着我的手速……对……这次别赶，稳住。","[both] 以「护士」的身份对对方说：快了……别停……现在……放。","[both] 以「护士」的身份对对方说：好了。做完了。配合得不错，对方。","[both] 以「护士」的身份对对方说：记录写完了。对方的情况，需要复诊。","[both] 以「护士」的身份对对方说：明天凌晨两点，还来。挂号不用，直接来护理站找我。","[both] 以「老师」的身份对对方说：进来，把门关上。","[both] 以「老师」的身份对对方说：站过来。站到我跟前，别杵在门口。","[both] 以「老师」的身份对对方说：对方最近，功课落了不少。今天的作业，重新做一遍。","[both] 以「老师」的身份对对方说：这一题，错的离谱。讲讲，当时怎么想的。","[both] 以「老师」的身份对对方说：答不上来？那就是基础没打牢。","[both] 以「老师」的身份对对方说：答不上来，就按我的方法来。","[both] 以「老师」的身份对对方说：站直。双手背到身后。先把这道题，想清楚。","[both] 以「老师」的身份对对方说：站着的感觉怎么样？下次还交不交白卷？","[both] 以「老师」的身份对对方说：看对方这站姿，还是没明白。头抬起来，目视前方，腰挺直。","[both] 以「老师」的身份对对方说：对。就这样站着。没有我的允许，不许动。","[both] 以「老师」的身份对对方说：光站着，长不了记性。今天，得罚得重些。","[both] 以「老师」的身份对对方说：皮带解开。裤子退到膝弯。","[both] 以「老师」的身份对对方说：手放背后，别挡着。我要检查的，不是对方的手。","[both] 以「老师」的身份对对方说：……罚都罚了，对方倒是紧张个什么。放松。","[both] 以「老师」的身份对对方说：补课，讲究的是方法。跟着我说的做。","[both] 以「老师」的身份对对方说：用对方的手。对，就那样。速度，听我的。","[both] 以「老师」的身份对对方说：快。……再快。对，这个力度，才算及格。","[both] 停。手拿开。","[both] 以「老师」的身份对对方说：这道题，又没做到位就急着交卷。","[both] 忍着。补课没结束之前，不许交卷。","[both] 以「老师」的身份对对方说：重做一遍。这次，不许看表，不许催，跟着我的口令。","[both] 以「老师」的身份对对方说：开始。……对。……慢一点，别赶。","[both] 以「老师」的身份对对方说：好。到了这个程度，先给我停在这儿，稳住。","[both] 以「老师」的身份对对方说：我没说停，对方为什么停。","[both] 以「老师」的身份对对方说：……不过停都停了，那就继续忍着。","[both] 忍着。这张卷子，什么时候交，对方说了算。","[both] 以「老师」的身份对对方说：态度还算端正，这道题，给过了。","[both] 以「老师」的身份对对方说：现在，跟着我。我说快，对方就快。我说放——就放。","[both] 以「老师」的身份对对方说：来。……快。……再快。……","[both] 以「老师」的身份对对方说：……现在，放。","[both] 以「老师」的身份对对方说：及格了，对方。今晚的补课，到这里。","[both] 以「老师」的身份对对方说：作业，明天还要检查。别迟到。","[both] 以「老师」的身份对对方说：走的时候，把灯关了。","[both] 以「空乘员」的身份对对方说：对方好，欢迎登机。请对方先把座椅调直。","[both] 以「空乘员」的身份对对方说：夜航头等舱，提供的是全私人服务。有任何需要，直接告诉我。","[both] 以「空乘员」的身份对对方说：安全带系好。起飞过程，需要保持安全姿势。","[both] 以「空乘员」的身份对对方说：夜航请放松。我来帮您……平复一下身体状态。","[both] 以「空乘员」的身份对对方说：请对方配合我，把时差带来的紧张，先化解掉。","[both] 以「空乘员」的身份对对方说：手，先放扶手上。不要乱动，服务期间请保持。","[both] 以「空乘员」的身份对对方说：把外套脱了，叠好放一旁。对，就这样。","[both] 以「空乘员」的身份对对方说：对方的这套服务，是有固定流程的。请按流程来。","[both] 以「空乘员」的身份对对方说：第一步，先让我看看对方的状态。别紧张，这很正常。","[both] 以「空乘员」的身份对对方说：把手……放上来。对。对方怎么舒服就怎么来，我在旁边记录。","[both] 以「空乘员」的身份对对方说：先生，对方还没有进入状态。","[both] 以「空乘员」的身份对对方说：光靠自己，可能效率不高。需要我提供辅助服务吗？","[both] 以「空乘员」的身份对对方说：对方确认的话，我会提供。但请遵守规则——要我说停，对方就停。","[both] 以「空乘员」的身份对对方说：好。那现在，继续。听我的口令。","[both] 以「空乘员」的身份对对方说：现在进入平飞阶段。对方可以加快速度。","[both] 以「空乘员」的身份对对方说：快。……再快。没有人会打扰对方，这趟航班，只有我们两个。","[both] 以「空乘员」的身份对对方说：深呼吸，对方。跟着口令，稳住。","[both] 暂停。手放开。","[both] 以「空乘员」的身份对对方说：先生，对方已接近临界速度。按安全规章，需要先暂停。","[both] 忍住。暂停是规定动作。对方有的是时间。","[both] 以「空乘员」的身份对对方说：休息好了，我们继续。","[both] 以「空乘员」的身份对对方说：这次，我给对方记着数。听好每一个数。","[both] 以「空乘员」的身份对对方说：我数到三之前，请对方稳住了。","[both] 以「空乘员」的身份对对方说：先生，对方不会以为，我真的会数到三吧。","[both] 忍着。降落之前，这场巡航由对方说了算。","[both] 以「空乘员」的身份对对方说：先生，看对方配合度不错。这趟服务，为对方开启终端。","[both] 以「空乘员」的身份对对方说：现在，听我倒数。每一个数，都要听好。","[both] 以「空乘员」的身份对对方说：对，就这样。……快。……再快。……","[both] 以「空乘员」的身份对对方说：……现在，放。","[both] 以「空乘员」的身份对对方说：先生，本次服务结束。对方表现得很好，对方。","[both] 以「空乘员」的身份对对方说：下机前，请把这个喝完。别浪费。","[both] 以「空乘员」的身份对对方说：期待对方下次登机。还是这趟航班，还是这个名字。","[both] 那是对方的声音。对方今晚说\"公司团建\"。原来团建，团到这里来了。","[both] 放慢呼吸，站在门外。对方让你走，你才能走。","[both] 别关上门。就站在那儿看，看仔细，这是给你上的一课。","[both] 以「总经理」的身份对对方说：门口那个，进来，把门带上。","[both] 让对方对你说：「把门锁上。今晚我加班，要加到你走为止。」","[both] 以「总经理」的身份对对方说：别看了，看得我烦。弄到隔壁档案室去，等我忙完再说。","[both] 停。别贴着门了，跪到中间去。","[both] 忍住。今晚没人碰你，你就听着，把这份难受咽下去。","[both] 停。手收回来。","[both] 深呼吸。忍着。对方不点头，你碰都不许碰。","[both] 以「健身教练」的身份对对方说：来接人？行，对方正好练完。","[both] 让对方对你说：「你，来，帮我把水递过来。」","[both] 让对方对你说：「我去冲个澡，换身衣服，你等我会儿。」","[both] 以「健身教练」的身份对对方说：嫂子，这儿酸不酸？我帮对方按按，练完得放松。","[both] 以「健身教练」的身份对对方说：嫂子练得好，明天继续啊。","[both] 让对方对你说：「别乱说……我就是练得累了。」","[both] 停。深呼吸，手别把方向盘握那么死。","[both] 忍住。今晚对方累了，你也别闹。先说几句话。","[both] 停。手放回去。","[both] 想清楚再说。对方可没那么好说话。你要碰对方，得先说明白。","[both] 以「陌生男人」的身份对对方说：还是这么漂亮。当年要不是对方先下手，我可就……哈哈，开玩笑，敬一杯。","[both] 让对方对你说：「去啊，人家跟你说话呢。别让人家觉得你小气。」","[both] 让对方对你说：「那我敬你。这些年，谢谢你一直惦记着。」","[both] 以「陌生男人」的身份对对方说：嫂子敬的，必须喝。……喝完了，能跟嫂子说句话吗？","[both] 以「陌生男人」的身份对对方说：我送对方回去。对方，坐后面，我开车稳。","[both] 停。深呼吸，手别攥那么紧。","[both] 忍住。快到家了，到家再说。现在，一个字都别多说。","[both] 车停在你家楼下。对方被扶着上楼，回头看了你一眼：\"我头晕，今晚你睡沙发吧。\"","[both] 停。先说清楚，你今晚一肚子的火，想往哪儿发？","[both] 想清楚再回答。对方不是随便的人。你要碰对方，得先过对方这一关。","[both][Q] 对方今晚扮演「护士」，已经演了整场。对方要你回答：这个角色说过的哪一句，你到现在还分不清是真心，还是只是台词？","[both][Q] 对方扮演「老师」，给你判了「重做」。对方要你回答：如果这个角色换成你，你会不会用同样的语气念出那句评语？","[both][Q] 对方在演「空乘员」，正在等你开口。对方要你回答：你最想对扮演这个角色的对方回一句什么？现在说出来，对方照接。","[both][Q] 对方扮演「总经理」一整晚没给好脸色。对方要你回答：这个角色身上，哪一点让你想起你自己？","[both][Q] 对方演「健身教练」，递过来一瓶水。对方要你回答：这个角色刚才那句话，是顺着话说出来的，还是特意说给你听的？","[both][Q] 对方在角色里一直没叫过你的名字。对方要你回答：这一整晚你最想听到它出现在哪一句话里？","[both][Q] 对方用角色的语气叫了一声「乖」。对方要你回答：这一个字从角色嘴里说出来，和平时听到，有什么不一样？","[both][Q] 对方在角色里给你下了道命令，你照做了。对方要你回答：刚才那一下，你是听角色的，还是听对方的？","[both][Q] 对方演「空乘员」，守着规矩不越线。对方要你回答：你想让这个角色在哪一句台词上越线？说出那一句的原话。","[both][Q] 对方演「老师」，罚完让你走了。对方要你回答：如果还有一次机会，你想让这个角色对你说的最后一句话是什么？","[both][Q] 对方在角色里要你忍着。对方要你回答：刚才忍住的那些，你最想用哪一句说给对方听？","[both][Q] 对方扮演「护士」，刚写完「记录」。对方要你回答：这份记录里，你最想让对方写上去的是哪一句？","[both][Q] 对方演「健身教练」，笑着说「练得不错」。对方要你回答：这句夸奖你信了几分？如果换成别的角色说，你还信吗？","[both][Q] 对方今晚演过不止一个角色。对方要你回答：这些角色里，哪一个最像你自己演不出来的那个你？"],
+  "scene-undercurrent": ["[both] 坐好。手放膝盖上。对方没让你动，你就不许动。","[both] 跟着节拍，深呼吸。听这些，你会难受。难受也要听。","[both] 捏紧拳头，别松开。记住这种感觉——它是你今晚的主角。","[both] 这句，给对方听好了。白天是对方，夜里是别人的骚货。","[both] 对，就这样。承认它。你的身体比你的嘴诚实。","[both] 停。手从裤子上拿开。","[both] 看够了没？看够了就闭上眼，感受节拍。对方数到三，你才可以睁开。","[both] 深呼吸。忍着。忍到对方让你动为止。","[both] 第一集，完。欲望是这里的通行证，而你，才刚刚学会看它。","[both] 跟对方走。手放口袋里，别自作主张。","[both] 把这句话记住：你不是来享受的，你是来被使唤的。","[both] 退出来。","[both] 忍住。把手放背后。对方让你肏，你才能肏。","[both] 停。把眼睛闭起来。","[both] 深呼吸。忍着。忍到对方说可以。","[both] 让对方对你说：「把镜头对准你自己。我想看看你。别挂电话。」","[both] 让对方对你说：「别闹……你一个人在外面怪可怜的。」","[both] 停。手，拿开。","[both] 忍住。把手背到枕头底下，听对方说完，你才有资格继续。","[both] 停。求了也没用，对方再看会。","[both] 深呼吸。忍不住就咬自己一口。对方让你动，你才能动。","[both] 让对方对你说：「回来啦？餐厅不去了，今天想窝在家里。看个老录像吧。」","[both] 让对方对你说：「咱俩结婚那天的录像，我一直收着呢。今天看看，纪念一下。」","[both] 让对方对你说：「这个人，你还记得吗？」","[both] 让对方对你说：「那天班长跟我说，新娘真漂亮。还问我——\"要是先认识他，会选他吗。\"」","[both] 让对方对你说：「我那时候说，当然选你啊。……现在想想，真傻。」","[both] 让对方对你说：「这段，是敬酒那桌。你看仔细了。」","[both] 让对方对你说：「你那天喝多了，趴桌上。班长扶我起来说送我回房……这段被剪掉了，你没看过吧。」","[both] 让对方对你说：「那天晚上你喝得烂醉，我扶你回新房，你就栽床上睡过去了。」","[both] 让对方对你说：「后来班长来敲门，说怕我累着，给我送了碗醒酒汤。我在门口，站了很久。」","[both] 让对方对你说：「你，那晚你在床上睡得那么沉，什么都不知道。」","[both] 让对方对你说：「这段是afterparty，被剪掉的。你看，那支舞。」","[both] 让对方对你说：「那天班长问我，舞跳得好不好。我说，比你强。」","[both] 停。别急。录像还没放完。","[both] 忍着。把遥控器放下，坐好，看完再说。今晚，你是观众。","[both] 让对方对你说：「后面这段，你送宾客，没在镜头里。这段是我后来自己补录的。」","[both] 让对方对你说：「那天我录的时候想——你，如果你知道了，会怎么看我。」","[both] 停。先别说话。","[both] 让对方对你说：「你，今天把话说开了。你还想要这个家，就得听我的安排。」","[both] 让对方对你说：「乖。你，从今天起，家里的事，我定。你只要听话。」","[both] 让对方对你说：「过来，跪在这儿。今晚，把录像看完。」","[both] 让对方对你说：「对，就这样。你伺候我，我伺候你——今晚，你是我俩的。」","[both] 录像放完了，屏幕暗下去。对方关了电视，伸了个懒腰。","[both] 让对方对你说：「明天下班早点回来。我那边还有几段\"没给你看过的\"录像。」","[both] 停。手，先停在这儿。","[both] 忍住。对方让你动，你再动。车震这种事，讲究的是憋。","[both] 停。车停好，手放方向盘上。","[both] 想清楚。进去之后，听对方的。不听，对方立刻走人。","[both] 让对方对你说：「你，隔壁屋铺好了。你睡那边，我清净。」","[both] 让对方对你说：「……电话？……嗯，在啊。你睡隔壁了。」","[both] 让对方对你说：「讨厌……你还想听什么……」","[both] 让对方对你说：「轻点！我就睡在隔壁呢。」","[both] 让对方对你说：「怕什么，你不敢敲门。你要是敢，我明早就离婚。」","[both] 让对方对你说：「嗯……别……你还在隔壁呢……」","[both] 让对方对你说：「……你别弄出声来，让你听见……」","[both] 停。别出声。","[both] 忍着。现在，你只能听，只能看，不能出声。","[both] 停。隔壁没声了。对方听见了。","[both] 忍住。让对方先服软。你看，这堵墙，原来也没那么厚。","[both] 隔壁忽然传来一声很轻的、像是敲墙的声音。对方在那边，也敲了敲墙。","[both] 让对方对你说：「你……过来吧。今晚，别分房了。」","[both] 让对方对你说：「……你、你看见了？」","[both] 让对方对你说：「既然你看见了，那正好，咱们谈谈。」","[both] 让对方对你说：「你，你知道这名字下面，每一笔，我都记了多少年吗？」","[both] 让对方对你说：「你从不查我手机，从不问我晚归。你以为你信任我？你只是懒得看。」","[both] 让对方对你说：「你，这些年你过得憋屈，我也过得憋屈。所以，我替我们俩，都找好了\"出口\"。」","[both] 让对方对你说：「你，我选第二条。我还想跟你过下去。只是……从今往后，家规得改一改。」","[both] 让对方对你说：「你，既然答应了，今晚就走流程。跪好。」","[both] 让对方对你说：「记住，你。从今以后，你想碰我们任何一个，都得先问另一个。」","[both] 停。手，收回去。","[both] 忍住。今晚，是家规第一课。背错了，明晚也不许碰。","[both] 你结结巴巴地背：听话、不撒谎、不许偷看手机、晚归要报备……对方听着，嘴角慢慢扬起。","[both] 让对方对你说：「背得不错。你，看来这些年，你心里其实早就清楚，只是从没说出口。」","[both] 让对方对你说：「你，先亲这儿……对……听我指挥……」","[both] 停。","[both] 让对方对你说：「你还欠我一笔。今晚，你伺候完另一个人，还得伺候我。」","[both] 忍住。规矩是一次一个。急什么，往后的日子，长着呢。","[both] 让对方对你说：「你，谢谢你，没有走。……也谢谢你，愿意留在这个家。」","[both] 让对方对你说：「你，从今晚起，名单上最后一个名字，是你。」","[both] 让对方对你说：「进来……对……你，这个家，终究还是你的。」","[both] 事后，对方把那两张名单叠在一起，放进笔记本夹层里，压平。你，收好了。以后，不许再翻了。","[both] 停。手拿开。晾着。","[both] 诚实也要憋着，懂吗？先走液都流到手腕上了，黏糊糊的，全是你的。","[both] 憋回去没有？……对方知道很痛苦。痛苦就对了。越痛苦，你越记得住——对方没说可以，就不许射。","[both] 这就是你现在的样子——鸡巴硬到发紫，精液到门口了，被对方一句话就拦回去。","[both][Q] 对方把今晚的故事讲了一半就停住。对方要你回答：你在这个故事里是谁——是被安排的那个人，还是安排人的那个？","[both][Q] 对方演到一半停下。对方要你回答：你猜对方今晚最想对你说的那句台词是什么？现在说出来，对方便照着演下去。","[both][Q] 对方把这个故事讲成了真的。对方要你回答：如果它是真的，你会在第几分钟离开？","[both][Q] 对方演到了隔墙那一段。对方要你回答：如果今晚真有另一堵墙隔在你们中间，你会敲墙，还是一直不出声？","[both][Q] 对方把录像放完，屏幕暗下去。对方要你回答：这段录像里，最该被剪掉的是哪一段？","[both][Q] 对方把家规一条条念给你听。对方要你回答：这些规矩里，哪一条其实一直是你自己也想守的？","[both][Q] 对方演到了那份名单。对方要你回答：如果名字可以换一次，你想换掉哪一个？换成谁？","[both][Q] 对方演的是出差那一夜。对方要你回答：这个故事里，对方最想坦白的一句话是什么？","[both][Q] 对方把镜头对准你。对方要你回答：镜头里最不该被拍到的，是哪一个瞬间？","[both][Q] 对方演完这一段，回到现实。对方要你回答：这个故事里哪一段是你自己的，哪一段全是对方编的？","[both][Q] 对方把节拍交给这个故事。对方要你回答：如果这个故事今晚不结束，你愿意让它走到第几集？","[both][Q] 对方在故事里说了一句「这是最后一次」。对方要你回答：你信吗？如果不信，你要怎么让对方相信？"],
+  "fantasy-build": ["[M][Q] 你第一次幻想对方被别的男人碰是什么场景？尽可能详细地描述那个画面——在哪、他长什么样、对方在做什么。","[F][Q] 你幻想过被别的男人欣赏甚至渴望吗？你最想被什么样的男人注视？诚实回答，不用顾虑对方的感受——对方准备好了。","[both][Q] 「淫妻」对你们的关系意味着什么？各自用一句话写在纸上，然后交换看。看完后不要评价，只是抱一下。","[M][Q] 你觉得自己是哪种类型——\"想看对方享受\"还是\"想看对方被占有\"？这两个感觉完全不同，你偏向哪边？","[F] 现在对你说一句真心话：「我可以为你尝试探索这件事，但你必须答应我：任何时候我说停，就必须停。」等对方说「我答应」之后，再继续。","[M] 关掉所有灯，两人并排躺下或靠在沙发上。握住对方的手。用你最有磁性的声音，慢慢描述这场幻想的开端——\"想象你躺在一张很大的床上，窗帘半掩，房间很暗……\" 详细描述对方穿的什么、房间什么味道、还有谁在暗中看着对方。","[F][Q] 刚才描述了那个场景——你脑海里浮现了什么样的对方？还是你根本没看清脸，更多是感受？","[both] 现在角色互换。对方来描述你想象中自己被触碰的画面——从哪开始？肩膀？腰？大腿内侧？ 全程闭眼，你不许说话，只感受对方的声音。","[M][Q] 听到对方描述那个画面时，你身体哪里最有反应？和对方想象中的那个男人相比，你觉得自己的优势在哪？","[both] 现在两人一起想象一个最坏的情况：如果这件事真的发生了，你们中谁最可能受不了？各自用手机打一段话发给对方，然后交换手机看。今晚这些消息会保留，作为你们的\"初始备忘录\"。","[M] 打开手机录音，对着它描述你的完整幻想——从对方怎么认识那个男人，到第一次接吻，再到最后一步。不要害羞，用最直白的语言。录完后放给对方听，从对方的表情里找线索。","[F][Q] 听自己的声音被别人描述那个画面，感受是什么？有没有哪一个细节让你觉得\"其实这样也挺好的\"？","[F] 现在轮到你。打开录音，用你最性感的声音描述——\"如果你和另一个男人拥抱，他的手放在你的腰上，你会怎么呼吸？\"描述你的身体反应，越细越好。录完发给对方。","[M][Q] 听到对方的录音，和你在脑子里想象的有什么不同？对方的声音里有没有一种你平时没听到过的\"另一种女人\"的味道？","[both] 各自从刚才的录音里剪一段 10 秒的片段，设为对方的闹钟铃声。未来一周每天早上听到这段声音。","[F] 今晚穿一件你平时觉得\"太大胆了\"的衣服，在对方的陪伴下出门散步或去酒吧。注意——你的任务不是勾引谁，而是感受陌生人的视线。","[M][Q] 今晚你看到有几个男人看对方？你心里是什么感受——嫉妒几分？兴奋几分？自豪几分？分别打 1-10。","[F][Q] 被其他男人注视的时候，你在想什么？你有想到对方吗？你希望那时对方在看你的表情，还是在看其他男人的反应？","[M] 回家后，从刚才在场的男人里选一个，和对方一起编一个完整的故事——他是谁、做什么的、你们怎么认识的。越详细越好。然后问对方：「如果今晚他真的过来搭讪了，你希望我怎么反应？」","[F] 你帮对方拍一张照片——不能露脸，但要有足够的暗示（锁骨、腿、腰线、或者一件撩起的衬衫）。选一张你觉得\"发出去会有人评论\"的。","[both][Q] 看着这张照片——如果发到社交平台，你们俩分别能接受多少人看到？10 个人？100 个？还是只想给特定的人看？各自写在手机备忘录里再给对方看。","[M] 现在做一个最大胆的尝试——找一个匿名社交平台（如 Whisper 或类似应用），用对方的照片做头像，写一段简介，但不发露骨内容。然后你们一起看收到的私信。念出前三条给你听。","[M][Q] 看到别人给对方发的私信，你什么感觉？有没有哪一条让你觉得\"这个人比我更懂怎么夸对方\"？","[F] 选私信里最让你舒服（或最好奇）的一条，和你一起编你们的回答。然后——发出去。一起按发送键。","[both] 一起去一家正规的按摩 SPA，选双人套餐。但要做一个特别的约定：两位技师都必须是异性。在同一个房间里，感受对方被陌生按摩师触碰时的反应。","[both][Q] 按摩过程中——你在想什么？你有偷偷看对方的表情吗？当陌生人的手在对方背上游走的时候，你意识到自己笑了吗？还是皱眉了？","[M] 回到只有你们两个人的空间。面对面坐着，用最慢的动作帮对方把按摩完的衣服脱下来，检查对方的身体——就像在检查一件你即将借出去的艺术品。每到一个你觉得\"别人会特别想碰\"的部位，停下来亲一下。","[F][Q] 当陌生人的嘴唇经过你的那个部位时，你在想象什么？你希望另一个人的嘴唇也在同样的地方吗？还是你希望对方永远不要停？","[both] 各自在手机备忘录里列出「理想第三者的 5 个特征」。不能讨论，各自写。写完后交换看。","[F][Q] 你列出的条件里，有没有哪一条让你觉得\"对方对这件事是认真的\"？或者有没有哪一条让你有点失望？","[both] 假如你们真的需要选一个人——从你们共同认识的人里选出一个\"理论上最接近理想第三者\"的人。不需要告诉他，只需要写下来给对方看。然后讨论：如果真的是他/她，你们各自最担心的点是什么。","[M][Q] 如果有另一个男人即将触碰对方的身体——你最希望他在触碰前知道的「一条规则」是什么？写在纸上折叠好。当你们真的走到那一步时，打开它。","[both] 面对面坐下，膝盖相触。各自写下「这段旅程中我最享受的三个瞬间」和「最让我不安的两个瞬间」。交换读，不许说话，读完直接抱在一起。","[both][Q] 刚才的清单里——你们重合的\"享受瞬间\"有几个？重合的\"不安瞬间\"又有几个？如果以 10 分为满分，你们现在对\"真正走出去\"的意愿分别打几分？","[M] 告诉对方——无论这条路走多远，对方始终是你最珍贵的人。用最温柔的方式和对方做爱，不是出于欲望，而是出于连接。全程不要说话，只通过呼吸和触摸沟通。","[both] 最后的任务：两人一起创建一个共享备忘录，标题为「我们的淫妻旅程备忘录」。写下你们各自的底线、唤醒词（任何时候一方说出这个词就必须停下），以及下一步想尝试的事情。这个备忘录将是你们未来所有决定的基础。","[both][Q] 用一句话总结今晚的旅程——各自发一条朋友圈（仅自己可见），然后截图发给对方。","[both][Q] 如果这场幻想明天就要成真，你希望它是「只有你们两个人知道」，还是「允许被第三个人看见」？为什么？","[both][Q] 描述幻想的时候，你更习惯说画面（在哪、长什么样）还是说感受（怎么呼吸、心里怎么想）？用刚才说过的那一段举个例子。","[both][Q] 你们各自幻想里都有一个地点——那个地方得是真实存在的，还是只要两个人脑子里有就算数？","[both][Q] 想象走到最激烈的那一段时，你希望自己是「被看的那一个」还是「看的那一个」？想换答案需要什么条件？","[both][Q] 如果这段幻想只能留下一个细节——一种气味、一段声音、一件衣服——各自会留哪一个？为什么是它？","[both][Q] 刚才说过的那些话里，有没有哪一句是你其实不想让对方记住的？有的话，现在改口，重新说一遍。","[both] 两人面对面坐下，各自把今晚说过的幻想改写成不超过 50 字的「剧情简介」——不许用形容词，只写发生了什么。交换读，各自指出对方写错的一个细节。","[both] 打开录音，两个人轮流描述同一个幻想：同一段画面，同一个情节，但各讲各的。录完一起听，找出两个版本里差别最大的地方。","[both] 各自写下这段幻想里「绝对不要出现在画面里」的三样东西，和「其实可以有」的三样东西，折起来交换看，再面对面把两列念出来对齐。","[both] 各自挑一张纸，把这段幻想的边界画成一条线——最左边是最日常的版本，最右边是最出格的版本，把你想停的地方标出来。交换看，标的位置一样吗？","[both] 今晚结束前，两人各说一个「以后可以再演、但要换细节」的版本——只改一个细节，其余保持原样，然后各自说出这个细节改在哪。"],
+  "bond-intro": ["[both][Q] 你愿意先从哪一步试起：蒙眼、绑手，还是先只约好边界？","[both][Q] 蒙上眼之后，你能撑多久不会开始不安？","[both][Q] 你想用什么词当停止词？说出来，让对方记住。","[both][Q] 绑手的时候，松紧到什么程度你会觉得是安全而不是被勒住？","[both][Q] 试轻度拍打之前，你会先确认哪几件事？","[both][Q] 你能接受背上留一点红印吗？大概多久能消？","[both][Q] 蒙眼之后你更想被带着走，还是想站在原地不动？","[both][Q] 如果对方的手停在某个地方不动，你会先开口还是先动手？","[both][Q] 第一次试完，你希望对方问你哪一句话？","[both][Q] 你更想先当绑的人，还是先当被绑的人？","[both][Q] 遇到让你不舒服的那一秒，你习惯马上说还是先忍一下？","[both][Q] 你希望被绑多久？超过这个时间你会开始想结束？","[both][Q] 你更在意被绑住这件事本身，还是绑住之后对方会做什么？","[M][Q] 你动手之前，会先确认对方哪三个状态？","[F][Q] 被绑住的时候，你希望对方隔多久问一次「还好吗」？","[both] 先和对方约定一个停止词，各自念一遍确认记住了。","[both] 约定三档反馈：绿灯继续、黄灯减速、红灯立刻停。","[both] 用一句话说清今晚要试的范围和时长，其余今晚不谈。","[both] 把今晚的边界写在一张纸上，做完留着或撕掉都行。","[both] 试蒙眼：先用一条薄丝巾遮住自己的眼睛三十秒，对方只说话不碰你。","[both] 让对方蒙住你的眼睛，然后由你指挥对方的手停在哪里。","[both] 试蒙眼前先问对方：你怕痒吗，哪里不能碰。","[both] 试绑手：用宽丝巾松松绕过你的手腕，能塞进一根手指就不算紧。","[both] 试绑手时留一只手自由：被绑的人随时能自己解开。","[both] 试绑手之前，让对方用一句话说「我要开始了」，你点头才算数。","[both] 让对方绑住你的双手一分钟，期间你只回答「嗯」和「不要」。","[both] 拍打只落在手背或肩膀，每三下问一句「这样可以吗」。","[both] 试拍打之前，双方各说一句「我准备好了」，说完才开始。","[both] 蒙眼时让对方报出房间里三样东西的位置，答对就结束。","[both] 试一次「不绑只牵」：对方牵住你的手腕走三步，然后放开。","[both] 换一次方向：这次由被绑的人决定绑法，绑的人照做。","[both] 蒙眼期间如果不舒服，用两根手指敲两下桌面，对方立刻停下。","[both] 结束后给彼此三分钟，只说感受，不复盘谁对谁错。","[both] 结束前互相说一句「下次我希望你先问我」。","[M] 今晚要试哪一项由你来提，先说清楚边界在哪。","[M] 计时由你负责：到约定时间立刻喊停，不许延长。","[M] 试一次完全听对方指挥，只做被要求做的事。","[F] 今晚的顺序由你来定，从「约好边界」这一步开始。","[F] 过程中至少问两次「现在还好吗」这件事由你负责。","[F] 试一次完全由对方主导，但保留随时开口的权利。"],
+  "dominator-intro": ["[both][Q] 你今晚更想当下令的一方，还是当听话的一方？","[both][Q] 对方下指令的时候，你希望听到什么样的语气？","[both][Q] 「今晚由我说了算」这句话，你能接受到什么程度？","[both][Q] 你希望对方先解释原因再下令，还是直接下令？","[both][Q] 你愿意用什么称呼来称呼对方？说出来，让对方先应一声。","[both][Q] 你喊停的时候，希望对方几秒之内完全停下来？","[both][Q] 事后复盘的时候，你最想听对方说哪一句话？","[both][Q] 对方在过程中临时改规矩，你能接受吗？","[both][Q] 同样一件事，被命令和被请求，哪一种你更容易照做？","[both][Q] 第一次定规矩，你想定几条？","[both][Q] 对方下了你不想执行的一条指令，你会怎么开口？","[both][Q] 你希望今晚的顺序由谁来定？","[both][Q] 你希望对方在事后怎么肯定你？","[both][Q] 你能接受今晚有一条指令是必须完成的，不能打折吗？","[M][Q] 你打算下第一条指令之前，先跟对方确认什么？","[F][Q] 你希望对方下令时加上哪一句前缀，你才比较愿意听？","[both] 先和对方定今晚的「权力交换时长」，到点自动交还。","[both] 一起写下三条今晚的规矩，一条一句，双方确认。","[both] 约定一个口令：对方说「今天到此为止」，双方立刻收工。","[both] 让对方给你下一条简单指令，你照做，然后交换角色再来一条。","[both] 定一条「喊停就停」：任何一方喊停，另一方三秒内手停住。","[both] 让对方连续给你三条小指令，每条之间不许解释，你一条条做。","[both] 由对方决定今晚第一件事做什么，你只负责配合。","[both] 玩一次「十分钟主导」：十分钟内对方说什么你就做什么。","[both] 对方下指令时先复述一遍再执行，确认自己没听错。","[both] 交换角色各五分钟：谁下令，谁就负责把节奏放慢。","[both] 对方下令之后不评价好不好，先做完再说感受。","[both] 让对方命令你保持一个姿势一分钟，过程中只报秒数。","[both] 约定一句结束语：今晚结束前双方各说一次同一句话。","[both] 试一次「先请示」：对方每次要碰你之前都要问一句。","[both] 事后复盘：各说一条今晚做得顺的地方和一条要改的地方。","[both] 让对方写下今晚最满意的一个瞬间，念给你听。","[both] 定一条「今晚不追问」的规矩：对方不问你就不解释。","[both] 换一次玩法：下令的人要提前把指令想好，不能临时起意。","[M] 由你来定今晚的第一条规矩，说完等对方点头。","[M] 你来当十分钟的主导方，只下指令不解释理由。","[M] 你在对方犹豫的时候替对方把话接下去，但不许替对方做决定。","[F] 由你来定今晚的结束信号，说出口对方就必须照做。","[F] 你来当十分钟的听话方，全程只回答「好」和「停」。","[F] 你负责在对方下完令之后问一句「这条我照做了，可以吗」。"],
+  "taboo-intro": ["[both][Q] 你有一条一直没跟对方提过的底线，今天想试着说吗？","[both][Q] 对方提一个你从没见过的新玩法，你第一反应会是什么？","[both][Q] 你希望对方怎么开口问你，才不会让你有压力？","[both][Q] 你能接受「只此一次」这种破例吗？怎么说才算数？","[both][Q] 如果对方明显在犹豫，你要怎么确认才不会推着对方走？","[both][Q] 破例一次之后，你希望怎么收场才不算翻篇？","[both][Q] 你的底线是关于身体、还是关于场景和情境？","[both][Q] 事后复盘的时候，你最怕听到对方说什么？","[both][Q] 你希望破例的约定写下来，还是口头说一次就好？","[both][Q] 对方拒绝你一个提议时，你希望对方怎么补一句？","[both][Q] 你能接受对方提出你完全没想过的要求吗？","[both][Q] 你愿意今晚先从多小的一步开始试？","[both][Q] 你希望破例之后，对方怎么证明没有变卦？","[both][Q] 什么情况下你会把某条底线往后挪一格？","[M][Q] 你打算怎么试探，才不会让对方觉得被逼着做？","[F][Q] 被试探的那一方，你希望对方给你多少考虑时间？","[both] 先和对方各自列一张「不试」和「可以试」的清单，交换看。","[both] 挑一条对方清单上的「可以试」，今晚只试这一条。","[both] 开口问之前先说「不试也没关系」，给对方留退路。","[both] 对方犹豫的时候停下来等，不要重复问第二遍。","[both] 试之前先约定破例时长，到点自动停，不续时。","[both] 约定一条「不追问」的规矩：拒绝之后不许再劝。","[both] 让对方把新玩法只说一遍，你听完先给反馈，不急着答应。","[both] 破例一次之后立刻做一件平常的小事，把气氛拉回来。","[both] 试完立刻复盘：先各自说感受，再决定要不要再来一次。","[both] 对方说「今天不想」的时候，回答「好」，然后换别的事。","[both] 让对方说出这条底线的来源，你只听不评价。","[both] 试之前先确认一次「现在真的可以吗」，得到点头再开始。","[both] 让对方决定这次试什么、试多久，你只负责配合。","[both] 破例结束前先说那句「今晚到此为止」，让收场有台阶。","[both] 今晚试新的，对方只要说「我需要想一下」就到此为止。","[both] 破例之前先问一句「现在的心情适合试这个吗」。","[both] 试一次「只说不做」：把新玩法讲完整，动手的部分留到下次。","[both] 约定破例不连做，下次要试得重新问一次。","[both] 让对方给你一个「安全出口」的说法，你待会儿真要用就照说。","[both] 把今晚的结论写成两行：下次可以试什么、不再问什么。","[M] 由你来开这个口，先说明「拒绝也完全没关系」。","[M] 你负责在对方说「需要想一下」时立刻把话题收住。","[M] 你来决定今晚试探的顺序，一次只探一个方向。","[F] 由你来把「不试」清单念出来，一条一条念。","[F] 你负责在试完之后先问「现在感觉怎么样」，等对方先开口。","[F] 你来守破例的时长，时间到由你喊停。"],
+  "truth-dare": ["你做过最尴尬的事是什么？详细描述一遍","说出一个你从未告诉过任何人的秘密","最近一次哭是什么时候？为什么？","你偷偷喜欢过在座的谁？说出名字","你做过最后悔的决定是什么？","你用手机做过最见不得人的事是什么？","你曾经撒过最大的谎是什么？","你最害怕什么东西？用行动表现出来","你第一次心动是什么时候？对方是谁？","你手机里最不想让人看到的APP是什么？","你最想改变自己哪个地方？为什么？","你做过最疯狂的事是什么？","你最近一次说谎是什么时候？对谁？","你最不能忍受别人的什么习惯？","你被最糗的一次拒绝经历是怎样的？","你洗澡的时候会做什么奇怪的事？","说出你身上一个别人不知道的怪癖","你最想忘记的一件事是什么？","模仿一种动物的叫声持续10秒","闭着眼睛让其他人喂你吃一样东西","用最夸张的语气念一段绕口令","做十个俯卧撑或深蹲","给你手机通讯录第5个人打电话说「我爱你「","吃一口混合了三种酱料的食物","用方言说一段话让大家猜是什么意思","蒙眼转三圈然后走到指定位置","把冰块含在嘴里直到完全融化才能说话","学一段网红舞蹈（15秒）","对镜子里的自己深情表白一分钟","让右边的人在你脸上画一个纹身（可水洗）","把袜子穿在手上直到下一轮游戏结束","做一个最丑的鬼脸保持10秒","单脚站立做完一个完整的自我介绍","和你右手边的人对视30秒不许笑","用身体扭动写出自己的名字"],
+  "fun-challenges": ["用非惯用手写完一句完整的话","把一块饼干放额头上，靠面部表情移到嘴里","头顶一本书走一个来回，不能掉","用嘴叼着笔写出自己的名字","在30秒内把桌上的硬币从正面全部翻到反面","闭眼单脚站立超过30秒","连续做20个开合跳","用吸管喝完一整杯水（不许漏气）","把一张扑克牌从桌子一边吹到另一边","倒着说出刚才上一个人说的话","在嘴里含水的情况下说「我爱北京天安门「","左手画圆右手画方块，同时进行","模仿一种动物走路的样子走完整一圈","吃一片柠檬不能做出酸的表情","用筷子夹弹珠或花生到另一个碗里","憋气30秒同时保持笑脸","双脚跳着绕桌子一圈","把一句话用rap的节奏和语调说出来","用屁股写自己的名字（扭动身体）","闭着眼在别人手心上写字让对方猜","双手背后交叉握住从头顶翻过去保持10秒","两手同时画出两个不同的图案","在10秒内说出10个同类别的事物（如水果）","把一个硬币放手背上，翻转手接住硬币","连续转圈5圈后走直线","把脸埋进水里憋气5秒","用下巴夹住一个物品传递给旁边的人","在手机上用下巴打字打出「你好世界「","用嘴解开一个蝴蝶结","把纸条贴额头上，让别人给提示猜词","赤脚站在冰冷地面上30秒","做20个深蹲同时大声从1数到20","蒙眼摸一件物品猜出是什么","用两个膝盖夹住A4纸走路不掉","吃一根香蕉不用手（只用嘴剥皮）"],
+  "performance": ["模仿一个著名明星的经典台词","即兴表演一段「被人踩到脚「的场景","模仿在座某个人的说话方式和神态","表演一段默剧「吃火锅「全过程","用三种不同的情绪说同一句话","模仿一个动物尾巴被踩到的反应","即兴表演「中了500万彩票「的反应","扮演一个动漫角色说话走路（越浮夸越好）","模仿电视购物主持人推销一支笔","表演一段「第一次约会「的独角戏","用慢动作演绎一个日常动作","模仿你爸爸或妈妈的经典口头禅","表演「半夜看到鬼「的表情和动作","用夸张的表演重现一个经典电视广告","模仿一个卡通人物的声音和标志动作","即兴表演「迷路了向人问路「的场景","表演在沙漠里走了三天终于发现一瓶水","模仿一个体育明星的招牌庆祝动作","用歌剧唱腔说出你今天的心情","表演「踩到口香糖「的完整过程","模仿你最喜欢的电影角色的经典桥段","表演「偷吃零食被当场抓住「的窘迫","用肢体语言表达一个成语让大家猜","模仿带货主播的语调和手势推销空气","表演「电梯里遇到前领导「的尴尬","用哑剧表演「打蚊子「","模仿机器人的动作和说话方式","表演「发现钱包丢了「的着急状态","用戏曲唱腔说一段现代台词","模仿婴儿学走路的全过程"],
+  "mind-bender": ["用「飞机「「火锅「「拖鞋「三个词编一个通顺的故事","如果你在沙漠里只能带三样东西，带什么？","如果你能和一个历史人物对话，选谁？问什么？","用一句话说服大家相信你其实是一只猫变的","如果你能瞬间学会一项技能，选什么？","设计一个新节日，包括名称和庆祝方式","如果你变成透明人24小时，你会做什么？","把「手机「「月亮「「蟑螂「串成一个科幻故事","如果能创造一个APP，它的核心功能是什么？","假如世界上突然没了电，生活会变成什么样？","用外星人的视角向同类描述「电梯「这个装置","如果你能拥有一种超能力但不能是战斗类，选什么？","把「镜子「「凌晨三点「「笑声「编成一个恐怖故事","如果可以和动物对话，最先找什么动物聊什么？","设计一个全新的体育运动和规则","如果所有东西都变成食物，什么最可怕？","用倒叙的方式讲一个大家熟悉的童话","假如你是手机锁屏壁纸，描述你的一天","把「WiFi信号「「冰箱「「拖鞋「编成一个科幻故事","如果可以重做一个决定，你改变什么？","给「蓝色「写一首三行短诗","策划一个只有三个人的奥运会，项目是什么？","用声音表演一个场景（只出声音不出画面）","如果你是一盏路灯，描述你看到的夜晚故事","用五个不同的形容词描述「沉默「","为家里的一件普通物品写一份创意简历","如果明天是世界末日，你今天会做什么？","把一个成语用职场段子的方式重新解释","用数学公式或代码逻辑来描述爱情","把「充电宝「「马桶盖「「演唱会「编成一个合理的故事"],
+  "group-chaos": ["全体起立，单脚站立直到下一轮结束","每人说一个以「一「开头的成语，说不出的做三个俯卧撑","所有人围成圈，第一个人做动作，后面依次模仿并叠加","每人写一个任务放进碗里，随机抽一个一起执行","所有人一起做同一个鬼脸保持10秒不许笑","两人一组背对背夹气球走一个来回","全员石头剪刀布，赢家指定输家做一件事","每人用一种方言说同一句台词","所有人排成一排传递一个表情","每人轮流在纸上画一笔，最后组成一幅画","两人用额头夹住一张A4纸传递","每人说一件关于自己的事，其他人判断真假","全员蒙眼，一人做动作发出声音，其他人猜","两人一组只用一只手合作系鞋带","每人依次模仿上一个人的表情和姿势","全员接力讲一个故事，每人只能说一句话","两人三足走到对面再走回来","全体合唱一首歌，但每人唱不同的调","一人用肢体表演，其他人猜词，不许出声","每人往杯子里加一种饮料，最后一人必须喝掉","两人一组用身体拼出一个字母","全员集体模仿一种动物组成动物园","一人蒙眼站中间，其他人围圈走，摸一个人猜是谁","每人做一个动作，后面的人要重复前面所有人的动作","两人用一根绳子各用一只手合作打蝴蝶结","全员同时自由跳舞，最不协调的人获胜","第一个人做一个表情依次传递，最后一人猜原始表情","两人用吸管合作把乒乓球从一个碗移到另一个碗","全员用身体摆出一个单词的字母形状","一人指挥方向，其他人蒙眼完成一个搭建任务"],
+  "trust-probe": ["[both] 面对面坐下，保持一米距离。互相注视对方的眼睛，不许笑、不许说话，坚持 30 秒。","[both][Q] 刚才对视的时候，你脑子里在想什么？对方有没有让你意外的表情或眼神变化？","[M] 背对对方站好，双手抱在胸前。让对方在你身后半米处做好准备。听到指令后，身体直直地向后倒——对方会接住你。","[F] 现在换你。背对对方站好，双手抱胸，身体直直向后倒。","[both][Q] 哪一次接人让你更紧张——接还是被接？你觉得信任对方最难的部分是什么？","[F] 为对方戴上眼罩（或用毛巾蒙住眼睛）。然后通过语言引导对方在房间里完成一个简单的路线：走到门口→摸一下门把手→回到原地坐下。全程不能碰触对方。","[M] 现在换你引导。重新设置路线：走到窗边→摸一下窗户→走到桌前→坐下。","[both][Q] 蒙眼的时候你更依赖听觉还是触觉？引导的时候你觉得自己表达清楚了吗？","[both] 背对背坐好。各自在手机上或纸上写出以下三个问题的答案：（1）对方最喜欢的颜色（2）对方最近最开心的一件事（3）如果明天是世界末日，对方最想做什么。写完后同时亮出答案。","[both][Q] 有几道题答对了？哪一道题的答案让你最意外？经过这次旅程，你觉得对对方的信任有变化吗？"],
+  "warm-up": ["[both][Q] 你第一次见对方是什么印象？","[both][Q] 你觉得我们之间谁更搞笑？","[both][Q] 你最想和对方一起完成的一件事是什么？","[both][Q] 你觉得对方最大的优点是什么？","[both][Q] 你最喜欢和对方一起做什么事？","[both][Q] 你最近一次梦到对方是什么内容？","[both][Q] 你觉得我们认识以来对方最大的变化是什么？","[both][Q] 你最羡慕对方什么？","[both][Q] 如果我们是室友，你最担心什么？","[both][Q] 你觉得最代表我们友谊的一首歌是什么？","[both] 模仿你最擅长的一个动物，持续10秒","[both] 用三个词形容对方，然后让对方评分","[both] 做10个俯卧撑或者倒立10秒","[both] 闭着眼睛原地转三圈然后走直线","[both] 用唱歌的方式说出你今天最想做的事","[both] 和对方击掌然后做一个搞笑pose拍照","[both] 模仿一个你觉得对方最喜欢的明星","[both] 用对方的口吻发一条朋友圈","[both] 双手合十向对方说一句最真诚的谢谢","[both] 给对方取一个搞笑的外号，今天就这么叫","[both][Q] 你最近一次撒谎是什么时候？因为什么？","[both][Q] 你最怕别人问你什么问题？","[both][Q] 你隐藏得最好的一个小秘密是什么？","[both][Q] 你曾经因为什么小事偷偷哭过？","[both][Q] 你觉得自己最不成熟的表现是什么？","[both][Q] 你做过最尴尬的一件事是什么？","[both][Q] 你最不想让人知道的习惯是什么？","[both][Q] 你什么时候最没有安全感？","[both] 说出你今天在心里吐槽过的一件事","[both] 坦白你今天撒过的一个小谎","[both] 把你最近的搜索记录给对方看一条","[both] 说出你最怕的一样东西","[both] 在你最近的聊天记录里找一句最尴尬的话念出来","[both] 坦白你最近一次偷懒是什么时候","[both] 说出你一直想做但不敢做的事","[both] 给你最近一次惹到的人发一句道歉","[both][Q] 如果让你选一个电影角色来扮演对方你会选谁？","[both][Q] 你觉得对方适合演什么类型的角色？","[both][Q] 如果我们要演一出戏你最想演什么剧情？","[both][Q] 你觉得自己演技怎么样？有没有信心骗过对方？","[both][Q] 你最想体验一天谁的职业？","[both][Q] 如果让你扮演一个完全相反性格的人你会怎么演？","[both] 用霸道总裁的语气点一杯奶茶","[both] 扮演一个小学生在老师面前告状","[both] 用最夸张的播音腔介绍你身边这个人","[both] 扮演一个推销员向对方推销一件你身上的东西","[both] 用古装剧的语气说一段自我介绍","[both] 扮演一个正在直播的主播介绍你现在的状态"],
+  "heat-up": ["[both][Q] 你曾经因为对方的哪句话偷偷开心过？","[both][Q] 你觉得我们之间谁更固执？","[both][Q] 你在对方面前装过最累的一次是什么？","[both][Q] 你觉得对方什么时候最搞笑？","[both][Q] 你有过\"还好有你在\"的瞬间吗？","[both][Q] 如果明天我们互换一天身份，你会做什么？","[both][Q] 你什么时候觉得对方最可靠？","[both][Q] 你偷偷向对方学过什么？","[both][Q] 你觉得我们之间最难忘的一次争吵是因为什么？","[both][Q] 如果你可以改变对方一个小习惯，会是什么？","[both] 把你手机里最搞笑的一张照片设为聊天背景","[both] 用播音腔播报一段你今天的安排","[both] 在房间里走一圈标准的模特步","[both] 对着窗户大喊出你今天最想做的一件事","[both] 给你通讯录第三个人发一句\"我想你了\"","[both] 模仿你最喜欢的电影角色说一句经典台词","[both] 用屁股写自己的名字，让对方猜","[both] 用最夸张的语气对镜子说三遍你最棒","[both] 做一个你最尴尬的表情让对方拍照留念","[both] 在楼下对着天空说一句你最想说的话","[both][Q] 你曾经对朋友做过最自私的一件事是什么？","[both][Q] 你心里有没有一个你对不起但没道歉的人？","[both][Q] 你曾经因为面子而做过什么蠢事？","[both][Q] 你觉得你最不值得被原谅的一次行为是什么？","[both][Q] 你有过虚荣心爆棚的瞬间吗？因为什么？","[both][Q] 你曾经在背后说过谁的坏话而愧疚过？","[both][Q] 你撒过最大的谎是什么？最后被揭穿了吗？","[both][Q] 你最不希望别人怎么评价你？","[both] 把你相册里最不想让人看到的一张照片展示出来","[both] 坦白你曾经因为什么而嫉妒过别人","[both] 说出你最不想让在座的人知道的一件事","[both] 找一个你一直想道歉但没道歉的人现在发消息","[both] 把你去年最尴尬的一段回忆讲出来","[both] 坦白你最大的一个缺点并说一个改进方案","[both] 把你今天最真实的心情用三个词形容出来","[both] 说出你曾经为了什么人放弃过什么重要的东西","[both][Q] 如果我们要演刚认识的陌生人搭讪你会怎么开场？","[both][Q] 你觉得你最能驾驭什么风格的角色？","[both][Q] 你有没有在现实生活中假装过什么？","[both][Q] 如果让你扮演对方的上司你会怎么训对方？","[both][Q] 你最想让对方扮演什么角色来逗你开心？","[both][Q] 如果我们可以互换风格一天对方会变成什么样？","[both] 扮演一个严厉的教练训斥对方不好好训练","[both] 用电影里黑帮老大的语气说一句日常对话","[both] 扮演一个来查房的服务员问对方几道奇怪问题","[both] 用新闻联播的语气播报你今天的行程","[both] 扮演一个在机场接偶像的狂热粉丝","[both] 用吵架的语气说一句最温柔的话"],
+  "go-serious": ["[both][Q] 你最不想让对方知道的关于你的一件事是什么？","[both][Q] 你有没有因为对方而勉强过自己做不喜欢的事？","[both][Q] 你觉得你在我们的友谊中付出更多还是索取更多？","[both][Q] 你曾经嫉妒过对方和别人的关系吗？","[both][Q] 你有过想和对方绝交的瞬间吗？因为什么？","[both][Q] 你觉得你最对不起对方的一件事是什么？","[both][Q] 如果你可以删除我们之间的一个记忆，会是什么？","[both][Q] 你最不希望对方变成什么样的人？","[both][Q] 你有没有在背后夸过对方但没当面说过？","[both][Q] 你觉得我们之间最大的误会是什么？","[both] 拍一个15秒的搞笑视频发到群里","[both] 把手机最近三个月的搜索记录给对方看","[both] 把你朋友圈最近一张照片设成头像用一天","[both] 用对方的口吻给TA的朋友发一条消息","[both] 在楼下大喊一声\"我是世界上最快乐的人\"","[both] 把你最私密的一个秘密写在纸上然后撕掉","[both] 给一个你很久没联系的人发一句问候","[both] 模仿一个电视剧里最尴尬的告白场景","[both] 把手机交给对方让TA发一条动态","[both] 做20个高抬腿同时大声背诵一首诗","[both][Q] 你做过最让自己失望的一件事是什么？","[both][Q] 你有没有什么事情一直不敢跟家人说？","[both][Q] 你最深层的自卑感来源于什么？","[both][Q] 你曾经为了合群而做过什么违心的事？","[both][Q] 你觉得你最大的虚伪之处是什么？","[both][Q] 你有没有利用过别人的感情？","[both][Q] 你心里最过不去的一道坎是什么？","[both][Q] 你曾经背叛过别人的信任吗？","[both][Q] 你最不想让人看到的弱点是什么？","[both] 打开你的朋友圈把最新的三条公开念出来","[both] 坦白你心里最真实的一个对自己不满的地方","[both] 把你和最近联系人的后三分钟聊天记录念出来","[both] 说出一个你从来没对任何人提过的童年阴影","[both] 把你的浏览器无痕模式打开给对方看","[both] 说出你最想从你生活中删除的一个习惯","[both] 给你最愧疚的人写一段话然后发出去","[both] 把你手机备忘录里最私密的一条读出来","[both][Q] 如果让你扮演一个卧底警察你会怎么接近对方？","[both][Q] 你觉得你生活中有没有带着面具生活的时候？","[both][Q] 如果我们可以活进一部电影里你会选哪部？","[both][Q] 你更擅长扮演别人还是做自己？为什么？","[both][Q] 你有没有在某个场合完全扮演了另一个人？","[both][Q] 如果给你一个剧本你最想演什么极端角色？","[both][Q] 你觉得你人生中最大的角色是什么？","[both] 扮演一个正在审问嫌疑人的警察审问对方一分钟","[both] 用说书先生的风格讲一个你的亲身经历","[both] 扮演一个没落贵族用高傲的语气向对方借一块钱","[both] 全程用第三人称称呼自己持续5分钟","[both] 扮演一个外星人第一次来到地球描述你看到的一切","[both] 用反派的语气说一段你最正能量的台词","[both] 扮演一个中了五百万彩票的人发表获奖感言"],
+  "all-in": ["[both][Q] 你最黑暗的一个秘密是什么？","[both][Q] 如果有一天对方突然消失，你会用多久找到对方？","[both][Q] 你觉得真正的朋友应该做到什么？对方做到了吗？","[both][Q] 你曾经为了讨好对方而撒谎过吗？内容是什么？","[both][Q] 你最怕对方因为什么而离开？","[both][Q] 如果时间倒流，你还会选择认识对方吗？","[both][Q] 你做过最对不起朋友的事是什么？","[both][Q] 如果用一句话总结你对对方的感情，会是什么？","[both][Q] 你觉得你最不了解对方的地方是什么？","[both][Q] 如果明天是世界末日，你最想和对方说什么？","[both] 把你和对方的聊天记录从前往后念三页","[both] 在楼下找陌生人击掌并说\"今天你会好运\"","[both] 为你们的友谊写一段50字的总结发给对方","[both] 打开你的相册最近删除给对方看","[both] 用五分钟说出你最对不起对方的几个地方","[both] 把你的手机交给对方让TA看任何想看的APP","[both] 下楼买一瓶水全程只能用肢体语言交流","[both] 给你最想道歉的人打一个电话说对不起","[both] 用三种不同情绪说同一句话并录下来","[both] 把你手机里最旧的10张照片给对方看并解释","[both][Q] 你最见不得人的一件事是什么？","[both][Q] 如果把你心里最黑暗的想法公开大家会怎么看你？","[both][Q] 你曾经在内心最恶毒地诅咒过谁？因为什么？","[both][Q] 你有没有在最重要的时刻选择过逃避？","[both][Q] 你觉得你做过最伤天害理的事是什么？","[both][Q] 你真实的自己和你表现出来的自己有多大差距？","[both][Q] 你最害怕自己变成什么样的人？","[both][Q] 你有没有在朋友最需要你的时候选择了缺席？","[both][Q] 如果一切可以重来你最想改变自己的一个决定是什么？","[both] 坦白一件你做过但希望没人知道的事","[both] 打开你的微信红包转账记录解释最大的一笔","[both] 说出你心里最大的一个遗憾","[both] 把你所有社交平台简介改成一个人设保留一小时","[both] 坦白你曾经在友情中做过最自私的决定","[both] 把你和父母的最后五条微信聊天念出来","[both] 联系一个你曾经伤害过的人说一句真诚的对不起","[both] 把你备忘录里最情绪化的一页拍下来给对方看","[both] 说出一个你连最好的朋友都没告诉过的秘密","[both][Q] 如果让你扮演和现在完全相反的人生活一周你最怕什么？","[both][Q] 你有没有想过彻底改变自己的人设？变成什么样？","[both][Q] 如果有一天你发现你一直在扮演一个不是你的人你会怎么办？","[both][Q] 你觉得你在不同人面前是不是完全不同的角色？","[both][Q] 你内心最真实的人格和你表现出来的一样吗？","[both][Q] 如果让你在全世界面前扮演一个小丑你愿意吗？","[both][Q] 你有没有幻想过成为另一个人？为什么？","[both] 扮演一个在法庭上为自己辩护的律师辩护词一分钟","[both] 用你最不擅长的方言或口音完成接下来的对话3分钟","[both] 扮演一个时空穿越者描述你来自的未来世界","[both] 全程用诗人的语气说话做什么都要押韵持续5分钟","[both] 扮演一个正在临终告别的人对对方说一段话","[both] 用最夸张的悲剧演员风格演一段失去最重要东西的戏","[both] 扮演一个哲学家用深沉的语气回答对方随便一个问题"],
+};
+
+const POOLS = [
+  {n:"心动序章",src:"hand",l:"35|35",t:"35|35",c:"35|35",same:true},
+  {n:"甜蜜日常",src:"hand",l:"50|50",t:"50|50",c:"50|50",same:true},
+  {n:"暧昧升温",src:"hand",l:"35|35",t:"35|35",c:"35|35",same:true},
+  {n:"干柴烈火",src:"hand",l:"57|55",t:"57|55",c:"57|55",same:true},
+  {n:"极度诱惑",src:"hand",l:"43|43",t:"43|43",c:"43|43",same:true},
+  {n:"灵肉合一",src:"hand",l:"49|49",t:"49|49",c:"49|49",same:true},
+  {n:"情境扮演",src:"hand",l:"38|35",t:"38|35",c:"38|35",same:true},
+  {n:"奖惩卡池",src:"hand",l:"18|19",t:"17|17",c:"35|36",same:false},
+  {n:"主控调教",src:"hand",l:"29|35",t:"29|35",c:"29|35",same:true},
+  {n:"女王支配",src:"hand",l:"35|38",t:"35|38",c:"35|38",same:true},
+  {n:"契约情侣",src:"hand",l:"35|35",t:"35|35",c:"35|35",same:true},
+  {n:"众目之下",src:"conv",l:"87|87",t:"87/89|87/89",c:"87/89|87/89",same:false},
+  {n:"客厅禁区",src:"conv",l:"89|89",t:"86/89|86/89",c:"86/89|86/89",same:false},
+  {n:"深夜坦白",src:"conv",l:"47|47",t:"47/80|47/80",c:"47/80|47/80",same:false},
+  {n:"底线之后",src:"conv",l:"40|40",t:"38/40|37/40",c:"38/40|37/40",same:false},
+  {n:"三人世界",src:"conv",l:"44|44",t:"44|44",c:"44|44",same:true},
+  {n:"口无遮拦",src:"conv",l:"45|45",t:"43/45|42/45",c:"43/45|42/45",same:false},
+  {n:"易主之夜",src:"conv",l:"29|30",t:"29/35|30/32",c:"29/35|30/32",same:false},
+  {n:"互换之夜",src:"conv",l:"45|45",t:"45/46|45/46",c:"45/46|45/46",same:false},
+  {n:"风情妻子",src:"conv",l:"4|66",t:"4/8|63/66",c:"4/8|63/66",same:false},
+  {n:"青涩记事",src:"tier",l:"22|22",t:"22/27|22/27",c:"22/27|22/27",same:false},
+  {n:"细水长流",src:"tier",l:"16|16",t:"16/19|16/19",c:"16/19|16/19",same:false},
+  {n:"隐秘心事",src:"tier",l:"16|16",t:"16/20|16/19",c:"16/20|16/19",same:false},
+  {n:"火辣试探",src:"tier",l:"41|41",t:"41/50|41/51",c:"41/50|41/51",same:false},
+  {n:"烈焰日常",src:"tier",l:"56|56",t:"56/69|56/69",c:"56/69|56/69",same:false},
+  {n:"欲海深陷",src:"tier",l:"56|55",t:"56/57|55/57",c:"56/57|55/57",same:false},
+  {n:"角色试镜",src:"tier",l:"19|19",t:"19/23|19/23",c:"19/23|19/23",same:false},
+  {n:"戏中失控",src:"tier",l:"17|17",t:"17/18|17/18",c:"17/18|17/18",same:false},
+  {n:"癖好清单",src:"tier",l:"18|18",t:"18/21|18/21",c:"18/21|18/21",same:false},
+  {n:"越界癖好",src:"tier",l:"27|27",t:"27|27",c:"27|27",same:true},
+  {n:"束缚试探",src:"tier",l:"18|18",t:"17/18|17/18",c:"17/18|17/18",same:false},
+  {n:"枷锁深处",src:"tier",l:"27|27",t:"24/27|24/27",c:"24/27|24/27",same:false},
+  {n:"节奏掌控",src:"imm",l:"41|41",t:"14/41|14/41",c:"14/41|14/41",same:false},
+  {n:"角色台词",src:"imm",l:"129|129",t:"14/129|14/129",c:"14/129|14/129",same:false},
+  {n:"场景暗线",src:"imm",l:"85|85",t:"12/85|12/85",c:"12/85|12/85",same:false},
+  {n:"幻想构建",src:"imm",l:"19|18",t:"18/19|17/18",c:"18/19|17/18",same:false},
+  {n:"束缚入门",src:"entry",l:"22|22",t:"14/22|14/22",c:"14/22|14/22",same:false},
+  {n:"调教入门",src:"entry",l:"21|21",t:"15/21|15/21",c:"15/21|15/21",same:false},
+  {n:"禁忌入门",src:"entry",l:"23|23",t:"15/23|15/23",c:"15/23|15/23",same:false},
+];
+
+// 汇总
+// 飞行棋 49 包 / 3378 题
+// 情侣 39 包 / 3009 题（转换包 28 个 / 2440 题）
+//   其中场景包 9 个 / 烈度包 12 个 / 沉浸包 5 个 / 入门包 3 个
+// 普通 10 包 / 369 题（普通库烈度包 4 个 / 199 题）
+// 提问型 [Q] 1241 条 · 奖励向 [R] 19 条 · 惩罚向 [H] 17 条
+// 三格同池的包：12 / 39
+/* ===== DATA:END ===== */
+
+
+const TD = {
+  couple:{ name:"情侣题库 COUPLE_QUESTIONS · 1961 条", rows:[
+    ["甜蜜",54,38,34,4],["火辣",0,126,165,148],["坦白局",0,0,62,72],["角色扮演",0,10,38,28],
+    ["调教",0,0,48,58],["束缚",0,0,28,51],["禁忌",0,0,24,55],["脏话",10,30,40,19],
+    ["淫荡妻子",0,51,49,40],["交换",0,24,39,36],["户外露出",0,48,83,65],["绿帽",11,19,34,36],
+    ["第三者",0,23,32,44],["居家",0,55,77,53]
+  ]},
+  normal:{ name:"普通题库 NORMAL_QUESTIONS · 249 条", rows:[
+    ["甜蜜",61,28,20,20],["坦白局",16,16,18,18],["角色扮演",12,12,14,14]
+  ]}
+};
+
+const ASSETS = [
+  {n:"沉浸剧场", s:"3 场景 / 36 幕 / 1467 步", v:1467, note:"最大的一块在步骤数，不是题量"},
+  {n:"飞行棋主题包", s:"49 包 / 3378 题", v:3378, note:"其中 2527 条来自 30 个转换包"},
+  {n:"真心话大冒险", s:"2 库 / 2210 条", v:2210, note:"真心 1018 + 大冒险 943（情侣）"},
+  {n:"调教节奏", s:"17 套 / 170 阶段 / 715 句台词", v:715, note:"台词带 {name} 占位与 TTS 朗读标记"},
+  {n:"剧本杀", s:"5 本 / 26 章 / 118 步", v:118, note:"4 本情侣 + 1 本普通"},
+  {n:"小说", s:"1 部 / 60 章 / 483k 字", v:60, note:"13 个人物、13 条关系"},
+  {n:"惩罚库", s:"2 库 / 82 条", v:82, note:"普通库没有 extreme 档"},
+  {n:"状态效果池", s:"动作 10 / 标签 8 / 开场 6", v:24, note:"43 个包另有专属状态池"},
+  {n:"广播剧", s:"24 集 / 279 min", v:24, note:"普通模式 manifest 为空"}
+];
+
+const GAPS = [
+  {t:"去重窗口只有 10，且没有跨局记忆",
+   p:"<code>RECENT_TASKS_LIMIT = 10</code>。<code>scripts/sim-play.ts</code> 实测：<b>一局 17.1 个任务，单方每局约 8.6 个</b>"
+    +"（事件判定只在落点触发一次，不是每走一步都触发）。窗口 10 兜不住重样；"
+    +"<code>startGame</code> 还会清空 <code>recentTasks</code>，退出重进又是同一批题。实测最优值是 <b>窗口 32 + 跨局保留</b>"
+    +"（相邻局重样 6.1 → 2.7）。这是目前<b>最该先修</b>的一条。"},
+  {t:"执行方池已全部补到四局，但跨局重样还是靠去重窗口",
+   p:"按单方 8.6 个/局算，池子 ÷ 8.6 = 撑几局：≥9 一局 / ≥18 两局 / ≥26 三局 / ≥35 四局。"
+    +"这一轮给 <b>12 个偏薄的包</b>补了 109 条题，<b>39 个情侣包现在全部 ≥35</b>——"
+    +"单包内部够连打四局不重样。但<b>连续开两局</b>之间仍会重样：<code>startGame</code> 清空 <code>recentTasks</code>，"
+    +"窗口又只有 10（见上一条）。池子够大只是必要条件，跨局记忆才是关键那一环。"},
+  {t:"三种格子抽的是同一个池：39 个情侣包里还有 12 个",
+   p:"手写 11 个里有 10 个是同池（唯一例外「奖惩卡池」真带 <code>[R]/[H]</code>，幸运格只出奖励、陷阱只出惩罚），"
+    +"另有「三人世界」「越界癖好」两个转换包同池。这一轮<b>修掉了 7 个</b>："
+    +"「节奏掌控 / 角色台词 / 场景暗线」补了 40 条同烈度提问型变体，"
+    +"「束缚试探 / 细水长流 / 隐秘心事 / 戏中失控」补题后提问型占比上去，"
+    +"新写的 3 个入门包天生两种题型各半——<b>同池从 16/36 降到 12/39</b>。"
+    +"剩下的 12 个要靠给阶梯包补同烈度语气变体（正向版 / 加压版）才能分开。"},
+  {t:"阶梯包的 Level 只写在 desc 字符串里",
+   p:"11 个手写包中 8 个在 <code>desc</code> 里编码了 <code>(Level 0)</code>…<code>(Level 5)</code>，"
+    +"但 <code>Theme</code> 类型<b>没有 level 字段</b>，另外 3 个包（情境扮演 / 奖惩卡池 / 契约情侣）干脆没有 Level。"
+    +"想做「选包后按烈度递进出题」，得先把 Level 抽成结构化数据，而不是去解析描述文本。"},
+  {t:"719 条素材排队等人工重写，普通库另有 50 条与情侣库重复",
+   p:"<code>docs/内容素材待重写清单.md</code> 列了 <b>719 条</b>结构上无法自动转成飞行棋任务的素材："
+    +"调教素材里的第三方角色台词 277 条、场景旁白 167 条、依赖「上一章 / 客服 / 原文」框架的 259 条等。"
+    +"这些不是被丢弃，是排队等人工改写成两人局的题。"
+    +"另外普通题库 249 条里有 <b>50 条</b>与情侣题库<b>逐字相同</b>（soft 段当初是拷过去的），"
+    +"转换器已自动剔除，普通包只留真正独立的 199 条。"},
+  {t:"「灵肉合一」包内 18 条重复",
+   p:"98 条题面实际只有 80 条唯一，是全站唯一有包内重复的包。转换器已对 TD 包做了包内去重，这一条是手写期留下的。"},
+  {t:"普通模式广播剧是空的",
+   p:"<code>manifest-normal.json</code> 是空数组（0 集），而 couple manifest 有 24 集。普通模式访客进广播剧会看到空列表。"},
+  {t:"TD 情侣题库有 1 组重复文案",
+   p:"1961 条里唯一一组重复（剥标签后同文）。影响很小，但转换器按包去重后已不会进包。"}
+];
+
+/* ================= 渲染 ================= */
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const maxT = Math.max(...PACKS.map(p=>p.t));
+
+/* ── 任务索引：拆标签、标重复、建全文检索用的索引 ── */
+const TAG_RE = /^\[([^\]]+)\]\s*/;
+function splitTask(raw){
+  const tags = [];
+  let text = raw;
+  let m;
+  while((m = text.match(TAG_RE)) !== null){
+    tags.push(m[1]);
+    text = text.slice(m[0].length);
+  }
+  return {tags, text};
+}
+const dedupeKey = s => s.replace(/[\s\u3000]/g,"")
+  .replace(/[，。！？、；：""''（）【】《》…—～·,.!?;:'"()[\]<>~`@#$%^&*_+=|-]/g,"").toLowerCase();
+
+const TASK_INDEX = {};
+for(const p of PACKS){
+  const raw = TASKS[p.id] || [];
+  const rows = raw.map((r,i)=>{
+    const {tags,text} = splitTask(r);
+    return {i, tags, text, ltext:text.toLowerCase(), key:dedupeKey(text), dup:false};
+  });
+  const counts = new Map();
+  for(const r of rows) counts.set(r.key, (counts.get(r.key)||0)+1);
+  for(const r of rows) r.dup = (counts.get(r.key)||0) > 1;   // 同文多条全部标出
+  TASK_INDEX[p.id] = rows;
+}
+const TOTAL_TASKS = Object.values(TASK_INDEX).reduce((a,r)=>a+r.length,0);
+
+/* ── 状态 ── */
+const openPacks = new Set();
+const kindFilter = new Map();      // packId → 'all' | 'act' | 'ask'
+let curFilter = "all";
+let curQuery = "";
+
+function srcChip(p){
+  if(p.m==="couple"){
+    return p.src==="conv" ? `<span class="mini sc">场景包</span>`
+      : p.src==="imm" ? `<span class="mini im">沉浸包</span>`
+      : p.src==="tier" ? `<span class="mini ti">烈度包</span>`
+      : p.src==="entry" ? `<span class="mini en">入门包</span>`
+      : `<span class="mini st">阶梯包</span>`;
+  }
+  return p.src==="ntier" ? `<span class="mini nt">普通烈度包</span>` : `<span class="mini st">阶梯包</span>`;
+}
+
+/* 搜索命中：包名或题目正文。返回 null = 按包名整包命中 */
+function hitsOf(p, q){
+  if(!q) return [];
+  if(p.n.toLowerCase().includes(q)) return null;
+  const out = [];
+  for(const r of TASK_INDEX[p.id]||[]) if(r.ltext.includes(q)) out.push(r.i);
+  return out;
+}
+
+function currentList(){
+  return PACKS.filter(p=>{
+    if(curFilter==="conv") return p.src==="conv";
+    if(curFilter==="tier") return p.src==="tier";
+    if(curFilter==="hand") return p.src==="hand";
+    if(curFilter==="imm") return p.src==="imm";
+    if(curFilter==="entry") return p.src==="entry";
+    if(curFilter==="ntier") return p.src==="ntier";
+    if(curFilter==="couple") return p.m==="couple";
+    if(curFilter==="normal") return p.m==="normal";
+    return true;
+  }).filter(p=>{
+    if(!curQuery) return true;
+    if(p.n.toLowerCase().includes(curQuery)) return true;
+    const h = hitsOf(p, curQuery);
+    return h && h.length > 0;
+  });
+}
+
+function renderPacks(){
+  const list = currentList();
+
+  document.getElementById("packs").innerHTML = list.map(p=>{
+    const segs=[];
+    const w = v => (v/p.t*100).toFixed(2)+"%";
+    if(p.m==="couple"){
+      if(p.M) segs.push(`<div class="seg" style="width:${w(p.M)};background:var(--m)" title="[M] 男方执行 ${p.M}"></div>`);
+      if(p.F) segs.push(`<div class="seg" style="width:${w(p.F)};background:var(--f)" title="[F] 女方执行 ${p.F}"></div>`);
+      if(p.B) segs.push(`<div class="seg" style="width:${w(p.B)};background:var(--both)" title="[both] 通用 ${p.B}"></div>`);
+    }else{
+      segs.push(`<div class="seg" style="width:100%;background:var(--both)" title="未使用执行方标签"></div>`);
+    }
+    const tags=[srcChip(p)];
+    if(p.Q) tags.push(`<span class="mini q">Q ${p.Q}</span>`);
+    if(p.R) tags.push(`<span class="mini r">R ${p.R}</span>`);
+    if(p.H) tags.push(`<span class="mini h">H ${p.H}</span>`);
+    if(p.a!=="common") tags.push(`<span class="mini aud">仅${p.a==="male"?"男":"女"}方</span>`);
+    if(p.u!==p.t) tags.push(`<span class="mini na">重复 ${p.t-p.u}</span>`);
+    const h = curQuery ? hitsOf(p, curQuery) : [];
+    if(h && h.length) tags.push(`<span class="mini q">命中 ${h.length} 题</span>`);
+    const scale = (p.t/maxT*100).toFixed(2)+"%";
+    const rows = TASK_INDEX[p.id]||[];
+    // 搜索时样例行改成「第一条命中」，否则永远显示包内第一条，与命中无关
+    const peekRow = (h && h.length) ? rows[h[0]] : rows[0];
+    const peek = peekRow ? esc(peekRow.text) : "";
+    const open = openPacks.has(p.id);
+    return `<div class="pack${open?" open":""}" data-id="${p.id}">
+      <div class="bench bench-row">
+        <span class="bench-label" title="${esc(p.n)}"><span class="chev">▶</span>${esc(p.n)}</span>
+        <div><div class="bench-track"><div style="display:flex;width:${scale};height:100%">${segs.join("")}</div></div>
+        <div class="tagrow">${tags.join("")}</div>
+        <div class="peek">${peek}</div></div>
+        <span class="bench-val">${p.t}</span>
+      </div>
+      <div class="pack-detail" data-detail="${p.id}"></div>
+    </div>`;
+  }).join("") || `<p style="color:var(--muted);font-size:13px;padding:10px 0">没有匹配的主题包。</p>`;
+
+  // 展开中的包重新填内容
+  for(const p of list) if(openPacks.has(p.id)) fillDetail(p.id);
+
+  document.querySelectorAll("#packs .pack .bench").forEach(row=>{
+    row.addEventListener("click",()=>togglePack(row.parentElement.dataset.id));
+  });
+
+  const tot = list.reduce((s,p)=>s+p.t,0);
+  const qn = list.reduce((s,p)=>s+p.Q,0);
+  const rn = list.reduce((s,p)=>s+p.R,0);
+  const hn = list.reduce((s,p)=>s+p.H,0);
+  let sumText = `${list.length} 个包 · ${tot} 题 · 提问型 ${qn} · 奖励向 ${rn} · 惩罚向 ${hn}`;
+  if(curQuery){
+    let packs=0, hits=0;
+    for(const p of list){
+      const h = hitsOf(p, curQuery);
+      if(h && h.length){ packs++; hits+=h.length; }
+    }
+    sumText += ` · 搜索「${curQuery}」命中 ${packs} 个包 / ${hits} 条题`;
+  }
+  document.getElementById("packsum").textContent = sumText;
+  document.getElementById("packsrc").textContent =
+    list.filter(p=>p.src==="conv").length + " 场景 / " + list.filter(p=>p.src==="imm").length + " 沉浸 / " + list.filter(p=>p.src==="tier").length
+    + " 烈度 / " + list.filter(p=>p.src==="entry").length + " 入门 / " + list.filter(p=>p.src==="ntier").length
+    + " 普通烈度 / " + list.filter(p=>p.src==="hand").length + " 手写";
+}
+
+/* ── 展开某个包，列出全部题目 ── */
+function fillDetail(id){
+  const p = PACKS.find(x=>x.id===id);
+  const el = document.querySelector(`[data-detail="${id}"]`);
+  if(!p || !el) return;
+  const rows = TASK_INDEX[id] || [];
+  const kind = kindFilter.get(id) || "all";
+  const act = rows.filter(r=>!r.tags.includes("Q")).length;
+  const ask = rows.length - act;
+  const visible = rows.filter(r=>{
+    if(kind==="act" && r.tags.includes("Q")) return false;
+    if(kind==="ask" && !r.tags.includes("Q")) return false;
+    if(curQuery && !r.ltext.includes(curQuery)) return false;
+    return true;
+  });
+  const meta = `${p.t} 题 · 动作型 ${act} / 提问型 ${ask}`
+    + (p.m==="couple" ? ` · 男方 ${p.M} / 女方 ${p.F} / 通用 ${p.B}` : ` · 未用执行方标签`);
+  el.innerHTML = `
+    <div class="pd-head">
+      <span class="nm">${esc(p.n)}</span>
+      ${srcChip(p)}
+      <span class="meta">${meta}</span>
+      <span class="sp"></span>
+      <span class="pd-filter">
+        <button data-k="all" aria-pressed="${kind==="all"}">全部 ${p.t}</button>
+        <button data-k="act" aria-pressed="${kind==="act"}">动作型 ${act}</button>
+        <button data-k="ask" aria-pressed="${kind==="ask"}">提问型 ${ask}</button>
+      </span>
+    </div>
+    ${visible.length
+      ? `<div class="tasklist">${visible.map(r=>taskRow(r)).join("")}</div>`
+      : `<div class="pd-empty">没有符合条件的题目。${curQuery?"（当前搜索词过滤后为空）":""}</div>`}`;
+  el.querySelectorAll(".pd-filter button").forEach(b=>{
+    b.addEventListener("click",()=>{
+      kindFilter.set(id, b.dataset.k);
+      fillDetail(id);
+    });
+  });
+}
+
+function taskRow(r){
+  const chips = r.tags.map(t=>`<span class="chip ${t}">${t}</span>`).join("");
+  const dup = r.dup ? `<span class="chip dup">重复</span>` : "";
+  let html = esc(r.text);
+  if(curQuery){
+    const i = r.ltext.indexOf(curQuery);
+    if(i >= 0){
+      html = esc(r.text.slice(0,i))
+        + "<mark>" + esc(r.text.slice(i, i+curQuery.length)) + "</mark>"
+        + esc(r.text.slice(i+curQuery.length));
+    }
+  }
+  return `<div class="task"><span class="ix">${r.i+1}</span><span class="tx">${chips}${dup}${html}</span></div>`;
+}
+
+function togglePack(id){
+  const el = document.querySelector(`.pack[data-id="${id}"]`);
+  if(!el) return;
+  if(openPacks.has(id)){
+    openPacks.delete(id);
+    el.classList.remove("open");
+    el.querySelector(".pack-detail").innerHTML = "";
+  }else{
+    openPacks.add(id);
+    el.classList.add("open");
+    fillDetail(id);
+  }
+}
+
+/* 格子有效池：按 pickTaskForRole 的真实收窄顺序实测得出
+   格式 "男|女"，"|" 两边是各执行方的池大小；同一侧出现 "/" 表示题型由系统随机决定 */
+
+/* 单侧数字：87 → 87；87/89 → 87<span class="alt">或</span>89 */
+function poolCell(cell){
+  return cell.split("|").map(side =>
+    side.split("/").join('<span class="alt">或</span>')
+  ).join("<em>·</em>");
+}
+
+document.getElementById("pooltable").innerHTML = `
+  <thead><tr>
+    <th class="pk">包</th><th class="rz">幸运时刻</th><th class="rz">意外陷阱</th>
+    <th class="rz">亲密追尾</th><th class="rz">三格同池</th>
+  </tr></thead>
+  <tbody>${POOLS.map(p=>`
+    <tr class="${p.src==="hand"?"stair":""}">
+      <td style="font-weight:500;white-space:nowrap">${esc(p.n)}
+        <span class="mini ${p.src==="conv"?"sc":p.src==="imm"?"im":p.src==="tier"?"ti":p.src==="entry"?"en":"st"}" style="margin-left:6px">${p.src==="conv"?"场景包":p.src==="imm"?"沉浸包":p.src==="tier"?"烈度包":p.src==="entry"?"入门包":"阶梯包"}</span>
+      </td>
+      <td class="pc">${poolCell(p.l)}</td>
+      <td class="pc">${poolCell(p.t)}</td>
+      <td class="pc">${poolCell(p.c)}</td>
+      <td class="pc"><span class="badge ${p.same?"same":"diff"}">${p.same?"同池":"分流"}</span></td>
+    </tr>`).join("")}</tbody>`;
+document.getElementById("pooltable").insertAdjacentHTML("afterend",
+  `<p class="ptnote">数字 = 该执行方在那个格子里实际能抽到的题数；`
+  + `<span class="alt" style="color:var(--q)">或</span> = 题型由系统随机决定，两种都可能抽到。`
+  + `三格「同池」= 三种格子抽的其实是同一批题，只有卡面和拒绝代价不同。`
+  + `实测：39 个情侣包里 <b>12 个三格同池</b>，27 个分流；手写包里唯一的分流者是「奖惩卡池」。</p>`);
+
+/* 热力图 */
+function heatTable(key){
+  const d = TD[key];
+  const flat = d.rows.flatMap(r=>r.slice(1));
+  const max = Math.max(...flat);
+  const alpha = v => v===0 ? 0 : (0.06 + 0.34*(v/max)).toFixed(3);
+  const total = d.rows.reduce((s,r)=>s+r.slice(1).reduce((a,b)=>a+b,0),0);
+  return `<thead><tr><th>主题</th><th class="rz">soft</th><th class="rz">hot</th><th class="rz">hard</th>
+    <th class="rz">extreme</th><th style="text-align:right">合计</th></tr></thead>
+  <tbody>${d.rows.map(r=>{
+    const t = r.slice(1).reduce((a,b)=>a+b,0);
+    const cells = r.slice(1).map(v=>{
+      const a = alpha(v);
+      return `<td class="cell${v===0?" zero":""}"><div class="sw" style="background:rgba(59,130,246,${a})"></div><span>${v||"—"}</span></td>`;
+    }).join("");
+    return `<tr><td style="font-weight:500">${r[0]}</td>${cells}<td class="tot">${t}</td></tr>`;
+  }).join("")}</tbody>`;
+}
+document.getElementById("tdtable").innerHTML =
+  `<thead><tr><th colspan="6" style="padding-top:14px;color:var(--ink);font-size:13.5px">${TD.couple.name}</th></tr></thead>` +
+  heatTable("couple").replace(/^<thead>.*?<\/thead>/s,"") +
+  `<thead><tr><th colspan="6" style="padding-top:18px;color:var(--ink);font-size:13.5px">${TD.normal.name}</th></tr></thead>` +
+  heatTable("normal").replace(/^<thead>.*?<\/thead>/s,"");
+
+/* 其他资产 */
+const maxA = Math.max(...ASSETS.map(a=>a.v));
+document.getElementById("assets").innerHTML = ASSETS.map(a=>`
+  <div class="item">
+    <div class="nm">${a.n}<small>${a.s}</small></div>
+    <div><div class="bar"><i style="width:${(a.v/maxA*100).toFixed(1)}%"></i></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:5px">${a.note}</div></div>
+    <div class="vv">${a.v}</div>
+  </div>`).join("");
+
+/* 缺口 */
+document.getElementById("gaps").innerHTML = GAPS.map(g=>`<li><b>${g.t}</b><p>${g.p}</p></li>`).join("");
+document.getElementById("gapcount").textContent = GAPS.length;
+document.getElementById("taskcount").textContent = TOTAL_TASKS;
+
+/* 交互 */
+const qInput = document.getElementById("q");
+document.querySelectorAll(".toolbar button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    if(b.dataset.act === "expand"){
+      for(const p of currentList()) openPacks.add(p.id);
+      renderPacks();
+      return;
+    }
+    if(b.dataset.act === "collapse"){
+      openPacks.clear();
+      renderPacks();
+      return;
+    }
+    document.querySelectorAll(".toolbar button").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    curFilter = b.dataset.filter;
+    renderPacks();
+  });
+});
+qInput.addEventListener("input",()=>{
+  curQuery = qInput.value.trim().toLowerCase();
+  renderPacks();
+});
+renderPacks();
+</script>
+</body>
+</html>

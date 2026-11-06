@@ -27,6 +27,9 @@ dist-ssr
 scripts/radio/output/
 src/data/scenarios/hotwifeNovel/radio/output/
 
+# AI 助手的本地工作记忆（不入库）
+.workbuddy/
+
 # ASMR音效本地素材（下载脚本与备份，不上传）
 scripts/radio/assets/asmr/_test/
 scripts/radio/assets/asmr/**/.tts_backup/
