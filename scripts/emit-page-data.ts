@@ -1,12 +1,19 @@
 /**
  * 为可视化页面产出数据块。
  *
- * 页面里的 PACKS / POOLS 两张表如果手抄，改一次包就要改一次页面，
- * 迟早对不上。这里直接从运行期数据对象算出这两张表，打印成可直接粘进
+ * 页面里的 PACKS / POOLS / TASKS 三块如果手抄，改一次包就要改一次页面，
+ * 迟早对不上。这里直接从运行期数据对象算出这三块，打印成可直接粘进
  * `couple-flying-chess-content-inventory.html` 的 JS 字面量。
  *
- * 用法：npx vite-node scripts/emit-page-data.ts
+ * TASKS 是每个包的**全部题目原文**（含标签前缀），页面靠它做「点开包看内容」
+ * 和跨包全文检索——这样盘点页看到的就是运行期真正会抽到的题，而不是二手描述。
+ *
+ * 用法：
+ *   npx vite-node scripts/emit-page-data.ts            # 打印数据块
+ *   npx vite-node scripts/emit-page-data.ts --write    # 直接写回 HTML（推荐）
  */
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../src/data/themes';
 import { PACKS as TD_PACK_SPECS } from './td-pack-specs';
 import { IMMERSIVE_PACKS } from './immersive-pack-specs';
@@ -48,6 +55,7 @@ const norm = (s: string) =>
 // ─────────────────────────── PACKS 表 ───────────────────────────
 
 interface PackRow {
+  id: string;
   n: string;
   m: 'couple' | 'normal';
   a: string;
@@ -77,6 +85,7 @@ for (const pack of [...COUPLE_DEFAULT_THEMES, ...NORMAL_DEFAULT_THEMES]) {
   }
   const uniq = new Set(pack.tasks.map(norm)).size;
   rows.push({
+    id: pack.id,
     n: pack.name,
     m: pack.mode === 'couple' ? 'couple' : 'normal',
     a: pack.audience,
@@ -85,6 +94,18 @@ for (const pack of [...COUPLE_DEFAULT_THEMES, ...NORMAL_DEFAULT_THEMES]) {
     u: uniq,
     src: sourceOf(pack)
   });
+}
+
+// ─────────────────────────── TASKS 表（题目原文） ───────────────────────────
+
+/**
+ * 包 id → 该包的全部题目原文（含 [M]/[F]/[Q]/[R]/[H] 前缀标签）。
+ * 页面用它做「点开包看内容」和跨包全文检索。
+ */
+const TASKS: Record<string, string[]> = {};
+for (const pack of [...COUPLE_DEFAULT_THEMES, ...NORMAL_DEFAULT_THEMES]) {
+  if (TASKS[pack.id]) throw new Error(`包 id 重复：${pack.id}`);
+  TASKS[pack.id] = pack.tasks;
 }
 
 // ─────────────────────────── POOLS 表 ───────────────────────────
@@ -150,34 +171,68 @@ const pools = COUPLE_DEFAULT_THEMES.map(pack => {
 
 // ─────────────────────────── 输出 ───────────────────────────
 
-console.log('/* ===== 由 scripts/emit-page-data.ts 生成，勿手改 ===== */');
-console.log('const PACKS = [');
+const BEGIN_MARK = '/* ===== DATA:BEGIN 由 scripts/emit-page-data.ts 生成，勿手改 ===== */';
+const END_MARK = '/* ===== DATA:END ===== */';
+const HTML_PATH = resolve(process.cwd(), 'couple-flying-chess-content-inventory.html');
+
+const out: string[] = [];
+
+out.push(BEGIN_MARK);
+out.push('const PACKS = [');
 for (const r of rows) {
-  console.log(
-    `  {n:${JSON.stringify(r.n)},m:${JSON.stringify(r.m)},a:${JSON.stringify(r.a)},` +
+  out.push(
+    `  {id:${JSON.stringify(r.id)},n:${JSON.stringify(r.n)},m:${JSON.stringify(r.m)},a:${JSON.stringify(r.a)},` +
     `t:${r.t},M:${r.M},F:${r.F},B:${r.B},Q:${r.Q},R:${r.R},H:${r.H},u:${r.u},` +
     `src:${JSON.stringify(r.src)}},`
   );
 }
-console.log('];');
-console.log('');
-console.log('const POOLS = [');
+out.push('];');
+out.push('');
+out.push('/* 每个包的题目原文（含标签前缀）· 点开包即可读全文，支持跨包检索 */');
+out.push('const TASKS = {');
+for (const [id, tasks] of Object.entries(TASKS)) {
+  out.push(`  ${JSON.stringify(id)}: ${JSON.stringify(tasks)},`);
+}
+out.push('};');
+out.push('');
+out.push('const POOLS = [');
 for (const p of pools) {
-  console.log(
+  out.push(
     `  {n:${JSON.stringify(p.n)},src:${JSON.stringify(p.src)},` +
     `l:${JSON.stringify(p.l)},t:${JSON.stringify(p.t)},c:${JSON.stringify(p.c)},` +
     `same:${p.same}},`
   );
 }
-console.log('];');
-console.log('');
-console.log('// 汇总');
+out.push('];');
+
+// 汇总
 const coupleRows = rows.filter(r => r.m === 'couple');
 const normalRows = rows.filter(r => r.m === 'normal');
 const sum = (rs: PackRow[], k: keyof PackRow) => rs.reduce((a, r) => a + (r[k] as number), 0);
-console.log(`// 飞行棋 ${rows.length} 包 / ${sum(rows, 't')} 题`);
-console.log(`// 情侣 ${coupleRows.length} 包 / ${sum(coupleRows, 't')} 题（转换包 ${coupleRows.filter(r => r.src !== 'hand').length} 个 / ${sum(coupleRows.filter(r => r.src !== 'hand'), 't')} 题）`);
-console.log(`//   其中场景包 ${coupleRows.filter(r => r.src === 'conv').length} 个 / 烈度包 ${coupleRows.filter(r => r.src === 'tier').length} 个 / 沉浸包 ${coupleRows.filter(r => r.src === 'imm').length + normalRows.filter(r => r.src === 'imm').length} 个 / 入门包 ${coupleRows.filter(r => r.src === 'entry').length} 个`);
-console.log(`// 普通 ${normalRows.length} 包 / ${sum(normalRows, 't')} 题（普通库烈度包 ${normalRows.filter(r => r.src === 'ntier').length} 个 / ${sum(normalRows.filter(r => r.src === 'ntier'), 't')} 题）`);
-console.log(`// 提问型 [Q] ${sum(rows, 'Q')} 条 · 奖励向 [R] ${sum(rows, 'R')} 条 · 惩罚向 [H] ${sum(rows, 'H')} 条`);
-console.log(`// 三格同池的包：${pools.filter(p => p.same).length} / ${pools.length}`);
+out.push('');
+out.push('// 汇总');
+out.push(`// 飞行棋 ${rows.length} 包 / ${sum(rows, 't')} 题`);
+out.push(`// 情侣 ${coupleRows.length} 包 / ${sum(coupleRows, 't')} 题（转换包 ${coupleRows.filter(r => r.src !== 'hand').length} 个 / ${sum(coupleRows.filter(r => r.src !== 'hand'), 't')} 题）`);
+out.push(`//   其中场景包 ${coupleRows.filter(r => r.src === 'conv').length} 个 / 烈度包 ${coupleRows.filter(r => r.src === 'tier').length} 个 / 沉浸包 ${coupleRows.filter(r => r.src === 'imm').length + normalRows.filter(r => r.src === 'imm').length} 个 / 入门包 ${coupleRows.filter(r => r.src === 'entry').length} 个`);
+out.push(`// 普通 ${normalRows.length} 包 / ${sum(normalRows, 't')} 题（普通库烈度包 ${normalRows.filter(r => r.src === 'ntier').length} 个 / ${sum(normalRows.filter(r => r.src === 'ntier'), 't')} 题）`);
+out.push(`// 提问型 [Q] ${sum(rows, 'Q')} 条 · 奖励向 [R] ${sum(rows, 'R')} 条 · 惩罚向 [H] ${sum(rows, 'H')} 条`);
+out.push(`// 三格同池的包：${pools.filter(p => p.same).length} / ${pools.length}`);
+out.push(END_MARK);
+
+const text = out.join('\n') + '\n';
+
+if (process.argv.includes('--write')) {
+  const html = readFileSync(HTML_PATH, 'utf8');
+  const start = html.indexOf(BEGIN_MARK);
+  const end = html.indexOf(END_MARK);
+  if (start === -1 || end === -1) {
+    throw new Error('页面里找不到 DATA:BEGIN / DATA:END 标记，无法写回');
+  }
+  const next = html.slice(0, start) + text + html.slice(end + END_MARK.length);
+  writeFileSync(HTML_PATH, next, 'utf8');
+  const taskCount = Object.values(TASKS).reduce((a, t) => a + t.length, 0);
+  console.log(`已写回 ${HTML_PATH}`);
+  console.log(`  PACKS ${rows.length} 个包 · TASKS ${taskCount} 条题目 · POOLS ${pools.length} 行`);
+} else {
+  process.stdout.write(text);
+}
