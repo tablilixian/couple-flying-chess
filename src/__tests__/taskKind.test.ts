@@ -10,13 +10,14 @@ import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../data/themes';
  * 三种棋盘事件（幸运时刻 / 意外陷阱 / 亲密追尾）抽的是同一个池子。
  * 这里用 `[Q]` 标签引入「要回答的问题」，让事件之间真正产生区别。
  *
- * 转换包分两类：
+ * 转换包分三类：
  * - **场景包** 9 个：一个 TD 主题 = 一个包，包内是该幻想的推进梯度
  * - **烈度包** 12 个：一个 TD 主题按烈度档拆开，一包一档（补齐 TD 库里从未进过包的 5 个幻想）
+ * - **沉浸包** 4 个情侣 + 1 个普通：由「沉浸剧场 / 调教节奏」转换而来
  *
  * 三条硬约束，任何一条被破坏都必须红：
  * 1. **手写包行为不变** —— 没有 `[Q]` 就没有提问型，手写包一字不改
- * 2. **普通模式不受影响** —— 转换包只属于情侣模式
+ * 2. **普通模式不受影响** —— 情侣转换包只属于情侣模式
  * 3. **转换没有代词残留** —— 题面里不能出现「老公/老婆/男生/女生」这类第三人称
  */
 
@@ -49,14 +50,36 @@ const TIER_PACK_IDS = [
   'bond-deep'
 ];
 
+/** 沉浸/调教转换包（情侣）：调教流程与沉浸剧场剧本 */
+const IMMERSIVE_COUPLE_PACK_IDS = [
+  'rhythm-control',
+  'role-lines',
+  'scene-undercurrent',
+  'fantasy-build'
+];
+
+/** 沉浸/调教转换包（普通）：剧本「信任探索」 */
+const IMMERSIVE_NORMAL_PACK_IDS = ['trust-probe'];
+
 const CONVERTED_PACK_IDS = [...SCENE_PACK_IDS, ...TIER_PACK_IDS];
 
 const coupleThemes = COUPLE_DEFAULT_THEMES;
 const scenePacks = coupleThemes.filter(t => SCENE_PACK_IDS.includes(t.id));
 const tierPacks = coupleThemes.filter(t => TIER_PACK_IDS.includes(t.id));
+const immersiveCouplePacks = coupleThemes.filter(t => IMMERSIVE_COUPLE_PACK_IDS.includes(t.id));
+const immersiveNormalPacks = NORMAL_DEFAULT_THEMES.filter(t => IMMERSIVE_NORMAL_PACK_IDS.includes(t.id));
 const convertedPacks = coupleThemes.filter(t => CONVERTED_PACK_IDS.includes(t.id));
 /** 手写包 —— 一条 [Q] 都没有，行为必须与改造前完全一致 */
-const legacyPacks = coupleThemes.filter(t => !CONVERTED_PACK_IDS.includes(t.id));
+const legacyPacks = coupleThemes.filter(
+  t => !CONVERTED_PACK_IDS.includes(t.id) && !IMMERSIVE_COUPLE_PACK_IDS.includes(t.id)
+);
+
+/**
+ * 全部由脚本转换出来的包（不含手写包）。
+ *
+ * 转换包有三种来源，题目品质要求一致，所以合并做同一组断言。
+ */
+const allConvertedPacks = [...convertedPacks, ...immersiveCouplePacks, ...immersiveNormalPacks];
 
 /** 可复现的伪随机（mulberry32），让抽题测试是确定性的 */
 function seeded(seed: number): () => number {
@@ -209,18 +232,28 @@ describe('事件分流 · 题型由系统随机决定', () => {
 // ─────────────────────────────────────────────────────────────
 
 describe('转换包 · 数据完整性', () => {
-  it('21 个转换包都已注册，且都属于情侣模式', () => {
+  it('21 个 TD 转换包 + 5 个沉浸转换包都已注册', () => {
     expect(scenePacks).toHaveLength(9);
     expect(tierPacks).toHaveLength(12);
     expect(convertedPacks).toHaveLength(21);
+    expect(immersiveCouplePacks).toHaveLength(4);
+    expect(immersiveNormalPacks).toHaveLength(1);
     for (const t of convertedPacks) {
       expect(t.mode).toBe('couple');
     }
+    for (const t of immersiveCouplePacks) {
+      expect(t.mode).toBe('couple');
+    }
+    for (const t of immersiveNormalPacks) {
+      expect(t.mode).toBe('normal');
+    }
   });
 
-  it('普通模式拿不到任何转换包', () => {
+  it('普通模式拿不到任何情侣转换包', () => {
     const normalIds = NORMAL_DEFAULT_THEMES.map(t => t.id);
-    for (const id of CONVERTED_PACK_IDS) expect(normalIds).not.toContain(id);
+    for (const id of [...CONVERTED_PACK_IDS, ...IMMERSIVE_COUPLE_PACK_IDS]) {
+      expect(normalIds).not.toContain(id);
+    }
   });
 
   it('角色极不平衡的包用 audience 钉给合适的一方', () => {
@@ -251,7 +284,7 @@ describe('转换包 · 数据完整性', () => {
     expect(thin).toEqual(['戏中失控', '束缚试探', '细水长流', '隐秘心事']);
   });
 
-  it('每个包动作型与提问型都有，两种题型都玩得到', () => {
+  it('每个 TD 转换包动作型与提问型都有，两种题型都玩得到', () => {
     for (const t of convertedPacks) {
       const acts = t.tasks.filter(x => taskKindOf(x) === 'act');
       const asks = t.tasks.filter(x => taskKindOf(x) === 'ask');
@@ -262,7 +295,31 @@ describe('转换包 · 数据完整性', () => {
 
   it('题面没有转换残留：第三人称代词 / 占位符', () => {
     const bad = /老公|老婆|妻子|丈夫|男生|女生|@@KEEP|\$1|__KEEP__/;
-    for (const t of convertedPacks) {
+    for (const t of allConvertedPacks) {
+      for (const task of t.tasks) {
+        const body = stripTaskTags(task);
+        expect(bad.test(body), `${t.name}: ${body}`).toBe(false);
+      }
+    }
+  });
+
+  it('沉浸转换包没有第三方人物残留', () => {
+    // 「甜甜」「总经理的实习生」这类**当场在场**的第三方角色在两人局里放不下，
+    // 转换时已全部剔除或改写，题面里不能再出现。
+    // （「班长」不同 —— 它只出现在婚礼重放里对往事的转述中，
+    //   反而能说清「说的是别人不是你」，所以保留。）
+    const bad = /甜甜|实习生|学长|班主任/;
+    for (const t of [...immersiveCouplePacks, ...immersiveNormalPacks]) {
+      for (const task of t.tasks) {
+        const body = stripTaskTags(task);
+        expect(bad.test(body), `${t.name}: ${body}`).toBe(false);
+      }
+    }
+  });
+
+  it('沉浸转换包没有未替换的占位符', () => {
+    const bad = /\{name\}|\{partner\}|\{actor\}|\{0\}|\{1\}|@@/;
+    for (const t of [...immersiveCouplePacks, ...immersiveNormalPacks]) {
       for (const task of t.tasks) {
         const body = stripTaskTags(task);
         expect(bad.test(body), `${t.name}: ${body}`).toBe(false);
@@ -272,7 +329,7 @@ describe('转换包 · 数据完整性', () => {
 
   it('转换包之间没有重复文案', () => {
     const seen = new Map<string, string>();
-    for (const t of convertedPacks) {
+    for (const t of allConvertedPacks) {
       for (const task of t.tasks) {
         const body = stripTaskTags(task);
         expect(seen.has(body), `重复：${body}`).toBe(false);
@@ -282,18 +339,87 @@ describe('转换包 · 数据完整性', () => {
   });
 
   it('每个包都有状态池（行动 + 条件）', () => {
-    for (const t of convertedPacks) {
+    for (const t of allConvertedPacks) {
       expect((t.actionStates || []).length, t.name).toBeGreaterThan(0);
       expect((t.conditionStates || []).length, t.name).toBeGreaterThan(0);
     }
   });
 
   it('状态池文案同样没有第三人称残留', () => {
-    for (const t of convertedPacks) {
+    for (const t of allConvertedPacks) {
       for (const s of [...(t.actionStates || []), ...(t.conditionStates || [])]) {
         expect(/老公|老婆|妻子|丈夫|男生|女生/.test(stripTaskTags(s)), s).toBe(false);
       }
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// 沉浸 / 调教 转换包
+// ─────────────────────────────────────────────────────────────
+
+describe('沉浸转换包 · 台词方向与题量', () => {
+  it('四个情侣包 + 一个普通包都进了对应模式的注册表', () => {
+    const coupleIds = COUPLE_DEFAULT_THEMES.map(t => t.id);
+    const normalIds = NORMAL_DEFAULT_THEMES.map(t => t.id);
+    for (const id of IMMERSIVE_COUPLE_PACK_IDS) expect(coupleIds).toContain(id);
+    for (const id of IMMERSIVE_NORMAL_PACK_IDS) expect(normalIds).toContain(id);
+  });
+
+  it('流式素材全是动作型：三个包没有提问型，剧本包有', () => {
+    // 调教流程的原始素材就是「控制者下的指令」，一句提问都没有；
+    // 剧本（淫妻启蒙 / 信任探索）本来就是一问一答，所以两种题型都有。
+    for (const id of ['rhythm-control', 'role-lines', 'scene-undercurrent']) {
+      const t = immersiveCouplePacks.find(x => x.id === id)!;
+      expect(t.tasks.filter(x => taskKindOf(x) === 'ask').length, t.name).toBe(0);
+      expect(t.tasks.filter(x => taskKindOf(x) === 'act').length, t.name).toBeGreaterThan(0);
+    }
+    for (const t of [...immersiveCouplePacks, ...immersiveNormalPacks]) {
+      if (['rhythm-control', 'role-lines', 'scene-undercurrent'].includes(t.id)) continue;
+      expect(t.tasks.filter(x => taskKindOf(x) === 'ask').length, t.name).toBeGreaterThan(0);
+    }
+  });
+
+  it('执行方池：情侣包够两局（≥18）；普通包素材只有 10 步，够一局（≥8）', () => {
+    for (const t of immersiveCouplePacks) {
+      expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(18);
+    }
+    // 「信任探索」整本剧本只有 10 步（M2/F2/both6），两方各 8 条 —— 一局的量
+    for (const t of immersiveNormalPacks) {
+      expect(executorPool(t), `${t.name} 的执行方池`).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  it('台词方向的三个包，题面里「你」指执行者、「对方」指伴侣', () => {
+    // 角色台词包：角色台词包成「以「角色」的身份对对方说：…」
+    // （包里还混有流程级指令，那是节拍控制，不是台词）
+    const role = immersiveCouplePacks.find(t => t.id === 'role-lines')!;
+    const roleLines = role.tasks.filter(t => stripTaskTags(t).startsWith('以「'));
+    expect(roleLines.length).toBeGreaterThan(50);
+    for (const task of roleLines) {
+      expect(stripTaskTags(task), task).toMatch(/^以「.+」的身份对对方说：/);
+    }
+    // 场景暗线包：伴侣台词包成「让对方对你说」
+    const scene = immersiveCouplePacks.find(t => t.id === 'scene-undercurrent')!;
+    const cLines = scene.tasks.filter(t => stripTaskTags(t).startsWith('让对方对你说'));
+    expect(cLines.length).toBeGreaterThan(0);
+    for (const task of cLines) {
+      expect(stripTaskTags(task), task).toMatch(/^让对方对你说：「.+」$/);
+    }
+  });
+
+  it('剧本包按 actor 分派执行方：M / F / both 都有', () => {
+    const fantasy = immersiveCouplePacks.find(t => t.id === 'fantasy-build')!;
+    const roles = { M: 0, F: 0, both: 0 };
+    for (const task of fantasy.tasks) {
+      const tag = parseTaskTags(task).tags[0];
+      if (tag === 'M') roles.M++;
+      else if (tag === 'F') roles.F++;
+      else roles.both++;
+    }
+    expect(roles.M).toBeGreaterThan(0);
+    expect(roles.F).toBeGreaterThan(0);
+    expect(roles.both).toBeGreaterThan(0);
   });
 });
 

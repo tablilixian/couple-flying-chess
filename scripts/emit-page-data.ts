@@ -9,6 +9,7 @@
  */
 import { COUPLE_DEFAULT_THEMES, NORMAL_DEFAULT_THEMES } from '../src/data/themes';
 import { PACKS as TD_PACK_SPECS } from './td-pack-specs';
+import { IMMERSIVE_PACKS } from './immersive-pack-specs';
 import { parseTaskTags, taskKindOf, type TaskKind } from '../src/utils/personalizeTask';
 import { EVENT_KINDS, type TaskEventType } from '../src/utils/taskPicker';
 
@@ -17,11 +18,14 @@ import { EVENT_KINDS, type TaskEventType } from '../src/utils/taskPicker';
  * - hand  手写包（含 11 个阶梯包 + 普通模式 5 个包）
  * - conv   场景包：一个 TD 主题 = 一个包，包内是该幻想的推进梯度
  * - tier   烈度包：同一个 TD 主题按烈度档拆开，一包只收一档
+ * - imm    沉浸包：由「沉浸剧场 / 调教节奏」转换而来
  */
 const TIER_PACK_IDS = new Set(TD_PACK_SPECS.filter(s => s.tiers).map(s => s.id));
 const CONVERTED_PACK_IDS = new Set(TD_PACK_SPECS.map(s => s.id));
+const IMMERSIVE_PACK_IDS = new Set(IMMERSIVE_PACKS.map(s => s.id));
 
-function sourceOf(pack: { id: string; tasks: string[] }): 'hand' | 'conv' | 'tier' {
+function sourceOf(pack: { id: string; tasks: string[] }): 'hand' | 'conv' | 'tier' | 'imm' {
+  if (IMMERSIVE_PACK_IDS.has(pack.id)) return 'imm';
   if (!CONVERTED_PACK_IDS.has(pack.id)) return 'hand';
   return TIER_PACK_IDS.has(pack.id) ? 'tier' : 'conv';
 }
@@ -46,7 +50,7 @@ interface PackRow {
   R: number;
   H: number;
   u: number;
-  src: 'hand' | 'conv' | 'tier';
+  src: 'hand' | 'conv' | 'tier' | 'imm';
 }
 
 const rows: PackRow[] = [];
@@ -164,7 +168,7 @@ const normalRows = rows.filter(r => r.m === 'normal');
 const sum = (rs: PackRow[], k: keyof PackRow) => rs.reduce((a, r) => a + (r[k] as number), 0);
 console.log(`// 飞行棋 ${rows.length} 包 / ${sum(rows, 't')} 题`);
 console.log(`// 情侣 ${coupleRows.length} 包 / ${sum(coupleRows, 't')} 题（转换包 ${coupleRows.filter(r => r.src !== 'hand').length} 个 / ${sum(coupleRows.filter(r => r.src !== 'hand'), 't')} 题）`);
-console.log(`//   其中场景包 ${coupleRows.filter(r => r.src === 'conv').length} 个 / 烈度包 ${coupleRows.filter(r => r.src === 'tier').length} 个`);
+console.log(`//   其中场景包 ${coupleRows.filter(r => r.src === 'conv').length} 个 / 烈度包 ${coupleRows.filter(r => r.src === 'tier').length} 个 / 沉浸包 ${coupleRows.filter(r => r.src === 'imm').length + normalRows.filter(r => r.src === 'imm').length} 个`);
 console.log(`// 普通 ${normalRows.length} 包 / ${sum(normalRows, 't')} 题`);
 console.log(`// 提问型 [Q] ${sum(rows, 'Q')} 条 · 奖励向 [R] ${sum(rows, 'R')} 条 · 惩罚向 [H] ${sum(rows, 'H')} 条`);
 console.log(`// 三格同池的包：${pools.filter(p => p.same).length} / ${pools.length}`);

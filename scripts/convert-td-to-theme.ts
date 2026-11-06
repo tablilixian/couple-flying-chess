@@ -14,7 +14,7 @@
  *
  * 运行：npx vite-node scripts/convert-td-to-theme.ts [--report]
  */
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { COUPLE_QUESTIONS } from '../src/data/truthDare';
 import { TDQuestion } from '../src/types';
 
@@ -135,12 +135,29 @@ const OVERRIDES = new Map<string, string>([
 
 /**
  * 保护占位符：把不该替换的片段整段圈起来，替换完再原样还原。
- * 用 @@KEEP:xxx@@ 而不是 $1 / $& —— 后两者在 replace 链里会引用到错误的分组。
+ *
+ * ⚠️ 标记里**不能带原文**。
+ * 早先的写法是 `@@KEEP:xxx@@` 存原文，结果后面那轮替换会把标记里的字也一起改掉：
+ *   「其他」 → @@KEEP:其他@@ → 标记里的「他」被当成指代 → @@KEEP:其对方@@
+ *   「他们」 → @@KEEP:他们@@ → 标记里的「他」被当成指代 → @@KEEP:她对方们@@
+ * 于是「趁其他人睡着」被转成了「趁其对方人睡着」。
+ * 现在改用序号占位 `@@K0@@` / `@@K1@@`，标记本身不含任何原文字符。
  */
-const KEEP_RE = /@@KEEP:([^@]+)@@/g;
-const keep = (m: string) => `@@KEEP:${m}@@`;
+function makeKeeper() {
+  const kept: string[] = [];
+  return {
+    keep: (m: string) => {
+      kept.push(m);
+      return `@@K${kept.length - 1}@@`;
+    },
+    restore: (s: string) => s.replace(/@@K(\d+)@@/g, (_, i: string) => kept[Number(i)] ?? '')
+  };
+}
 
-function normalizeSegment(seg: string, opts: { quoted: boolean; isTruth: boolean }): string {
+function normalizeSegment(
+  seg: string,
+  opts: { quoted: boolean; isTruth: boolean; keep: (m: string) => string }
+): string {
   let s = seg;
 
   // R1：伴侣称谓 —— 在所有语境下都是"我的另一半"，即飞行棋里的「对方」
@@ -158,8 +175,8 @@ function normalizeSegment(seg: string, opts: { quoted: boolean; isTruth: boolean
   //  - 「其他/其它/其中」的「他」不是指人
   //  - 「他们/她们」是第三方群体
   s = s.replace(/他\/她/g, '对方');
-  s = s.replace(/([其])(他|她)/g, keep);
-  s = s.replace(/(他|她)(们)/g, keep);
+  s = s.replace(/([其])(他|她)/g, opts.keep);
+  s = s.replace(/(他|她)(们)/g, opts.keep);
   s = s.replace(/他|她/g, '对方');
 
   // R3：男生/女生 → 对方（执行方由任务卡上的一方担任，第三人称一律指伴侣）
@@ -179,16 +196,18 @@ function normalizeSegment(seg: string, opts: { quoted: boolean; isTruth: boolean
 }
 
 function normalizeText(text: string, isTruth: boolean): string {
+  const { keep, restore } = makeKeeper();
   const parts = text.split(QUOTE_RE);
   const out = parts.map(part => {
     const quoted = part.startsWith('「') || part.startsWith('"') || part.startsWith('“');
-    return normalizeSegment(part, { quoted, isTruth });
+    return normalizeSegment(part, { quoted, isTruth, keep });
   });
-  return out
-    .join('')
-    .replace(/@@WE@@/g, '我们')
-    .replace(/@@SELF@@/g, '自我')
-    .replace(KEEP_RE, '$1')
+  return restore(
+    out
+      .join('')
+      .replace(/@@WE@@/g, '我们')
+      .replace(/@@SELF@@/g, '自我')
+  )
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -266,6 +285,23 @@ function buildPack(spec: PackSpec) {
 
 function esc(s: string): string {
   return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+/**
+ * 写文件前的护栏。
+ *
+ * macOS 的文件系统**默认不区分大小写**，`coupleRolePlay.ts` 和
+ * `coupleRoleplay.ts` 会指向同一个文件，手写包曾因此被整个覆盖。
+ */
+function assertTargetFree(outPath: string, specId: string) {
+  if (!existsSync(outPath)) return;
+  const prev = readFileSync(outPath, 'utf8');
+  if (!prev.includes(`id: '${specId}'`)) {
+    throw new Error(
+      `拒绝写入 ${outPath}：该路径上已经是另一个包。\n` +
+      `  macOS 文件名不区分大小写，新包的文件名很可能与既有包撞车了 —— 请换一个文件名。`
+    );
+  }
 }
 
 function toSource(pack: ReturnType<typeof buildPack>): string {
@@ -376,6 +412,7 @@ for (const spec of PACKS) {
   } else {
     const fileName = `couple${spec.id.replace(/(^|-)([a-z])/g, (_, __, c) => c.toUpperCase())}.ts`;
     const outPath = `src/data/themes/${fileName}`;
+    assertTargetFree(outPath, spec.id);
     writeFileSync(outPath, toSource(pack), 'utf8');
     console.log(`✅ ${outPath}  ${pack.tasks.length} 条`);
   }

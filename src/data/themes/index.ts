@@ -32,11 +32,16 @@ import coupleKinkList from './coupleKinkList';
 import coupleKinkBeyond from './coupleKinkBeyond';
 import coupleBondFirst from './coupleBondFirst';
 import coupleBondDeep from './coupleBondDeep';
+import coupleRhythmControl from './coupleRhythmControl';
+import coupleRoleLines from './coupleRoleLines';
+import coupleSceneUndercurrent from './coupleSceneUndercurrent';
+import coupleFantasyBuild from './coupleFantasyBuild';
 import normalTruthDare from './normalTruthDare';
 import normalFunChallenges from './normalFunChallenges';
 import normalPerformance from './normalPerformance';
 import normalMindBender from './normalMindBender';
 import normalGroupChaos from './normalGroupChaos';
+import normalTrustProbe from './normalTrustProbe';
 
 const RAW_COUPLE_THEMES: Omit<Theme, 'mode'>[] = [
   couplePrelude,
@@ -70,7 +75,11 @@ const RAW_COUPLE_THEMES: Omit<Theme, 'mode'>[] = [
   coupleKinkList,
   coupleKinkBeyond,
   coupleBondFirst,
-  coupleBondDeep
+  coupleBondDeep,
+  coupleRhythmControl,
+  coupleRoleLines,
+  coupleSceneUndercurrent,
+  coupleFantasyBuild
 ];
 
 const RAW_NORMAL_THEMES: Omit<Theme, 'mode'>[] = [
@@ -78,7 +87,8 @@ const RAW_NORMAL_THEMES: Omit<Theme, 'mode'>[] = [
   normalFunChallenges,
   normalPerformance,
   normalMindBender,
-  normalGroupChaos
+  normalGroupChaos,
+  normalTrustProbe
 ];
 
 export const COUPLE_DEFAULT_THEMES: Theme[] = RAW_COUPLE_THEMES.map(theme => ({
